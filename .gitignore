@@ -1,0 +1,44 @@
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
+
+# Visual Studio Code
+.vscode
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+/Properties/launchSettings.json
+/Properties/PublishProfiles/FolderProfile.pubxml
+/**/bin/
+/**/obj/
+/**/.vs/
+/ATL.Performance.IdentityServer/Logs/logs.txt
+/ATL.Performance.IdentityServer/node_modules/
+/ATL.Performance.IdentityServer/Logs
+/ATL.Performance.IdentityServer/Logs/
+/ATL.Performance.IdentityServer/appsettings.json
+/ATL.Performance.IdentityServer/Properties/launchSettings.json
+Vue-Element
+/**/*rfc.log
