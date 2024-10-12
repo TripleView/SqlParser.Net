@@ -1,4 +1,5 @@
 using SqlParser.Net.Ast.Expression;
+using Xunit.Abstractions;
 
 namespace SqlParser.Net.Test;
 
@@ -62,5 +63,13 @@ public class UpdateTest
 
     }
 
+    [Fact]
+    public void TestUpdate2()
+    {
+        var sql = "update test set name =4 where name =1";
+        var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+
+
+    }
 
 }

@@ -272,4 +272,49 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
     }
 
+    [Fact]
+    public void TestInsert7()
+    {
+        var sql = "INSERT INTO \"TEST\"  \r\n           (\"Name\",\"Age\")\r\n     VALUES\r\n           (:Name,:Age) ";
+        var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        var expect = new SqlInsertExpression()
+        {
+            Columns = new List<SqlExpression>()
+            {
+                new SqlIdentifierExpression()
+                {
+                    Name = "\"Name\""
+                },
+                new SqlIdentifierExpression()
+                {
+                    Name = "\"Age\""
+                },
+            },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Name = "\"TEST\""
+                }
+            },
+            ValuesList = new List<List<SqlExpression>>()
+            {
+                new List<SqlExpression>()
+                {
+                    new SqlVariableExpression()
+                    {
+                        Name = "Name",
+                        Prefix = ":"
+                    },
+                    new SqlVariableExpression()
+                    {
+                        Name = "Age",
+                        Prefix = ":"
+                    },
+                }
+            }
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+    }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace SqlParser.Net.Lexer;
 
@@ -20,27 +20,35 @@ public class SqlLexer
     /// </summary>
     private Dictionary<char, bool> charDic = new Dictionary<char, bool>();
     private Dictionary<char, bool> digitDic = new Dictionary<char, bool>();
-    private static Dictionary<string, Token> tokenDic = new Dictionary<string, Token>();
+    private ConcurrentDictionary<string, Token> tokenDic = new ConcurrentDictionary<string, Token>();
+    /// <summary>
+    /// Token dictionary for all database types
+    /// 所有数据库类型的token字典
+    /// </summary>
+    private static ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>> allDbTypeTokenDic = new ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>>();
     private List<Token> tokens = new List<Token>();
     private DbType dbType
         ;
-    static SqlLexer()
-    {
-        InitTokenDic();
-    }
-    public List<Token> Parse(string sql,DbType dbType)
+    //static SqlLexer()
+    //{
+    //    InitTokenDic();
+    //}
+    public List<Token> Parse(string sql, DbType dbType)
     {
         this.dbType = dbType;
-        tokens.Clear();
+        //tokens.Clear();
+        InitTokenDic();
         //Only recognize line breaks \n
         //仅识别换行符\n
         sql = sql.Replace("\r\n", "\n");
 
         chars = sql.Select(it => it).ToList();
+
         InitCharDic();
         InitDigitDic();
 
         GetNextChar();
+
         //最大循环次数，避免死循环
         var maxCount = 100000;
         var i = 0;
@@ -64,16 +72,12 @@ public class SqlLexer
             {
                 continue;
             }
-            isHit = AcceptLineBreak();
+            isHit = AcceptEmptyChar();
             if (isHit)
             {
                 continue;
             }
-            isHit = AcceptWhiteSpace();
-            if (isHit)
-            {
-                continue;
-            }
+
             isHit = AcceptIdentifierOrKeyword();
             if (isHit)
             {
@@ -96,21 +100,11 @@ public class SqlLexer
             }
             if (!isHit)
             {
-                throw new NotSupportedException("not support char:" + GetCurrentCharValue());
+                throw new NotSupportedException("not support char:" + GetNextCharValue());
             }
         }
 
         return tokens;
-    }
-
-    private bool AcceptWhiteSpace()
-    {
-        if (Accept(' '))
-        {
-            return true;
-        }
-
-        return false;
     }
 
     private bool AcceptComments()
@@ -233,9 +227,9 @@ public class SqlLexer
         return false;
     }
 
-    private bool AcceptLineBreak()
+    private bool AcceptEmptyChar()
     {
-        if (Accept('\n'))
+        if (Accept('\n') || Accept('\t') || Accept(' '))
         {
             return true;
         }
@@ -273,7 +267,15 @@ public class SqlLexer
 
         return "";
     }
+    private string GetNextCharValue()
+    {
+        if (nextChar.HasValue)
+        {
+            return nextChar.Value.ToString();
+        }
 
+        return "";
+    }
     private bool AcceptIdentifierOrKeyword()
     {
         if (AcceptLetters())
@@ -461,7 +463,12 @@ public class SqlLexer
             tokens.Add(token);
             return true;
         }
-
+        if (Accept('"'))
+        {
+            var token = Token.DoubleQuotes;
+            tokens.Add(token);
+            return true;
+        }
         return false;
     }
 
@@ -514,9 +521,9 @@ public class SqlLexer
     /// <returns></returns>
     private Token AcceptIdentifierOrKeywordToken(string txt)
     {
-        if (!string.IsNullOrWhiteSpace(txt) && tokenDic.ContainsKey(txt.ToLower()))
+        if (!string.IsNullOrWhiteSpace(txt) && tokenDic.ContainsKey(txt.ToLowerInvariant()))
         {
-            return tokenDic[txt.ToLower()];
+            return tokenDic[txt.ToLowerInvariant()];
         }
 
         var token = Token.IdentifierString;
@@ -524,30 +531,38 @@ public class SqlLexer
         return token;
     }
 
+
     /// <summary>
     /// 初始化token名称字典
     /// </summary>
-    private static void InitTokenDic()
-    {
-        var fields = typeof(Token).GetFields(BindingFlags.Static | BindingFlags.Public);
-        var i = 0;
-        foreach (var fieldInfo in fields)
-        {
-            var token = (Token)fieldInfo.GetValue(null);
-            try
-            {
-                tokenDic.Add(token.Value.ToString().ToLower(), token);
-            }
-            catch (Exception e)
-            {
-                var c = token;
-                Console.WriteLine(e);
-                throw;
-            }
+    //private static void InitTokenDic()
+    //{
+    //    if (isInitTokenDic)
+    //    {
+    //        return;
+    //    }
 
-            i++;
-        }
-    }
+    //    isInitTokenDic = true;
+
+    //    var fields = typeof(Token).GetFields(BindingFlags.Static | BindingFlags.Public);
+    //    var i = 0;
+    //    foreach (var fieldInfo in fields)
+    //    {
+    //        var token = (Token)fieldInfo.GetValue(null);
+    //        try
+    //        {
+    //            tokenDic.Add(token.Value.ToString().ToLower(), token);
+    //        }
+    //        catch (Exception e)
+    //        {
+    //            var c = token;
+    //            Console.WriteLine(e);
+    //            throw;
+    //        }
+
+    //        i++;
+    //    }
+    //}
 
     /// <summary>
     /// 初始化允许的字符集合
@@ -564,6 +579,157 @@ public class SqlLexer
         }
     }
 
+    /// <summary>
+    /// 初始化token字典集合
+    /// </summary>
+    private void InitTokenDic()
+    {
+        if (allDbTypeTokenDic.TryGetValue(dbType, out tokenDic))
+        {
+            return;
+        }
+        if (tokenDic == null)
+        {
+            tokenDic = new ConcurrentDictionary<string, Token>();
+        }
+
+        tokenDic.TryAdd("Select".ToLowerInvariant(), Token.Select);
+
+        tokenDic.TryAdd("Delete".ToLowerInvariant(), Token.Delete);
+        tokenDic.TryAdd("Insert".ToLowerInvariant(), Token.Insert);
+        tokenDic.TryAdd("Update".ToLowerInvariant(), Token.Update);
+        tokenDic.TryAdd("Having".ToLowerInvariant(), Token.Having);
+        tokenDic.TryAdd("Where".ToLowerInvariant(), Token.Where);
+        tokenDic.TryAdd("Order".ToLowerInvariant(), Token.Order);
+        tokenDic.TryAdd("By".ToLowerInvariant(), Token.By);
+        tokenDic.TryAdd("Group".ToLowerInvariant(), Token.Group);
+        tokenDic.TryAdd("As".ToLowerInvariant(), Token.As);
+        tokenDic.TryAdd("Null".ToLowerInvariant(), Token.Null);
+        tokenDic.TryAdd("Not".ToLowerInvariant(), Token.Not);
+        tokenDic.TryAdd("Distinct".ToLowerInvariant(), Token.Distinct);
+        tokenDic.TryAdd("From".ToLowerInvariant(), Token.From);
+        tokenDic.TryAdd("Create".ToLowerInvariant(), Token.Create);
+        tokenDic.TryAdd("Alter".ToLowerInvariant(), Token.Alter);
+        tokenDic.TryAdd("Drop".ToLowerInvariant(), Token.Drop);
+        tokenDic.TryAdd("Set".ToLowerInvariant(), Token.Set);
+        tokenDic.TryAdd("Into".ToLowerInvariant(), Token.Into);
+
+        tokenDic.TryAdd("View".ToLowerInvariant(), Token.View);
+        tokenDic.TryAdd("Index".ToLowerInvariant(), Token.Index);
+        tokenDic.TryAdd("Union".ToLowerInvariant(), Token.Union);
+        tokenDic.TryAdd("Left".ToLowerInvariant(), Token.Left);
+        tokenDic.TryAdd("Inner".ToLowerInvariant(), Token.Inner);
+        tokenDic.TryAdd("Right".ToLowerInvariant(), Token.Right);
+        tokenDic.TryAdd("Full".ToLowerInvariant(), Token.Full);
+        tokenDic.TryAdd("Outer".ToLowerInvariant(), Token.Outer);
+        tokenDic.TryAdd("Cross".ToLowerInvariant(), Token.Cross);
+        tokenDic.TryAdd("Join".ToLowerInvariant(), Token.Join);
+
+
+        tokenDic.TryAdd("On".ToLowerInvariant(), Token.On);
+        tokenDic.TryAdd("Cast".ToLowerInvariant(), Token.Cast);
+        tokenDic.TryAdd("And".ToLowerInvariant(), Token.And);
+        tokenDic.TryAdd("Or".ToLowerInvariant(), Token.Or);
+        tokenDic.TryAdd("Xor".ToLowerInvariant(), Token.Xor);
+
+
+        tokenDic.TryAdd("Case".ToLowerInvariant(), Token.Case);
+        tokenDic.TryAdd("When".ToLowerInvariant(), Token.When);
+        tokenDic.TryAdd("Then".ToLowerInvariant(), Token.Then);
+        tokenDic.TryAdd("Else".ToLowerInvariant(), Token.Else);
+        tokenDic.TryAdd("ElseIf".ToLowerInvariant(), Token.ElseIf);
+
+        tokenDic.TryAdd("End".ToLowerInvariant(), Token.End);
+        tokenDic.TryAdd("Asc".ToLowerInvariant(), Token.Asc);
+        tokenDic.TryAdd("Desc".ToLowerInvariant(), Token.Desc);
+        tokenDic.TryAdd("Is".ToLowerInvariant(), Token.Is);
+        tokenDic.TryAdd("Like".ToLowerInvariant(), Token.Like);
+        tokenDic.TryAdd("In".ToLowerInvariant(), Token.In);
+        tokenDic.TryAdd("Between".ToLowerInvariant(), Token.Between);
+        tokenDic.TryAdd("Values".ToLowerInvariant(), Token.Values);
+        tokenDic.TryAdd("Over".ToLowerInvariant(), Token.Over);
+        tokenDic.TryAdd("Partition".ToLowerInvariant(), Token.Partition);
+        //mysql
+        tokenDic.TryAdd("True".ToLowerInvariant(), Token.True);
+        tokenDic.TryAdd("False".ToLowerInvariant(), Token.False);
+
+        tokenDic.TryAdd("Identified".ToLowerInvariant(), Token.Identified);
+        tokenDic.TryAdd("Password".ToLowerInvariant(), Token.Password);
+        //operator
+        tokenDic.TryAdd("LeftParen".ToLowerInvariant(), Token.LeftParen);
+        tokenDic.TryAdd("RightParen".ToLowerInvariant(), Token.RightParen);
+        tokenDic.TryAdd("LeftCurlyBrackets".ToLowerInvariant(), Token.LeftCurlyBrackets);
+        tokenDic.TryAdd("RightCurlyBrackets".ToLowerInvariant(), Token.RightCurlyBrackets);
+        tokenDic.TryAdd("LeftSquareBracket".ToLowerInvariant(), Token.LeftSquareBracket);
+        tokenDic.TryAdd("RightSquareBracket".ToLowerInvariant(), Token.RightSquareBracket);
+        tokenDic.TryAdd("Semicolon".ToLowerInvariant(), Token.Semicolon);
+        tokenDic.TryAdd("Comma".ToLowerInvariant(), Token.Comma);
+
+        tokenDic.TryAdd("Dot".ToLowerInvariant(), Token.Dot);
+        tokenDic.TryAdd("At".ToLowerInvariant(), Token.At);
+        tokenDic.TryAdd("EqualTo".ToLowerInvariant(), Token.EqualTo);
+        tokenDic.TryAdd("GreaterThen".ToLowerInvariant(), Token.GreaterThen);
+        tokenDic.TryAdd("LessThen".ToLowerInvariant(), Token.LessThen);
+        tokenDic.TryAdd("Bang".ToLowerInvariant(), Token.Bang);
+        tokenDic.TryAdd("Colon".ToLowerInvariant(), Token.Colon);
+        tokenDic.TryAdd("NotEqualTo".ToLowerInvariant(), Token.NotEqualTo);
+        tokenDic.TryAdd("GreaterThenOrEqualTo".ToLowerInvariant(), Token.GreaterThenOrEqualTo);
+        tokenDic.TryAdd("LessThenOrEqualTo".ToLowerInvariant(), Token.LessThenOrEqualTo);
+        tokenDic.TryAdd("Exists".ToLowerInvariant(), Token.Exists);
+        tokenDic.TryAdd("Plus".ToLowerInvariant(), Token.Plus);
+        tokenDic.TryAdd("Sub".ToLowerInvariant(), Token.Sub);
+        tokenDic.TryAdd("Star".ToLowerInvariant(), Token.Star);
+        tokenDic.TryAdd("Slash".ToLowerInvariant(), Token.Slash);
+        tokenDic.TryAdd("With".ToLowerInvariant(), Token.With);
+        tokenDic.TryAdd("All".ToLowerInvariant(), Token.All);
+        tokenDic.TryAdd("Intersect".ToLowerInvariant(), Token.Intersect);
+        tokenDic.TryAdd("Except".ToLowerInvariant(), Token.Except);
+        tokenDic.TryAdd("Minus".ToLowerInvariant(), Token.Minus);
+        tokenDic.TryAdd("Any".ToLowerInvariant(), Token.Any);
+        tokenDic.TryAdd("LineBreak".ToLowerInvariant(), Token.LineBreak);
+        tokenDic.TryAdd("DoubleQuotes".ToLowerInvariant(), Token.DoubleQuotes);
+
+        tokenDic.TryAdd("LineComment".ToLowerInvariant(), Token.LineComment);
+        tokenDic.TryAdd("MultiLineComment".ToLowerInvariant(), Token.MultiLineComment);
+        //Identifier|标识符
+        tokenDic.TryAdd("IdentifierString".ToLowerInvariant(), Token.IdentifierString);
+        //NumberConstant|数字常量
+        tokenDic.TryAdd("NumberConstant".ToLowerInvariant(), Token.NumberConstant);
+        //StringConstant|字符串常量
+        tokenDic.TryAdd("StringConstant".ToLowerInvariant(), Token.StringConstant);
+
+        //oracle
+        if (dbType == DbType.Oracle)
+        {
+            tokenDic.TryAdd("Dual".ToLowerInvariant(), Token.Dual);
+            tokenDic.TryAdd("Unique".ToLowerInvariant(), Token.Unique);
+            tokenDic.TryAdd("First".ToLowerInvariant(), Token.First);
+        }
+
+        if (dbType == DbType.MySql || dbType == DbType.Pgsql)
+        {
+            tokenDic.TryAdd("Limit".ToLowerInvariant(), Token.Limit);
+        }
+
+        if (dbType == DbType.SqlServer || dbType == DbType.Pgsql)
+        {
+            tokenDic.TryAdd("Offset".ToLowerInvariant(), Token.Offset);
+        }
+
+        if (dbType == DbType.SqlServer || dbType == DbType.Oracle)
+        {
+            tokenDic.TryAdd("Rows".ToLowerInvariant(), Token.Rows);
+            tokenDic.TryAdd("Fetch".ToLowerInvariant(), Token.Fetch);
+            tokenDic.TryAdd("Only".ToLowerInvariant(), Token.Only);
+        }
+        //sql server
+        if (dbType == DbType.SqlServer)
+        {
+            tokenDic.TryAdd("Next".ToLowerInvariant(), Token.Next);
+        }
+
+        allDbTypeTokenDic.TryAdd(dbType, tokenDic);
+    }
     /// <summary>
     /// 初始化允许的数字集合
     /// </summary>

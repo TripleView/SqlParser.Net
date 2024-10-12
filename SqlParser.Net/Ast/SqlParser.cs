@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Lexer;
 
@@ -16,15 +17,15 @@ public class SqlParser
     private List<string> comments = new List<string>();
     private DbType dbType;
     /// <summary>
-    /// Left Escape Character
-    /// 左转义字符
+    /// Left Escape Character token
+    /// 左转义字符token
     /// </summary>
-    private string leftEscapeCharacter { get; set; }
+    private Token leftEscapeCharacter { get; set; }
     /// <summary>
-    /// right Escape Character
-    /// 右转义字符
+    /// right Escape Character token
+    /// 右转义字符token
     /// </summary>
-    private string rightEscapeCharacter { get; set; }
+    private Token rightEscapeCharacter { get; set; }
     /// <summary>
     /// true:Only recursive arithmetic operations,false:recursive all logical operations
     /// true:仅递归四则运算,false:递归所有逻辑运算
@@ -36,15 +37,30 @@ public class SqlParser
         this.dbType = dbType;
         this.tokens = tokens;
         InitEscapeCharacter();
-        MergeEscapeCharacterAndIdentifier();
-        RemoveAllComment();
-
+        MergeEscapeCharacterCharAndRemoveAllComment();
         GetNextToken();
+        //var t2 = TimeUtils.TestMicrosecond((() =>
+        //{
+
+        //}));
+
+        //var t12 = TimeUtils.TestMicrosecond((() =>
+        //{
+        //    MergeEscapeCharacterCharAndRemoveAllComment();
+        //}));
+
         if (CheckNextToken(Token.Select) || CheckNextToken(Token.With) || CheckNextToken(Token.LeftParen))
         {
-            var result = AcceptSelectExpression();
+            var result = new SqlSelectExpression();
+            result = AcceptSelectExpression();
             result.Comments = comments;
+            //var t = TimeUtils.TestMicrosecond((() =>
+            //{
+
+
+            //}));
             return result;
+            //return result;
         }
         else if (CheckNextToken(Token.Update))
         {
@@ -77,98 +93,107 @@ public class SqlParser
         {
             case DbType.MySql:
             case DbType.Sqlite:
-            case DbType.Oracle:
-                leftEscapeCharacter = "`";
-                rightEscapeCharacter = "`";
+                leftEscapeCharacter = Token.Backtick;
+                rightEscapeCharacter = Token.Backtick;
                 break;
             case DbType.SqlServer:
-                leftEscapeCharacter = "[";
-                rightEscapeCharacter = "]";
+                leftEscapeCharacter = Token.LeftSquareBracket;
+                rightEscapeCharacter = Token.RightSquareBracket;
                 break;
             case DbType.Pgsql:
-                leftEscapeCharacter = "\"";
-                rightEscapeCharacter = "\"";
+            case DbType.Oracle:
+                leftEscapeCharacter = Token.DoubleQuotes;
+                rightEscapeCharacter = Token.DoubleQuotes;
                 break;
         }
     }
 
     /// <summary>
-    /// Combine special field names with the escape character in front of the field，
-    /// 合并特殊字段名前面的转义字符和字段
+    /// Combine special field names with the escape character in front of the field，then  remove all comment
+    /// 合并特殊字段名前面的转义字符和字段，然后移除所有注释
     /// </summary>
-    private void MergeEscapeCharacterAndIdentifier()
+    private void MergeEscapeCharacterCharAndRemoveAllComment()
     {
-        var tokens = new List<Token>();
-        if (!string.IsNullOrWhiteSpace(leftEscapeCharacter) && !string.IsNullOrWhiteSpace(rightEscapeCharacter))
+        var hasLeft = false;
+        for (var i = 0; i < this.tokens.Count; i++)
         {
-            var removeIndexs = new List<int>();
-            var addTokenDic = new Dictionary<int, Token>();
-            for (var i = 1; i < this.tokens.Count - 1; i++)
+            var currentToken = this.tokens[i];
+            if (currentToken.IsRemove)
+            {
+                continue;
+            }
+
+            if (currentToken.IsToken(leftEscapeCharacter))
+            {
+                hasLeft = true;
+                continue;
+            }
+            if (currentToken.IsToken(Token.LineComment) || currentToken.IsToken(Token.MultiLineComment))
+            {
+                comments.Add(currentToken.Value?.ToString() ?? "");
+                currentToken.IsRemove = true;
+                this.tokens[i] = currentToken;
+                continue;
+            }
+            if (!hasLeft)
+            {
+                continue;
+            }
+
+            if (i >= 1 && i <= this.tokens.Count - 1)
             {
                 var previewToken = this.tokens[i - 1];
-                var currentToken = this.tokens[i];
+
                 var nextToken = this.tokens[i + 1];
-                if (previewToken.Value == leftEscapeCharacter && currentToken.Name == Token.IdentifierString.Name &&
-                    nextToken.Value == rightEscapeCharacter)
+                if (previewToken.IsToken(leftEscapeCharacter) && currentToken.IsToken(Token.IdentifierString) &&
+                    nextToken.IsToken(rightEscapeCharacter))
                 {
-                    removeIndexs.Add(i - 1);
-                    removeIndexs.Add(i + 1);
-                    currentToken.Value = leftEscapeCharacter + currentToken.Value + rightEscapeCharacter;
-                    addTokenDic[i] = currentToken;
+                    previewToken.IsRemove = true;
+                    this.tokens[i - 1] = previewToken;
+                    nextToken.IsRemove = true;
+                    this.tokens[i + 1] = nextToken;
+                    currentToken.Value = leftEscapeCharacter.Value.ToString() + currentToken.Value + rightEscapeCharacter.Value;
+                    this.tokens[i] = currentToken;
+                    hasLeft = false;
                 }
             }
-
-            for (int i = 0; i < this.tokens.Count; i++)
-            {
-                if (removeIndexs.Contains(i))
-                {
-                    continue;
-                }
-
-                if (addTokenDic.ContainsKey(i))
-                {
-                    tokens.Add(addTokenDic[i]);
-                    continue;
-                }
-                tokens.Add(this.tokens[i]);
-            }
-
-            this.tokens = tokens;
         }
+
+        this.tokens.RemoveAll(it => it.IsRemove);
     }
 
     /// <summary>
     /// remove all comment
     /// 移除所有注释
     /// </summary>
-    private void RemoveAllComment()
-    {
-        var tokens = new List<Token>();
-        var removeIndexs = new List<int>();
-        var isComment = false;
+    //private void RemoveAllComment()
+    //{
+    //    var tokens = new List<Token>();
+    //    var removeIndexs = new List<int>();
+    //    var isComment = false;
 
-        for (int i = 0; i < this.tokens.Count; i++)
-        {
-            if (this.tokens[i].Name == Token.LineComment.Name || this.tokens[i].Name == Token.MultiLineComment.Name)
-            {
-                comments.Add(this.tokens[i].Value?.ToString());
-                removeIndexs.Add(i);
-            }
-        }
+    //    for (int i = 0; i < this.tokens.Count; i++)
+    //    {
+    //        if (this.tokens[i].Name == Token.LineComment.Name || this.tokens[i].Name == Token.MultiLineComment.Name)
+    //        {
+    //            comments.Add(this.tokens[i].Value?.ToString());
+    //            removeIndexs.Add(i);
+    //        }
+    //    }
 
 
-        for (int i = 0; i < this.tokens.Count; i++)
-        {
-            if (removeIndexs.Contains(i))
-            {
-                continue;
-            }
+    //    for (int i = 0; i < this.tokens.Count; i++)
+    //    {
+    //        if (removeIndexs.Contains(i))
+    //        {
+    //            continue;
+    //        }
 
-            tokens.Add(this.tokens[i]);
-        }
+    //        tokens.Add(this.tokens[i]);
+    //    }
 
-        this.tokens = tokens;
-    }
+    //    this.tokens = tokens;
+    //}
 
     private SqlInsertExpression AcceptInsertExpression()
     {
@@ -496,6 +521,10 @@ public class SqlParser
         {
             return AcceptPgsqlLimitExpression();
         }
+        else if (dbType == DbType.Oracle)
+        {
+            return AcceptOracleLimitExpression();
+        }
 
         return null;
     }
@@ -514,6 +543,22 @@ public class SqlParser
             result.RowCount = rowCount;
             result.Offset = first;
 
+            return result;
+        }
+
+        return null;
+    }
+
+    private SqlLimitExpression AcceptOracleLimitExpression()
+    {
+        if (Accept(Token.Fetch))
+        {
+            var result = new SqlLimitExpression();
+            AcceptOrThrowException(Token.First);
+            var rowCount = AcceptNestedComplexExpression();
+            AcceptOrThrowException(Token.Rows);
+            AcceptOrThrowException(Token.Only);
+            result.RowCount = rowCount;
             return result;
         }
 
@@ -1315,10 +1360,11 @@ public class SqlParser
                     throw new Exception($"超过{maxCount}次无法找到order by信息");
                 }
                 if (nextToken == null
-                    || (dbType == DbType.MySql && nextToken.HasValue && nextToken.Value.Name == Token.Limit.Name)
-                    || (dbType == DbType.SqlServer && nextToken.HasValue && nextToken.Value.Name == Token.Offset.Name)
-                    || (dbType == DbType.Pgsql && nextToken.HasValue && (nextToken.Value.Name == Token.Limit.Name || nextToken.Value.Name == Token.Offset.Name))
-                    || (nextToken.HasValue && (nextToken.Value.Name == Token.RightParen.Name)))
+                    || (dbType == DbType.MySql && nextToken.HasValue && nextToken.Value.IsToken(Token.Limit))
+                    || (dbType == DbType.SqlServer && nextToken.HasValue && nextToken.Value.IsToken(Token.Offset))
+                    || (dbType == DbType.Oracle && nextToken.HasValue && nextToken.Value.IsToken(Token.Fetch))
+                    || (dbType == DbType.Pgsql && nextToken.HasValue && (nextToken.Value.IsToken(Token.Limit) || nextToken.Value.IsToken(Token.Offset)))
+                    || (nextToken.HasValue && (nextToken.Value.IsToken(Token.RightParen))))
                 {
                     break;
                 }
@@ -1369,7 +1415,7 @@ public class SqlParser
                     throw new Exception($"超过{maxCount}次无法找到partition by信息");
                 }
                 if (nextToken == null
-                   || (nextToken.HasValue && (nextToken.Value.Name == Token.Order.Name)))
+                   || (nextToken.HasValue && (nextToken.Value.IsToken(Token.Order))))
                 {
                     break;
                 }
@@ -1449,7 +1495,7 @@ public class SqlParser
 
     private bool Accept(Token token)
     {
-        if (nextToken.HasValue && nextToken.Value.Name == token.Name)
+        if (nextToken.HasValue && nextToken.Value.IsToken(token))
         {
             GetNextToken();
             return true;
@@ -1480,7 +1526,7 @@ public class SqlParser
     }
     private bool CheckNextToken(Token token)
     {
-        if (nextToken.HasValue && nextToken.Value.Name == token.Name)
+        if (nextToken.HasValue && nextToken.Value.IsToken(token))
         {
             return true;
         }

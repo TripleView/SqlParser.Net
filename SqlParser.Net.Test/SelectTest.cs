@@ -3101,7 +3101,64 @@ public class SelectTest
 
         Assert.True(sqlAst.Equals(expect));
     }
+    [Fact]
+    public void TestLimitForOracle()
+    {
+        var sql = "SELECT * FROM TEST3 t  ORDER BY t.NAME  DESC FETCH FIRST 2 rows ONLY";
+        var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    }
+                },
+                From = new SqlTableExpression()
+                {
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Name = "t"
+                    },
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Name = "TEST3"
+                    }
+                },
 
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+                    {
+                        new SqlOrderByItemExpression()
+                        {
+                            OrderByType = SqlOrderByType.Desc,
+                            Expression = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression() { Name = "NAME" },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Name = "t"
+                                }
+                            }
+                        }
+                    }
+                },
+                Limit = new SqlLimitExpression()
+                {
+                    RowCount = new SqlNumberExpression()
+                    {
+                        Value = 2
+                    }
+                }
+            }
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+    }
     [Theory]
     [InlineData(new object[] { " limit 1 offset 10" })]
     [InlineData(new object[] { " limit 1 " })]
