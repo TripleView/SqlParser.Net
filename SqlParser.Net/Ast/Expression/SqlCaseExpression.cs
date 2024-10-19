@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlCaseExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlCaseExpression(this);
+    }
     public SqlCaseExpression()
     {
         this.Type = SqlExpressionType.Case;
@@ -14,6 +18,8 @@ public class SqlCaseExpression : SqlExpression
     public List<SqlCaseItemExpression> Items { get; set; }
 
     public SqlExpression Else { get; set; }
+
+    public SqlExpression Value { get; set; }
 
     protected bool Equals(SqlCaseExpression other)
     {
@@ -38,6 +44,18 @@ public class SqlCaseExpression : SqlExpression
         else if (Else != null && other.Else != null)
         {
             if (!Else.Equals(other.Else))
+            {
+                return false;
+            }
+        }
+
+        if (Value is null ^ other.Value is null)
+        {
+            return false;
+        }
+        else if (Value != null && other.Value != null)
+        {
+            if (!Value.Equals(other.Value))
             {
                 return false;
             }

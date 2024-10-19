@@ -1,7 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlBetweenAndExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlBetweenAndExpression(this);
+    }
     public SqlBetweenAndExpression()
     {
         this.Type = SqlExpressionType.BetweenAnd;

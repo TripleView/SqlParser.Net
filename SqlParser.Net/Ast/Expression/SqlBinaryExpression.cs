@@ -1,7 +1,15 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlBinaryExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlBinaryExpression(this);
+    }
+
+
     public SqlBinaryExpression()
     {
         this.Type = SqlExpressionType.Binary;

@@ -1,7 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlNullExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlNullExpression(this);
+    }
     public SqlNullExpression()
     {
         this.Type = SqlExpressionType.Null;

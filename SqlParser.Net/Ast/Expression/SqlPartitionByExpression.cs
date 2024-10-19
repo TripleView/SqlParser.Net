@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlPartitionByExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlPartitionByExpression(this);
+    }
     public SqlPartitionByExpression()
     {
         this.Type = SqlExpressionType.PartitionBy;

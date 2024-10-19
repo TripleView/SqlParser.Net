@@ -1,6 +1,6 @@
 ﻿namespace SqlParser.Net.Ast.Expression;
 
-public  class SqlBinaryOperator
+public class SqlBinaryOperator
 {
     public string Name { get; }
 
@@ -30,7 +30,7 @@ public  class SqlBinaryOperator
     public static readonly SqlBinaryOperator Multiply = new SqlBinaryOperator("Multiply", "*");
     public static readonly SqlBinaryOperator Divide = new SqlBinaryOperator("Divide", "/");
     public static readonly SqlBinaryOperator Mod = new SqlBinaryOperator("Mod", "%");
-
+    public static readonly SqlBinaryOperator Concat = new SqlBinaryOperator("Concat", "||");
     protected bool Equals(SqlBinaryOperator other)
     {
         return Name == other.Name && Value.Equals(other.Value);

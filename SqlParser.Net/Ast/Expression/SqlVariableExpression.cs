@@ -1,7 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlVariableExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlVariableExpression(this);
+    }
     public SqlVariableExpression()
     {
         this.Type = SqlExpressionType.Variable;

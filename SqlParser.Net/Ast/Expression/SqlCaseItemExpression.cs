@@ -1,8 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlCaseItemExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlCaseItemExpression(this);
+    }
     public SqlCaseItemExpression()
     {
         this.Type = SqlExpressionType.CaseItem;

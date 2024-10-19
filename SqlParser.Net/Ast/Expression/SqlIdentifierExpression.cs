@@ -1,17 +1,23 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlIdentifierExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlIdentifierExpression(this);
+    }
     public SqlIdentifierExpression()
     {
         this.Type = SqlExpressionType.Identifier;
     }
 
-    public string Name { get; set; }
+    public string Value { get; set; }
 
     protected bool Equals(SqlIdentifierExpression other)
     {
-        return Name == other.Name;
+        return Value == other.Value;
     }
 
     public override bool Equals(object? obj)
@@ -24,7 +30,7 @@ public class SqlIdentifierExpression : SqlExpression
 
     public override int GetHashCode()
     {
-        return Name.GetHashCode();
+        return Value.GetHashCode();
     }
 
 }

@@ -1,10 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlInsertExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlInsertExpression(this);
+    }
     public SqlInsertExpression()
     {
         this.Type = SqlExpressionType.Insert;

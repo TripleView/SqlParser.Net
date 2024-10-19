@@ -20,6 +20,17 @@ public struct Token
     /// 用来进行2个token之间的快速比较，因为数字之间的比较比字符串之间的比较快10倍
     /// </summary>
     public int CompareIndex { get; set; }
+    /// <summary>
+    /// Token start position index
+    /// token起始位置索引
+    /// </summary>
+    public int StartPositionIndex { get; set; }
+    /// <summary>
+    /// token结束位置索引
+    /// Token end position index
+    /// </summary>
+    public int EndPositionIndex { get; set; }
+
     public Token(string name, object value, int compareIndex, bool isKeyWord = true)
     {
         Name = name;
@@ -106,7 +117,6 @@ public struct Token
     public static readonly Token Identified = new Token("Identified", "Identified", 53);
     public static readonly Token Password = new Token("Password", "Password", 54);
     //oracle
-    public static readonly Token Dual = new Token("Dual", "Dual", 55);
     public static readonly Token Unique = new Token("Unique", "Unique", 56);
     public static readonly Token First = new Token("First", "First", 57);
     //sql server
@@ -171,4 +181,21 @@ public struct Token
     /// 单反引号
     /// </summary>
     public static readonly Token Backtick = new Token("Backtick", "`", 99);
+
+    /// <summary>
+    /// BarBar,||
+    /// 连接符||
+    /// </summary>
+    public static readonly Token BarBar = new Token("BarBar", "||", 100);
+    /// <summary>
+    ///Bitwise OR |
+    /// 按位或|
+    /// </summary>
+    public static readonly Token Bar = new Token("Bar", "|", 101);
+
+    public static readonly Token Within = new Token("Within", "Within", 102);
+
+    public static readonly Token Pivot = new Token("Pivot", "Pivot", 103);
+
+    public static readonly Token For = new Token("For", "For", 104);
 }

@@ -1,8 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlUnionQueryExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlUnionQueryExpression(this);
+    }
     public SqlUnionQueryExpression()
     {
         this.Type = SqlExpressionType.UnionQuery;

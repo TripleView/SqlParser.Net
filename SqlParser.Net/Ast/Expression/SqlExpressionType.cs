@@ -13,6 +13,8 @@ public enum SqlExpressionType
     AllColumn,
     Constant,
     JoinTable,
+    ReferenceTable,
+    PivotTable,
     OrderBy,
     OrderByItem,
     Binary,
@@ -37,5 +39,6 @@ public enum SqlExpressionType
     Limit,
     Over,
     PartitionBy,
-    Not
+    Not,
+    WithinGroup
 }

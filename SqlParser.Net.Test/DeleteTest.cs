@@ -16,14 +16,14 @@ public class DeleteTest
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "test"
+                    Value = "test"
                 }
             },
             Where = new SqlBinaryExpression()
             {
                 Left = new SqlIdentifierExpression()
                 {
-                    Name = "name"
+                    Value = "name"
                 },
                 Operator = SqlBinaryOperator.EqualTo,
                 Right = new SqlNumberExpression()

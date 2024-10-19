@@ -2,18 +2,20 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAllColumnExpression : SqlExpression
+public class SqlReferenceTableExpression : SqlExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlAllColumnExpression(this);
+        visitor.VisitSqlReferenceTableExpression(this);
     }
-    public SqlAllColumnExpression()
+    public SqlReferenceTableExpression()
     {
-        this.Type = SqlExpressionType.AllColumn;
+        this.Type = SqlExpressionType.ReferenceTable;
     }
 
-    protected bool Equals(SqlAllColumnExpression other)
+    public SqlFunctionCallExpression FunctionCall { get; set; }
+
+    protected bool Equals(SqlReferenceTableExpression other)
     {
         return true;
     }
@@ -23,13 +25,11 @@ public class SqlAllColumnExpression : SqlExpression
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((SqlAllColumnExpression)obj);
+        return Equals((SqlReferenceTableExpression)obj);
     }
 
     public override int GetHashCode()
     {
         throw new System.NotImplementedException();
     }
-
-
 }

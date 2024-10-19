@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Xml.Linq;
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Lexer;
 
@@ -26,16 +28,19 @@ public class SqlParser
     /// 右转义字符token
     /// </summary>
     private Token rightEscapeCharacter { get; set; }
+
+    public string Sql { get; set; }
     /// <summary>
     /// true:Only recursive arithmetic operations,false:recursive all logical operations
     /// true:仅递归四则运算,false:递归所有逻辑运算
     /// </summary>
     private bool isOnlyRecursiveFourArithmeticOperations = false;
 
-    public SqlExpression Parse(List<Token> tokens, DbType dbType)
+    public SqlExpression Parse(List<Token> tokens, string sql, DbType dbType)
     {
         this.dbType = dbType;
         this.tokens = tokens;
+        this.Sql = sql;
         InitEscapeCharacter();
         MergeEscapeCharacterCharAndRemoveAllComment();
         GetNextToken();
@@ -174,7 +179,7 @@ public class SqlParser
 
     //    for (int i = 0; i < this.tokens.Count; i++)
     //    {
-    //        if (this.tokens[i].Name == Token.LineComment.Name || this.tokens[i].Name == Token.MultiLineComment.Name)
+    //        if (this.tokens[i].Value == Token.LineComment.Value || this.tokens[i].Value == Token.MultiLineComment.Value)
     //        {
     //            comments.Add(this.tokens[i].Value?.ToString());
     //            removeIndexs.Add(i);
@@ -308,65 +313,79 @@ public class SqlParser
                 var subQueryAlias = GetCurrentTokenValue();
                 subQuery.Alias = new SqlIdentifierExpression()
                 {
-                    Name = subQueryAlias
+                    Value = subQueryAlias
                 };
             }
             return subQuery;
         }
 
+        var isFrom = CheckCurrentToken(Token.From);
         AcceptOrThrowException(Token.IdentifierString);
 
-        var tableName = GetCurrentTokenValue();
-
-        while (true)
+        var name = GetCurrentTokenValue();
+        //such as:SELECT * FROM TABLE(splitstr('a;b',';'))
+        if (isFrom && CheckNextToken(Token.LeftParen))
         {
-            if (Accept(Token.Dot))
+            var functionCall = AcceptFunctionCall(name);
+            var table = new SqlReferenceTableExpression()
             {
-                tableName += ".";
-                if (Accept(Token.IdentifierString))
+                FunctionCall = functionCall
+            };
+            return table;
+        }
+        else
+        {
+            while (true)
+            {
+                var isOracleDbLink = dbType == DbType.Oracle && Accept(Token.At);
+                if (Accept(Token.Dot) || isOracleDbLink)
                 {
-                    var value = GetCurrentTokenValue();
-                    tableName += value;
+                    name += isOracleDbLink ? "@" : ".";
+                    if (Accept(Token.IdentifierString))
+                    {
+                        var value = GetCurrentTokenValue();
+                        name += value;
+                    }
+                    else
+                    {
+                        throw new Exception("sql error");
+                    }
                 }
                 else
                 {
-                    throw new Exception("sql error");
+                    break;
                 }
             }
-            else
+
+            var alias = "";
+            if (Accept(Token.As))
             {
-                break;
+                AcceptOrThrowException(Token.IdentifierString);
+                alias = GetCurrentTokenValue();
             }
-        }
-
-        var alias = "";
-        if (Accept(Token.As))
-        {
-            AcceptOrThrowException(Token.IdentifierString);
-            alias = GetCurrentTokenValue();
-        }
-        else if (Accept(Token.IdentifierString))
-        {
-            alias = GetCurrentTokenValue();
-        }
-
-        var table = new SqlTableExpression()
-        {
-            Name = new SqlIdentifierExpression()
+            else if (Accept(Token.IdentifierString))
             {
-                Name = tableName
+                alias = GetCurrentTokenValue();
             }
-        };
 
-        if (!string.IsNullOrWhiteSpace(alias))
-        {
-            table.Alias = new SqlIdentifierExpression()
+            var table = new SqlTableExpression()
             {
-                Name = alias
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = name
+                }
             };
+
+            if (!string.IsNullOrWhiteSpace(alias))
+            {
+                table.Alias = new SqlIdentifierExpression()
+                {
+                    Value = alias
+                };
+            }
+            return table;
         }
 
-        return table;
     }
 
     private List<SqlExpression> AcceptUpdateItemsExpression()
@@ -455,6 +474,10 @@ public class SqlParser
             }
         }
 
+        if (total == null)
+        {
+            return null;
+        }
         if (total is SqlSelectExpression result)
         {
             return result;
@@ -481,6 +504,10 @@ public class SqlParser
 
     private SqlSelectExpression AcceptSelectQueryExpression()
     {
+        if (!(CheckNextToken(Token.Select) || CheckNextToken(Token.With)))
+        {
+            return null;
+        }
         var query = new SqlSelectQueryExpression();
         query.WithSubQuery = AcceptWithSubQueryExpression();
 
@@ -663,32 +690,35 @@ public class SqlParser
             {
                 var subQueryExpression = new SqlWithSubQueryExpression()
                 {
-                    Columns = new List<SqlIdentifierExpression>()
                 };
                 Accept(Token.Comma);
                 AcceptOrThrowException(Token.IdentifierString);
                 var alias = GetCurrentTokenValue();
-                AcceptOrThrowException(Token.LeftParen);
                 subQueryExpression.Alias = new SqlIdentifierExpression()
                 {
-                    Name = alias
+                    Value = alias
                 };
-                while (true)
+                if (Accept(Token.LeftParen))
                 {
-                    Accept(Token.Comma);
-                    AcceptOrThrowException(Token.IdentifierString);
-                    var columnName = GetCurrentTokenValue();
-                    var columnExpression = new SqlIdentifierExpression()
+                    subQueryExpression.Columns = new List<SqlIdentifierExpression>();
+                    while (true)
                     {
-                        Name = columnName
-                    };
-                    subQueryExpression.Columns.Add(columnExpression);
-                    if (CheckNextToken(Token.RightParen) || nextToken == null)
-                    {
-                        break;
+                        Accept(Token.Comma);
+                        AcceptOrThrowException(Token.IdentifierString);
+                        var columnName = GetCurrentTokenValue();
+                        var columnExpression = new SqlIdentifierExpression()
+                        {
+                            Value = columnName
+                        };
+                        subQueryExpression.Columns.Add(columnExpression);
+                        if (CheckNextToken(Token.RightParen) || nextToken == null)
+                        {
+                            break;
+                        }
                     }
+                    AcceptOrThrowException(Token.RightParen);
                 }
-                AcceptOrThrowException(Token.RightParen);
+
                 AcceptOrThrowException(Token.As);
                 AcceptOrThrowException(Token.LeftParen);
                 var subQuery = AcceptSelectExpression();
@@ -736,7 +766,7 @@ public class SqlParser
             {
                 item.Alias = new SqlIdentifierExpression()
                 {
-                    Name = asStr
+                    Value = asStr
                 };
             }
             result.Add(item);
@@ -808,6 +838,8 @@ public class SqlParser
     {
         var left = AcceptFourArithmeticOperationsAddOrSub();
         SqlExpression right = null;
+        // not in,not like,not between
+        var isNot = false;
         while (true)
         {
             SqlBinaryOperator @operator = null;
@@ -865,35 +897,68 @@ public class SqlParser
                     End = end,
                     Body = left
                 };
+                if (isNot)
+                {
+                    var notResult = new SqlNotExpression()
+                    {
+                        Body = result
+                    };
+                    return notResult;
+                }
                 return result;
             }
             else if (Accept(Token.In))
             {
-                AcceptOrThrowException(Token.LeftParen);
-                var targetList = new List<SqlExpression>();
-                this.isOnlyRecursiveFourArithmeticOperations = true;
-                while (true)
-                {
-                    Accept(Token.Comma);
-                    var item = AcceptFourArithmeticOperationsAddOrSub();
-                    targetList.Add(item);
-                    if (nextToken == null || CheckNextToken(Token.RightParen))
-                    {
-                        break;
-                    }
-                }
-                AcceptOrThrowException(Token.RightParen);
-                this.isOnlyRecursiveFourArithmeticOperations = false;
                 var result = new SqlInExpression()
                 {
-                    Field = left,
-                    TargetList = targetList
+                    Field = left
                 };
+                AcceptOrThrowException(Token.LeftParen);
+                var subQuery = AcceptSelectExpression();
+                if (subQuery != null)
+                {
+                    result.SubQuery = subQuery;
+                }
+                else
+                {
+                    var targetList = new List<SqlExpression>();
+                    this.isOnlyRecursiveFourArithmeticOperations = true;
+                    while (true)
+                    {
+                        Accept(Token.Comma);
+                        var item = AcceptFourArithmeticOperationsAddOrSub();
+                        targetList.Add(item);
+                        if (nextToken == null || CheckNextToken(Token.RightParen))
+                        {
+                            break;
+                        }
+                    }
+                    this.isOnlyRecursiveFourArithmeticOperations = false;
+                    result.TargetList = targetList;
+                }
+                AcceptOrThrowException(Token.RightParen);
+                if (isNot)
+                {
+                    var notResult = new SqlNotExpression()
+                    {
+                        Body = result
+                    };
+                    return notResult;
+                }
                 return result;
             }
             else if (Accept(Token.Like))
             {
                 @operator = SqlBinaryOperator.Like;
+            }
+            else if (Accept(Token.BarBar))
+            {
+                @operator = SqlBinaryOperator.Concat;
+            }
+            else if (Accept(Token.Not))
+            {
+                isNot = true;
+                continue;
             }
             else
             {
@@ -911,6 +976,15 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
+            if (isNot)
+            {
+                var notResult = new SqlNotExpression()
+                {
+                    Body = left
+                };
+                return notResult;
+            }
+            right = null;
         }
 
         return left;
@@ -1011,13 +1085,9 @@ public class SqlParser
             AcceptOrThrowException(Token.RightParen);
             return expr;
         }
-        else if (Accept(Token.Not))
+        else if (CheckNextToken(Token.Not))
         {
-            var expression = AcceptLogicalExpression();
-            var result = new SqlNotExpression()
-            {
-                Expression = expression
-            };
+            var result = AcceptNot();
             return result;
         }
 
@@ -1035,11 +1105,11 @@ public class SqlParser
                     var sqlPropertyExpression = new SqlPropertyExpression();
                     var sqlIdentifierExpression = new SqlIdentifierExpression()
                     {
-                        Name = name
+                        Value = name
                     };
                     var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
                     {
-                        Name = propertyName
+                        Value = propertyName
                     };
                     sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
                     sqlPropertyExpression.Table = sqlIdentifierExpression;
@@ -1049,50 +1119,10 @@ public class SqlParser
                 {
                     throw new Exception("sql syntc error");
                 }
-
-
             }
-            else if (Accept(Token.LeftParen))
+            else if (CheckNextToken(Token.LeftParen))
             {
-                var arguments = new List<SqlExpression>();
-                var result = new SqlFunctionCallExpression()
-                {
-                    Name = name
-                };
-
-                if (Accept(Token.Distinct))
-                {
-                    result.IsDistinct = true;
-                }
-
-                while (true)
-                {
-                    if (CheckNextToken(Token.RightParen) || nextToken == null)
-                    {
-                        break;
-                    }
-
-                    Accept(Token.Comma);
-                    var argument = AcceptNestedComplexExpression();
-                    arguments.Add(argument);
-                }
-
-                if (arguments.Count == 0)
-                {
-                    arguments = null;
-                }
-
-                result.Arguments = arguments;
-
-                AcceptOrThrowException(Token.RightParen);
-
-                if (CheckNextToken(Token.Over))
-                {
-                    var over = AcceptOver();
-
-                    result.Over = over;
-                }
-
+                var result = AcceptFunctionCall(name);
                 return result;
                 //if (functions.Any(it => it.ToLower() == txt.ToLower()))
                 //{
@@ -1108,7 +1138,7 @@ public class SqlParser
             {
                 var sqlIdentifierExpression = new SqlIdentifierExpression()
                 {
-                    Name = name
+                    Value = name
                 };
                 body = sqlIdentifierExpression;
             }
@@ -1120,7 +1150,7 @@ public class SqlParser
                 var txt = GetCurrentTokenValue();
                 body = new SqlNumberExpression()
                 {
-                    Value = decimal.Parse(txt)
+                    Value = decimal.Parse(txt, NumberStyles.Any, CultureInfo.InvariantCulture)
                 };
             }
             else if (Accept(Token.StringConstant))
@@ -1184,6 +1214,12 @@ public class SqlParser
             {
                 Items = new List<SqlCaseItemExpression>()
             };
+
+            if (!CheckNextToken(Token.When))
+            {
+                var value = AcceptLogicalExpression();
+                result.Value = value;
+            }
             while (true)
             {
                 if (nextToken == null || CheckNextToken(Token.Else) || CheckNextToken(Token.End))
@@ -1216,13 +1252,123 @@ public class SqlParser
         }
         else
         {
-            throw new Exception("未找到符合条件的字段展示");
+            var startIndex = -1;
+            if (pos - 2 >= 0)
+            {
+                startIndex = tokens[pos - 2].StartPositionIndex;
+            }
+            else if (pos - 1 >= 0)
+            {
+                startIndex = tokens[pos - 1].StartPositionIndex;
+            }
+            else
+            {
+                startIndex = tokens[pos].StartPositionIndex;
+            }
+            var endIndex = -1;
+            if (pos + 2 <= tokens.Count - 1)
+            {
+                endIndex = tokens[pos + 2].EndPositionIndex;
+            }
+            else if (pos + 1 <= tokens.Count - 1)
+            {
+                endIndex = tokens[pos + 1].EndPositionIndex;
+            }
+            else
+            {
+                endIndex = tokens[pos].EndPositionIndex;
+            }
+            throw new Exception($"An error occurred at position :{nextToken?.StartPositionIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
         }
 
         return body;
 
     }
 
+    private SqlNotExpression AcceptNot()
+    {
+        if (Accept(Token.Not))
+        {
+            var expression = AcceptLogicalExpression();
+            var result = new SqlNotExpression()
+            {
+                Body = expression
+            };
+            return result;
+        }
+
+        return null;
+    }
+
+    private SqlFunctionCallExpression AcceptFunctionCall(string functionName)
+    {
+        AcceptOrThrowException(Token.LeftParen);
+        var arguments = new List<SqlExpression>();
+        var result = new SqlFunctionCallExpression()
+        {
+            Name = new SqlIdentifierExpression()
+            {
+                Value = functionName
+            }
+        };
+
+        if (Accept(Token.Distinct))
+        {
+            result.IsDistinct = true;
+        }
+
+        while (true)
+        {
+            if (CheckNextToken(Token.RightParen) || nextToken == null)
+            {
+                break;
+            }
+
+            Accept(Token.Comma);
+            var argument = AcceptNestedComplexExpression();
+            arguments.Add(argument);
+        }
+
+        if (arguments.Count == 0)
+        {
+            arguments = null;
+        }
+
+        result.Arguments = arguments;
+
+        AcceptOrThrowException(Token.RightParen);
+
+        result.WithinGroup = AcceptWithinGroup();
+
+        if (CheckNextToken(Token.Over))
+        {
+            var over = AcceptOver();
+
+            result.Over = over;
+        }
+
+        return result;
+    }
+
+    private SqlWithinGroupExpression AcceptWithinGroup()
+    {
+        if (dbType == DbType.SqlServer || dbType == DbType.Pgsql || (dbType == DbType.Oracle))
+        {
+            if (Accept(Token.Within) && Accept(Token.Group))
+            {
+                AcceptOrThrowException(Token.LeftParen);
+                var orderBy = AcceptOrderByExpression();
+                AcceptOrThrowException(Token.RightParen);
+                var result = new SqlWithinGroupExpression()
+                {
+                    OrderBy = orderBy
+                };
+                return result;
+            }
+        }
+
+        return null;
+    }
     private SqlOverExpression AcceptOver()
     {
         if (Accept(Token.Over))
@@ -1262,7 +1408,83 @@ public class SqlParser
     {
         //单表或者多表关联
         var tableOrJoinTable = AcceptTableOrJoinTableSourceExpression();
-        return tableOrJoinTable;
+        var result = AcceptPivotTable(tableOrJoinTable);
+        return result;
+    }
+
+    private SqlExpression AcceptPivotTable(SqlExpression source)
+    {
+        if ((dbType == DbType.Oracle || dbType == DbType.SqlServer) && Accept(Token.Pivot))
+        {
+            AcceptOrThrowException(Token.LeftParen);
+            AcceptOrThrowException(Token.IdentifierString);
+            var name = GetCurrentTokenValue();
+            var functionCall = AcceptFunctionCall(name);
+            AcceptOrThrowException(Token.For);
+            this.isOnlyRecursiveFourArithmeticOperations = true;
+            var @for = AcceptFourArithmeticOperationsAddOrSub();
+            this.isOnlyRecursiveFourArithmeticOperations = false;
+            AcceptOrThrowException(Token.In);
+            AcceptOrThrowException(Token.LeftParen);
+            var @in = new List<SqlExpression>();
+            var i = 0;
+            while (true)
+            {
+                i++;
+                if (nextToken == null || CheckNextToken(Token.RightParen) || !(i == 1 || Accept(Token.Comma)))
+                {
+                    break;
+                }
+
+                var value = AcceptNestedComplexExpression();
+                var item = new SqlSelectItemExpression()
+                {
+                    Body = value
+                };
+                if (dbType == DbType.Oracle && Accept(Token.As))
+                {
+                    AcceptOrThrowException(Token.IdentifierString);
+                    var alias = GetCurrentTokenValue();
+                    item.Alias = new SqlIdentifierExpression()
+                    {
+                        Value = alias
+                    };
+                }
+                @in.Add(item);
+            }
+
+            AcceptOrThrowException(Token.RightParen);
+            AcceptOrThrowException(Token.RightParen);
+            var result = new SqlPivotTableExpression()
+            {
+                SubQuery = source,
+                FunctionCall = functionCall,
+                For = @for,
+                In = @in
+            };
+            if (dbType == DbType.SqlServer)
+            {
+                AcceptOrThrowException(Token.As);
+                AcceptOrThrowException(Token.IdentifierString);
+                var alias = GetCurrentTokenValue();
+                result.Alias = new SqlIdentifierExpression()
+                {
+                    Value = alias
+                };
+            }
+            if (dbType == DbType.Oracle && Accept((Token.IdentifierString)))
+            {
+                var alias = GetCurrentTokenValue();
+                result.Alias = new SqlIdentifierExpression()
+                {
+                    Value = alias
+                };
+            }
+
+            return result;
+        }
+
+        return source;
     }
 
     private SqlExpression AcceptTableOrJoinTableSourceExpression()
@@ -1369,25 +1591,30 @@ public class SqlParser
                     break;
                 }
 
-                Accept(Token.Comma);
-                var item = AcceptNestedComplexExpression();
-                SqlOrderByType? orderByType = null;
-                if (Accept(Token.Asc))
+                if (i == 1 || Accept(Token.Comma))
                 {
-                    orderByType = SqlOrderByType.Asc;
-                }
-                else if (Accept(Token.Desc))
-                {
-                    orderByType = SqlOrderByType.Desc;
-                }
+                    var item = AcceptNestedComplexExpression();
+                    SqlOrderByType? orderByType = null;
+                    if (Accept(Token.Asc))
+                    {
+                        orderByType = SqlOrderByType.Asc;
+                    }
+                    else if (Accept(Token.Desc))
+                    {
+                        orderByType = SqlOrderByType.Desc;
+                    }
 
-                var orderByItem = new SqlOrderByItemExpression()
+                    var orderByItem = new SqlOrderByItemExpression()
+                    {
+                        Expression = item,
+                        OrderByType = orderByType
+                    };
+                    items.Add(orderByItem);
+                }
+                else
                 {
-                    Expression = item,
-                    OrderByType = orderByType
-                };
-                items.Add(orderByItem);
-
+                    break;
+                }
             }
 
             return result;
@@ -1415,16 +1642,22 @@ public class SqlParser
                     throw new Exception($"超过{maxCount}次无法找到partition by信息");
                 }
                 if (nextToken == null
-                   || (nextToken.HasValue && (nextToken.Value.IsToken(Token.Order))))
+                   || (nextToken.HasValue && (nextToken.Value.IsToken(Token.Order)))
+                   || (nextToken.HasValue && (nextToken.Value.IsToken(Token.RightParen))))
                 {
                     break;
                 }
 
-                Accept(Token.Comma);
-                var item = AcceptNestedComplexExpression();
+                if (i == 1 || Accept(Token.Comma))
+                {
+                    var item = AcceptNestedComplexExpression();
 
-                items.Add(item);
-
+                    items.Add(item);
+                }
+                else
+                {
+                    break;
+                }
             }
 
             return result;
@@ -1451,9 +1684,17 @@ public class SqlParser
                 {
                     throw new Exception($"超过{maxCount}次无法找到group by信息");
                 }
-                Accept(Token.Comma);
-                var item = AcceptNestedComplexExpression();
-                items.Add(item);
+
+                if (i == 1 || Accept(Token.Comma))
+                {
+                    var item = AcceptNestedComplexExpression();
+                    items.Add(item);
+                }
+                else
+                {
+                    break;
+                }
+
                 if (CheckNextToken(Token.Having) || nextToken == null)
                 {
                     break;
@@ -1527,6 +1768,16 @@ public class SqlParser
     private bool CheckNextToken(Token token)
     {
         if (nextToken.HasValue && nextToken.Value.IsToken(token))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool CheckCurrentToken(Token token)
+    {
+        if (currentToken.HasValue && currentToken.Value.IsToken(token))
         {
             return true;
         }

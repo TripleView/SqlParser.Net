@@ -1,8 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlOverExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlOverExpression(this);
+    }
     public SqlOverExpression()
     {
         this.Type = SqlExpressionType.Over;

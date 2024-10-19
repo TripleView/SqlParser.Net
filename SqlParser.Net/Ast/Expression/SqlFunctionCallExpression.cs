@@ -1,9 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlFunctionCallExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlFunctionCallExpression(this);
+    }
     public SqlFunctionCallExpression()
     {
         this.Type = SqlExpressionType.FunctionCall;
@@ -11,7 +16,7 @@ public class SqlFunctionCallExpression : SqlExpression
 
     public List<SqlExpression> Arguments { get; set; }
 
-    public string Name { get; set; }
+    public SqlIdentifierExpression Name { get; set; }
 
     /// <summary>
     /// 是否不重复
@@ -20,6 +25,8 @@ public class SqlFunctionCallExpression : SqlExpression
 
     public SqlOverExpression Over { get; set; }
 
+    public SqlWithinGroupExpression WithinGroup { get; set; }
+
     protected bool Equals(SqlFunctionCallExpression other)
     {
         if (IsDistinct != other.IsDistinct)
@@ -27,7 +34,7 @@ public class SqlFunctionCallExpression : SqlExpression
             return false;
         }
 
-        if (Name != other.Name)
+        if (!Name.Equals(other.Name))
         {
             return false;
         }
@@ -54,16 +61,30 @@ public class SqlFunctionCallExpression : SqlExpression
             }
         }
 
+        var result = true;
         if (Over == null ^ other.Over == null)
         {
             return false;
         }
         else if (Over != null && other.Over != null)
         {
-            return Over.Equals(other.Over);
+            result &= Over.Equals(other.Over);
         }
 
-        return true;
+        if (!result)
+        {
+            return result;
+        }
+
+        if (WithinGroup == null ^ other.WithinGroup == null)
+        {
+            return false;
+        }
+        else if (WithinGroup != null && other.WithinGroup != null)
+        {
+            result &= WithinGroup.Equals(other.WithinGroup);
+        }
+        return result;
     }
 
     public override bool Equals(object? obj)

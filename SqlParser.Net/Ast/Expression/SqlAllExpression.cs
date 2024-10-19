@@ -1,4 +1,6 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlAllExpression : SqlExpression
 {
@@ -26,5 +28,9 @@ public class SqlAllExpression : SqlExpression
     public override int GetHashCode()
     {
         return SelectExpression.GetHashCode();
+    }
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlAllExpression(this);
     }
 }

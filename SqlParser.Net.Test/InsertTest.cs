@@ -16,18 +16,18 @@ public class InsertTest
             {
                 new SqlIdentifierExpression()
                 {
-                    Name = "name"
+                    Value = "name"
                 },
                 new SqlIdentifierExpression()
                 {
-                    Name = "id"
+                    Value = "id"
                 },
             },
             Table = new SqlTableExpression()
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "test11"
+                    Value = "test11"
                 }
             },
             ValuesList = new List<List<SqlExpression>>()
@@ -71,18 +71,18 @@ public class InsertTest
             {
                 new SqlIdentifierExpression()
                 {
-                    Name = "name"
+                    Value = "name"
                 },
                 new SqlIdentifierExpression()
                 {
-                    Name = "id"
+                    Value = "id"
                 },
             },
             Table = new SqlTableExpression()
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "test11"
+                    Value = "test11"
                 }
             },
             ValuesList = new List<List<SqlExpression>>()
@@ -114,18 +114,18 @@ public class InsertTest
             {
                 new SqlIdentifierExpression()
                 {
-                    Name = "name"
+                    Value = "name"
                 },
                 new SqlIdentifierExpression()
                 {
-                    Name = "id"
+                    Value = "id"
                 },
             },
             Table = new SqlTableExpression()
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "test11"
+                    Value = "test11"
                 }
             },
             ValuesList = new List<List<SqlExpression>>()
@@ -160,7 +160,7 @@ public class InsertTest
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "TEST"
+                    Value = "TEST"
                 }
             },
             ValuesList = new List<List<SqlExpression>>()
@@ -189,14 +189,14 @@ public class InsertTest
             {
                 new SqlIdentifierExpression()
                 {
-                    Name = "name"
+                    Value = "name"
                 }
             },
             Table = new SqlTableExpression()
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "TEST2"
+                    Value = "TEST2"
                 }
             },
             FromSelect = new SqlSelectExpression()
@@ -209,11 +209,11 @@ public class InsertTest
                         {
                             Alias = new SqlIdentifierExpression()
                             {
-                                Name = "name2"
+                                Value = "name2"
                             },
                             Body = new SqlIdentifierExpression()
                             {
-                                Name = "name"
+                                Value = "name"
                             }
                         }
                     },
@@ -221,11 +221,11 @@ public class InsertTest
                     {
                         Alias = new SqlIdentifierExpression()
                         {
-                            Name = "t"
+                            Value = "t"
                         },
                         Name = new SqlIdentifierExpression()
                         {
-                            Name = "TEST"
+                            Value = "TEST"
                         }
                     }
                 }
@@ -246,14 +246,14 @@ public class InsertTest
             {
                 new SqlIdentifierExpression()
                 {
-                    Name = "sms"
+                    Value = "sms"
                 }
             },
             Table = new SqlTableExpression()
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "message.dbo.TempSMS"
+                    Value = "message.dbo.TempSMS"
                 }
             },
             ValuesList = new List<List<SqlExpression>>()
@@ -275,7 +275,7 @@ public class InsertTest
     [Fact]
     public void TestInsert7()
     {
-        var sql = "INSERT INTO \"TEST\"  \r\n           (\"Name\",\"Age\")\r\n     VALUES\r\n           (:Name,:Age) ";
+        var sql = "INSERT INTO \"TEST\"  \r\n           (\"Value\",\"Age\")\r\n     VALUES\r\n           (:Value,:Age) ";
         var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
         var expect = new SqlInsertExpression()
         {
@@ -283,18 +283,18 @@ public class InsertTest
             {
                 new SqlIdentifierExpression()
                 {
-                    Name = "\"Name\""
+                    Value = "\"Value\""
                 },
                 new SqlIdentifierExpression()
                 {
-                    Name = "\"Age\""
+                    Value = "\"Age\""
                 },
             },
             Table = new SqlTableExpression()
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "\"TEST\""
+                    Value = "\"TEST\""
                 }
             },
             ValuesList = new List<List<SqlExpression>>()
@@ -303,7 +303,7 @@ public class InsertTest
                 {
                     new SqlVariableExpression()
                     {
-                        Name = "Name",
+                        Name = "Value",
                         Prefix = ":"
                     },
                     new SqlVariableExpression()

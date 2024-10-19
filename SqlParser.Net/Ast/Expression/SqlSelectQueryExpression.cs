@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlSelectQueryExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlSelectQueryExpression(this);
+    }
     public SqlSelectQueryExpression()
     {
         this.Type = SqlExpressionType.SelectQuery;

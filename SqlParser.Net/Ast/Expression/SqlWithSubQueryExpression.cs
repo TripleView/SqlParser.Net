@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlWithSubQueryExpression : SqlExpression
 {
-
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlWithSubQueryExpression(this);
+    }
     public SqlWithSubQueryExpression()
     {
         this.Type = SqlExpressionType.WithSubQuery;
@@ -31,17 +35,24 @@ public class SqlWithSubQueryExpression : SqlExpression
             }
         }
 
-        if (Columns.Count != other.Columns.Count)
+        if (Columns is null ^ other.Columns is null)
         {
             return false;
         }
-        for (var i = 0; i < Columns.Count; i++)
+        else if (Columns != null && other.Columns != null)
         {
-            var item = Columns[i];
-            var item2 = other.Columns[i];
-            if (!item.Equals(item2))
+            if (Columns.Count != other.Columns.Count)
             {
                 return false;
+            }
+            for (var i = 0; i < Columns.Count; i++)
+            {
+                var item = Columns[i];
+                var item2 = other.Columns[i];
+                if (!item.Equals(item2))
+                {
+                    return false;
+                }
             }
         }
 

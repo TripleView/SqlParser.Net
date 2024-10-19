@@ -7,11 +7,14 @@ namespace SqlParser.Net;
 
 public class DbUtils
 {
-    public static SqlExpression Parse(string sql, DbType dbType)
+    public static SqlExpression Parse(string sql, DbType dbType, Action<long, string> logger = null)
     {
         var sw = new Stopwatch();
         sw.Start();
-        var sqlLexer = new SqlLexer();
+        var sqlLexer = new SqlLexer()
+        {
+            Logger = logger
+        };
         var tokens = sqlLexer.Parse(sql, dbType);
         if (tokens.Count == 0)
         {
@@ -19,14 +22,20 @@ public class DbUtils
         }
         sw.Stop();
         var t = sw.ElapsedMilliseconds;
-        Trace.WriteLine("t:" + t);
+        if (logger != null)
+        {
+            logger(t, "lexer");
+        }
         sw.Restart();
         var sqlParser = new Ast.SqlParser();
-        var result = sqlParser.Parse(tokens, dbType);
+        var result = sqlParser.Parse(tokens, sql, dbType);
         sw.Stop();
         var t2 = sw.ElapsedMilliseconds;
+        if (logger != null)
+        {
+            logger(t2, "parser");
+        }
         sw.Restart();
-        Trace.WriteLine("t2:" + t2);
         return result;
     }
 }

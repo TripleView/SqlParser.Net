@@ -1,7 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlPropertyExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlPropertyExpression(this);
+    }
     public SqlPropertyExpression()
     {
         this.Type = SqlExpressionType.Property;
@@ -19,7 +25,8 @@ public class SqlPropertyExpression : SqlExpression
         if (Name is null ^ other.Name is null)
         {
             return false;
-        }else if (Name != null && other.Name != null)
+        }
+        else if (Name != null && other.Name != null)
         {
             if (!Name.Equals(other.Name))
             {

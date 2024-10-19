@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SqlParser.Net.Lexer;
 
 public class SqlLexer
 {
+    public Action<long, string> Logger { get; set; }
     private int pos = -1;
 
     private Token currentToken;
@@ -119,6 +121,7 @@ public class SqlLexer
         //FROM test
         if (CheckNextChar('/') && CheckNextNextChar('*'))
         {
+            var startIndex = pos;
             Accept('/');
             Accept('*');
             while (true)
@@ -146,6 +149,9 @@ public class SqlLexer
                     var comment = new string(comments.ToArray());
                     var token = Token.MultiLineComment;
                     token.Value = comment;
+                    var endIndex = pos - 1;
+                    token.StartPositionIndex = startIndex;
+                    token.EndPositionIndex = endIndex;
                     this.tokens.Add(token);
                     return true;
                 }
@@ -159,6 +165,7 @@ public class SqlLexer
         //TEST t----
         if (CheckNextChar('-') && CheckNextNextChar('-'))
         {
+            var startIndex = pos;
             Accept('-');
             Accept('-');
             while (true)
@@ -180,6 +187,9 @@ public class SqlLexer
                     var comment = new string(comments.ToArray());
                     var token = Token.LineComment;
                     token.Value = comment;
+                    var endIndex = pos - 1;
+                    token.StartPositionIndex = startIndex;
+                    token.EndPositionIndex = endIndex;
                     this.tokens.Add(token);
                     return true;
                 }
@@ -241,16 +251,22 @@ public class SqlLexer
     {
         if (AcceptDigits())
         {
+            var startIndex = pos - 1;
             var txt = GetCurrentCharValue();
+
             while (Accept('.') || AcceptDigits())
             {
-                if (currentChar == '.' && txt.IndexOf(".") != -1)
+                if (currentChar == '.' && txt.IndexOf(".", StringComparison.InvariantCulture) != -1)
                 {
                     throw new Exception("数字里不允许出现多个.");
                 }
                 txt += GetCurrentCharValue();
             }
+
             var token = AcceptNumberToken(txt);
+            var endIndex = pos - 1;
+            token.StartPositionIndex = startIndex;
+            token.EndPositionIndex = endIndex;
             tokens.Add(token);
             return true;
         }
@@ -280,6 +296,7 @@ public class SqlLexer
     {
         if (AcceptLetters())
         {
+            var startIndex = pos - 1;
             var txt = GetCurrentCharValue();
             while (AcceptLetters() || Accept('_') || AcceptDigits())
             {
@@ -287,6 +304,9 @@ public class SqlLexer
             }
 
             var token = AcceptIdentifierOrKeywordToken(txt);
+            var endIndex = pos - 1;
+            token.StartPositionIndex = startIndex;
+            token.EndPositionIndex = endIndex;
             tokens.Add(token);
             return true;
         }
@@ -302,28 +322,39 @@ public class SqlLexer
         if (Accept('+'))
         {
             var token = Token.Plus;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
         if (Accept('-'))
         {
             var token = Token.Sub;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
         if (Accept('*'))
         {
             var token = Token.Star;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
         if (Accept('/'))
         {
             var token = Token.Slash;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
         return false;
+    }
+
+    private void UpdateTokenPosition(ref Token token, int numberOf = 1)
+    {
+        var endIndex = pos - 1;
+        token.StartPositionIndex = pos - numberOf;
+        token.EndPositionIndex = endIndex;
     }
 
     /// <summary>
@@ -331,9 +362,10 @@ public class SqlLexer
     /// </summary>
     private bool AcceptSymbol()
     {
-        if (Accept(','))
+        if (Accept(',') || (dbType == DbType.Oracle && Accept('，')))
         {
             var token = Token.Comma;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -341,6 +373,7 @@ public class SqlLexer
         if (Accept('.'))
         {
             var token = Token.Dot;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -348,6 +381,7 @@ public class SqlLexer
         if (Accept('('))
         {
             var token = Token.LeftParen;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -355,6 +389,7 @@ public class SqlLexer
         if (Accept(')'))
         {
             var token = Token.RightParen;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -362,6 +397,7 @@ public class SqlLexer
         if (Accept('['))
         {
             var token = Token.LeftSquareBracket;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -369,6 +405,7 @@ public class SqlLexer
         if (Accept(']'))
         {
             var token = Token.RightSquareBracket;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -376,6 +413,7 @@ public class SqlLexer
         if (Accept('{'))
         {
             var token = Token.LeftCurlyBrackets;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -383,6 +421,7 @@ public class SqlLexer
         if (Accept('}'))
         {
             var token = Token.RightCurlyBrackets;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -390,6 +429,7 @@ public class SqlLexer
         if (Accept('='))
         {
             var token = Token.EqualTo;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -398,6 +438,7 @@ public class SqlLexer
         {
             AcceptOrThrowException('=');
             var token = Token.NotEqualTo;
+            UpdateTokenPosition(ref token, 2);
             tokens.Add(token);
             return true;
         }
@@ -405,6 +446,7 @@ public class SqlLexer
         if (Accept(';'))
         {
             var token = Token.Semicolon;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
@@ -414,11 +456,13 @@ public class SqlLexer
             if (Accept('='))
             {
                 var token = Token.GreaterThenOrEqualTo;
+                UpdateTokenPosition(ref token, 2);
                 tokens.Add(token);
             }
             else
             {
                 var token = Token.GreaterThen;
+                UpdateTokenPosition(ref token);
                 tokens.Add(token);
             }
             return true;
@@ -429,16 +473,19 @@ public class SqlLexer
             if (Accept('='))
             {
                 var token = Token.LessThenOrEqualTo;
+                UpdateTokenPosition(ref token, 2);
                 tokens.Add(token);
             }
             else if (Accept('>'))
             {
                 var token = Token.NotEqualTo;
+                UpdateTokenPosition(ref token, 2);
                 tokens.Add(token);
             }
             else
             {
                 var token = Token.LessThen;
+                UpdateTokenPosition(ref token);
                 tokens.Add(token);
             }
             return true;
@@ -454,19 +501,46 @@ public class SqlLexer
         if (Accept(':'))
         {
             var token = Token.Colon;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
         if (Accept('@'))
         {
             var token = Token.At;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
         }
         if (Accept('"'))
         {
             var token = Token.DoubleQuotes;
+            UpdateTokenPosition(ref token);
             tokens.Add(token);
+            return true;
+        }
+        if (Accept('`'))
+        {
+            var token = Token.Backtick;
+            UpdateTokenPosition(ref token);
+            tokens.Add(token);
+            return true;
+        }
+
+        if (Accept('|'))
+        {
+            if (Accept('|'))
+            {
+                var token = Token.BarBar;
+                UpdateTokenPosition(ref token, 2);
+                tokens.Add(token);
+            }
+            else
+            {
+                var token = Token.Bar;
+                UpdateTokenPosition(ref token);
+                tokens.Add(token);
+            }
             return true;
         }
         return false;
@@ -474,6 +548,7 @@ public class SqlLexer
 
     private Token AcceptStringToken()
     {
+        var startIndex = pos - 1;
         var buffer = new List<char>();
         while (true)
         {
@@ -488,6 +563,9 @@ public class SqlLexer
                 {
                     var token = Token.StringConstant;
                     token.Value = new string(buffer.ToArray());
+                    var endIndex = pos - 1;
+                    token.StartPositionIndex = startIndex;
+                    token.EndPositionIndex = endIndex;
                     return token;
                 }
             }
@@ -504,8 +582,16 @@ public class SqlLexer
 
     private Token AcceptNumberToken(string txt)
     {
-        if (double.TryParse(txt, out var number))
+        //var sw = new Stopwatch();
+        //sw.Start();
+        if (decimal.TryParse(txt, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var number))
         {
+            //sw.Stop();
+            //var t = sw.ElapsedMilliseconds;
+            //if (Logger != null)
+            //{
+            //    Logger(t, "dd" + txt);
+            //}
             var token = Token.NumberConstant;
             token.Value = number;
             return token;
@@ -569,11 +655,11 @@ public class SqlLexer
     /// </summary>
     private void InitCharDic()
     {
-        for (char i = 'a'; i < 'z'; i++)
+        for (char i = 'a'; i <= 'z'; i++)
         {
             charDic[i] = true;
         }
-        for (char i = 'A'; i < 'Z'; i++)
+        for (char i = 'A'; i <= 'Z'; i++)
         {
             charDic[i] = true;
         }
@@ -655,53 +741,18 @@ public class SqlLexer
 
         tokenDic.TryAdd("Identified".ToLowerInvariant(), Token.Identified);
         tokenDic.TryAdd("Password".ToLowerInvariant(), Token.Password);
-        //operator
-        tokenDic.TryAdd("LeftParen".ToLowerInvariant(), Token.LeftParen);
-        tokenDic.TryAdd("RightParen".ToLowerInvariant(), Token.RightParen);
-        tokenDic.TryAdd("LeftCurlyBrackets".ToLowerInvariant(), Token.LeftCurlyBrackets);
-        tokenDic.TryAdd("RightCurlyBrackets".ToLowerInvariant(), Token.RightCurlyBrackets);
-        tokenDic.TryAdd("LeftSquareBracket".ToLowerInvariant(), Token.LeftSquareBracket);
-        tokenDic.TryAdd("RightSquareBracket".ToLowerInvariant(), Token.RightSquareBracket);
-        tokenDic.TryAdd("Semicolon".ToLowerInvariant(), Token.Semicolon);
-        tokenDic.TryAdd("Comma".ToLowerInvariant(), Token.Comma);
 
-        tokenDic.TryAdd("Dot".ToLowerInvariant(), Token.Dot);
-        tokenDic.TryAdd("At".ToLowerInvariant(), Token.At);
-        tokenDic.TryAdd("EqualTo".ToLowerInvariant(), Token.EqualTo);
-        tokenDic.TryAdd("GreaterThen".ToLowerInvariant(), Token.GreaterThen);
-        tokenDic.TryAdd("LessThen".ToLowerInvariant(), Token.LessThen);
-        tokenDic.TryAdd("Bang".ToLowerInvariant(), Token.Bang);
-        tokenDic.TryAdd("Colon".ToLowerInvariant(), Token.Colon);
-        tokenDic.TryAdd("NotEqualTo".ToLowerInvariant(), Token.NotEqualTo);
-        tokenDic.TryAdd("GreaterThenOrEqualTo".ToLowerInvariant(), Token.GreaterThenOrEqualTo);
-        tokenDic.TryAdd("LessThenOrEqualTo".ToLowerInvariant(), Token.LessThenOrEqualTo);
         tokenDic.TryAdd("Exists".ToLowerInvariant(), Token.Exists);
-        tokenDic.TryAdd("Plus".ToLowerInvariant(), Token.Plus);
-        tokenDic.TryAdd("Sub".ToLowerInvariant(), Token.Sub);
-        tokenDic.TryAdd("Star".ToLowerInvariant(), Token.Star);
-        tokenDic.TryAdd("Slash".ToLowerInvariant(), Token.Slash);
         tokenDic.TryAdd("With".ToLowerInvariant(), Token.With);
         tokenDic.TryAdd("All".ToLowerInvariant(), Token.All);
         tokenDic.TryAdd("Intersect".ToLowerInvariant(), Token.Intersect);
         tokenDic.TryAdd("Except".ToLowerInvariant(), Token.Except);
         tokenDic.TryAdd("Minus".ToLowerInvariant(), Token.Minus);
         tokenDic.TryAdd("Any".ToLowerInvariant(), Token.Any);
-        tokenDic.TryAdd("LineBreak".ToLowerInvariant(), Token.LineBreak);
-        tokenDic.TryAdd("DoubleQuotes".ToLowerInvariant(), Token.DoubleQuotes);
-
-        tokenDic.TryAdd("LineComment".ToLowerInvariant(), Token.LineComment);
-        tokenDic.TryAdd("MultiLineComment".ToLowerInvariant(), Token.MultiLineComment);
-        //Identifier|标识符
-        tokenDic.TryAdd("IdentifierString".ToLowerInvariant(), Token.IdentifierString);
-        //NumberConstant|数字常量
-        tokenDic.TryAdd("NumberConstant".ToLowerInvariant(), Token.NumberConstant);
-        //StringConstant|字符串常量
-        tokenDic.TryAdd("StringConstant".ToLowerInvariant(), Token.StringConstant);
 
         //oracle
         if (dbType == DbType.Oracle)
         {
-            tokenDic.TryAdd("Dual".ToLowerInvariant(), Token.Dual);
             tokenDic.TryAdd("Unique".ToLowerInvariant(), Token.Unique);
             tokenDic.TryAdd("First".ToLowerInvariant(), Token.First);
         }
@@ -716,11 +767,18 @@ public class SqlLexer
             tokenDic.TryAdd("Offset".ToLowerInvariant(), Token.Offset);
         }
 
+        if (dbType == DbType.SqlServer || dbType == DbType.Pgsql || (dbType == DbType.Oracle))
+        {
+            tokenDic.TryAdd("Within".ToLowerInvariant(), Token.Within);
+        }
+
         if (dbType == DbType.SqlServer || dbType == DbType.Oracle)
         {
             tokenDic.TryAdd("Rows".ToLowerInvariant(), Token.Rows);
             tokenDic.TryAdd("Fetch".ToLowerInvariant(), Token.Fetch);
             tokenDic.TryAdd("Only".ToLowerInvariant(), Token.Only);
+            tokenDic.TryAdd("Pivot".ToLowerInvariant(), Token.Pivot);
+            tokenDic.TryAdd("For".ToLowerInvariant(), Token.For);
         }
         //sql server
         if (dbType == DbType.SqlServer)

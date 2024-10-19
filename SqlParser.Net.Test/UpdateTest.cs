@@ -18,7 +18,7 @@ public class UpdateTest
                 {
                     Left = new SqlIdentifierExpression()
                     {
-                        Name = "name"
+                        Value = "name"
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlStringExpression()
@@ -30,7 +30,7 @@ public class UpdateTest
                 {
                     Left = new SqlIdentifierExpression()
                     {
-                        Name = "d"
+                        Value = "d"
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlStringExpression()
@@ -43,14 +43,14 @@ public class UpdateTest
             {
                 Name = new SqlIdentifierExpression()
                 {
-                    Name = "test"
+                    Value = "test"
                 }
             },
             Where = new SqlBinaryExpression()
             {
                 Left = new SqlIdentifierExpression()
                 {
-                    Name = "name"
+                    Value = "name"
                 },
                 Operator = SqlBinaryOperator.EqualTo,
                 Right = new SqlStringExpression()

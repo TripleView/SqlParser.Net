@@ -1,7 +1,13 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlOrderByItemExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlOrderByItemExpression(this);
+    }
     public SqlOrderByItemExpression()
     {
         this.Type = SqlExpressionType.OrderByItem;

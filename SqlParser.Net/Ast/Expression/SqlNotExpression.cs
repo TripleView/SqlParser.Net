@@ -1,18 +1,24 @@
-﻿namespace SqlParser.Net.Ast.Expression;
+﻿using SqlParser.Net.Ast.Visitor;
+
+namespace SqlParser.Net.Ast.Expression;
 
 public class SqlNotExpression : SqlExpression
 {
+    public override void Accept(IAstVisitor visitor)
+    {
+        visitor.VisitSqlNotExpression(this);
+    }
 
     public SqlNotExpression()
     {
         this.Type = SqlExpressionType.Not;
     }
 
-    public SqlExpression Expression { get; set; }
+    public SqlExpression Body { get; set; }
 
     protected bool Equals(SqlNotExpression other)
     {
-        return Expression.Equals(other.Expression);
+        return Body.Equals(other.Body);
     }
 
     public override bool Equals(object? obj)
@@ -25,6 +31,6 @@ public class SqlNotExpression : SqlExpression
 
     public override int GetHashCode()
     {
-        return Expression.GetHashCode();
+        return Body.GetHashCode();
     }
 }

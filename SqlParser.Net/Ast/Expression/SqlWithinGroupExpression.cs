@@ -2,20 +2,23 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAllColumnExpression : SqlExpression
+public class SqlWithinGroupExpression : SqlExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlAllColumnExpression(this);
-    }
-    public SqlAllColumnExpression()
-    {
-        this.Type = SqlExpressionType.AllColumn;
+        visitor.VisitSqlWithinGroupExpression(this);
     }
 
-    protected bool Equals(SqlAllColumnExpression other)
+    public SqlWithinGroupExpression()
     {
-        return true;
+        this.Type = SqlExpressionType.WithinGroup;
+    }
+
+    public SqlOrderByExpression OrderBy { get; set; }
+
+    protected bool Equals(SqlWithinGroupExpression other)
+    {
+        return OrderBy.Equals(other.OrderBy);
     }
 
     public override bool Equals(object? obj)
@@ -23,13 +26,11 @@ public class SqlAllColumnExpression : SqlExpression
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((SqlAllColumnExpression)obj);
+        return Equals((SqlWithinGroupExpression)obj);
     }
 
     public override int GetHashCode()
     {
         throw new System.NotImplementedException();
     }
-
-
 }
