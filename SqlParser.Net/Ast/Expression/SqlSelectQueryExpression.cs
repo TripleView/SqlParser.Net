@@ -18,7 +18,7 @@ public class SqlSelectQueryExpression : SqlExpression
     /// cte sub query
     /// cte公共表表达式子查询
     /// </summary>
-    public List<SqlWithSubQueryExpression> WithSubQuery { get; set; }
+    public List<SqlWithSubQueryExpression> WithSubQuerys { get; set; }
 
     public List<SqlSelectItemExpression> Columns { get; set; }
     /// <summary>
@@ -62,20 +62,20 @@ public class SqlSelectQueryExpression : SqlExpression
             }
         }
 
-        if (WithSubQuery == null ^ other.WithSubQuery == null)
+        if (WithSubQuerys == null ^ other.WithSubQuerys == null)
         {
             return false;
         }
-        else if (WithSubQuery != null && other.WithSubQuery != null)
+        else if (WithSubQuerys != null && other.WithSubQuerys != null)
         {
-            if (WithSubQuery.Count != other.WithSubQuery.Count)
+            if (WithSubQuerys.Count != other.WithSubQuerys.Count)
             {
                 return false;
             }
-            for (var i = 0; i < WithSubQuery.Count; i++)
+            for (var i = 0; i < WithSubQuerys.Count; i++)
             {
-                var item = WithSubQuery[i];
-                var item2 = other.WithSubQuery[i];
+                var item = WithSubQuerys[i];
+                var item2 = other.WithSubQuerys[i];
                 if (!item.Equals(item2))
                 {
                     return false;
@@ -175,7 +175,7 @@ public class SqlSelectQueryExpression : SqlExpression
     {
         unchecked
         {
-            var hashCode = WithSubQuery.GetHashCode();
+            var hashCode = WithSubQuerys.GetHashCode();
             hashCode = (hashCode * 397) ^ Columns.GetHashCode();
             hashCode = (hashCode * 397) ^ ResultSetReturnOption.GetHashCode();
             hashCode = (hashCode * 397) ^ Into.GetHashCode();

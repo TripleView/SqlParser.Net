@@ -5,7 +5,7 @@ using SqlParser.Net.Ast.Expression;
 
 namespace SqlParser.Net.Ast.Visitor;
 
-public class UnitTestAstVisitor : BaseAstVisitor
+public class SqlGenerationAstVisitor : BaseAstVisitor
 {
     private StringBuilder sb = new StringBuilder();
     private string fourSpace = "    ";
@@ -319,13 +319,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
     {
-        AppendLine("new SqlIdentifierExpression()");
-        AppendLine("{");
-        AdvanceNext(() =>
-        {
-            AppendLine($"Value = \"{sqlIdentifierExpression.Value}\"");
-        });
-        AppendLine("},");
+       Append(sqlIdentifierExpression.Value);
     }
     public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
     {
@@ -690,25 +684,18 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
     {
-        AppendLine("new SqlPropertyExpression()");
-        AppendLine("{");
-        if (sqlPropertyExpression.Name != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Name = ");
-                sqlPropertyExpression.Name?.Accept(this);
-            });
-        }
+
         if (sqlPropertyExpression.Table != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Table = ");
-                sqlPropertyExpression.Table?.Accept(this);
-            });
+            sqlPropertyExpression.Table?.Accept(this);
+            sb.Append(".");
         }
-        AppendLine("},");
+
+        if (sqlPropertyExpression.Name != null)
+        {
+            sqlPropertyExpression.Name?.Accept(this);
+        }
+      
     }
     public override void VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
     {
@@ -729,20 +716,16 @@ public class UnitTestAstVisitor : BaseAstVisitor
         var isFirst = numberOfLevels == 0;
         if (isFirst)
         {
-            sb.Append("var expect = ");
+            sb.Append("var sql = ");
         }
 
-        AppendLine("new SqlSelectExpression()");
-        AppendLine("{");
+       
 
         if (sqlSelectExpression.Alias != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Alias = ");
-                sqlSelectExpression.Alias?.Accept(this);
-            });
+         
         }
+
         if (sqlSelectExpression.Query != null)
         {
             AdvanceNext(() =>
@@ -786,55 +769,36 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
     private void AdvanceNext(Action action)
     {
-        numberOfLevels++;
+        Append(" ( ");
         action();
-        numberOfLevels--;
+        Append(" ) ");
     }
     public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
-        AppendLine("new SqlSelectQueryExpression()");
-        AppendLine("{");
+      
 
         if (sqlSelectQueryExpression.WithSubQuerys != null)
         {
-            AdvanceNext(() =>
+            foreach (var item in sqlSelectQueryExpression.WithSubQuerys)
             {
-                AppendLine("WithSubQuerys = new List<SqlWithSubQueryExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlSelectQueryExpression.WithSubQuerys)
-                {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
+                item.Accept(this);
+            }
+        }
 
-                }
-                AppendLine("},");
-            });
-        }
-        if (sqlSelectQueryExpression.Columns != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendLine("Columns = new List<SqlSelectItemExpression>()");
-                AppendLine("{");
-                foreach (var column in sqlSelectQueryExpression.Columns)
-                {
-                    column.Accept(this);
-                }
-                AppendLine("},");
-            });
-        }
+        Append("select ");
 
         if (sqlSelectQueryExpression.ResultSetReturnOption != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendLine($"ResultSetReturnOption = SqlResultSetReturnOption.{sqlSelectQueryExpression.ResultSetReturnOption.ToString()},");
-            });
+            Append(sqlSelectQueryExpression.ResultSetReturnOption.ToString());
         }
 
-
+        if (sqlSelectQueryExpression.Columns != null)
+        {
+            foreach (var column in sqlSelectQueryExpression.Columns)
+            {
+                column.Accept(this);
+            }
+        }
 
         if (sqlSelectQueryExpression.Into != null)
         {
@@ -931,65 +895,39 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
-        AppendLine("new SqlStringExpression()");
-        AppendLine("{");
-        AdvanceNext(() =>
-        {
-            AppendLine($"Value = \"{sqlStringExpression.Value}\"");
-        });
-        AppendLine("},");
+        Append($"'{sqlStringExpression.Value}'");
     }
     public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
-        AppendLine("new SqlTableExpression()");
-        AppendLine("{");
-        AdvanceNext(() =>
-        {
-            AppendAndNotRequiredNextSpace("Name = ");
-            sqlTableExpression.Name?.Accept(this);
-        });
+        sqlTableExpression.Name?.Accept(this);
         if (sqlTableExpression.Alias != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Alias = ");
-                sqlTableExpression.Alias?.Accept(this);
-            });
+            Append(" as ");
+            sqlTableExpression.Alias?.Accept(this);
         }
-        AppendLine("},");
+  
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
-        AppendLine("new SqlUnionQueryExpression()");
-        AppendLine("{");
+    
+        AppendLine("(");
 
 
         if (sqlUnionQueryExpression.Left != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Left = ");
-                sqlUnionQueryExpression.Left.Accept(this);
-            });
+            sqlUnionQueryExpression.Left.Accept(this);
         }
 
         if (sqlUnionQueryExpression.UnionType != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendLine($"UnionType = SqlUnionType.{sqlUnionQueryExpression.UnionType.ToString()},");
-            });
+          Append($" {sqlUnionQueryExpression.UnionType.ToString()} ");
         }
 
         if (sqlUnionQueryExpression.Right != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Right = ");
-                sqlUnionQueryExpression.Right.Accept(this);
-            });
+            sqlUnionQueryExpression.Right.Accept(this);
         }
-        AppendLine("},");
+        AppendLine(")");
     }
     public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
@@ -1070,10 +1008,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
-        AppendLine("new SqlWithinGroupExpression()");
-        AppendLine("{");
-
-
+        
         if (sqlWithinGroupExpression.OrderBy != null)
         {
             AdvanceNext(() =>
@@ -1087,45 +1022,34 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
     {
-
-        AppendLine("new SqlWithSubQueryExpression()");
-        AppendLine("{");
-
-
+        Append(" with ");
         if (sqlWithSubQueryExpression.Alias != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Alias = ");
-                sqlWithSubQueryExpression.Alias.Accept(this);
-            });
+            sqlWithSubQueryExpression.Alias.Accept(this);
         }
+
+        if (sqlWithSubQueryExpression.Columns != null)
+        {
+            Append("( ");
+            foreach (var item in sqlWithSubQueryExpression.Columns)
+            {
+                item.Accept(this);
+
+            }
+            Append(" ) ");
+        }
+
+        Append(" as ");
         if (sqlWithSubQueryExpression.FromSelect != null)
         {
             AdvanceNext(() =>
             {
                 AppendAndNotRequiredNextSpace("FromSelect = ");
-                sqlWithSubQueryExpression.FromSelect.Accept(this);
+              
             });
         }
 
-        if (sqlWithSubQueryExpression.Columns != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendLine("Columns = new List<SqlIdentifierExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlWithSubQueryExpression.Columns)
-                {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
 
-                }
-                AppendLine("},");
-            });
-        }
         AppendLine("},");
     }
 }

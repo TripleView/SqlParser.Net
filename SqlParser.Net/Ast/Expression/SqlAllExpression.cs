@@ -10,11 +10,11 @@ public class SqlAllExpression : SqlExpression
         this.Type = SqlExpressionType.All;
     }
 
-    public SqlSelectExpression SelectExpression { get; set; }
+    public SqlSelectExpression Body { get; set; }
 
     protected bool Equals(SqlAllExpression other)
     {
-        return SelectExpression.Equals(other.SelectExpression);
+        return Body.Equals(other.Body);
     }
 
     public override bool Equals(object? obj)
@@ -27,7 +27,7 @@ public class SqlAllExpression : SqlExpression
 
     public override int GetHashCode()
     {
-        return SelectExpression.GetHashCode();
+        return Body.GetHashCode();
     }
     public override void Accept(IAstVisitor visitor)
     {

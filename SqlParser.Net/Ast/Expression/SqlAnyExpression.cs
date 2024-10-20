@@ -13,11 +13,11 @@ public class SqlAnyExpression : SqlExpression
         this.Type = SqlExpressionType.Any;
     }
 
-    public SqlSelectExpression SelectExpression { get; set; }
+    public SqlSelectExpression Body { get; set; }
 
     protected bool Equals(SqlAnyExpression other)
     {
-        return SelectExpression.Equals(other.SelectExpression);
+        return Body.Equals(other.Body);
     }
 
     public override bool Equals(object? obj)
@@ -30,6 +30,6 @@ public class SqlAnyExpression : SqlExpression
 
     public override int GetHashCode()
     {
-        return SelectExpression.GetHashCode();
+        return Body.GetHashCode();
     }
 }

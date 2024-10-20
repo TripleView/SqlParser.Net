@@ -509,7 +509,7 @@ public class SqlParser
             return null;
         }
         var query = new SqlSelectQueryExpression();
-        query.WithSubQuery = AcceptWithSubQueryExpression();
+        query.WithSubQuerys = AcceptWithSubQueryExpression();
 
         AcceptOrThrowException(Token.Select);
 
@@ -1183,7 +1183,7 @@ public class SqlParser
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlExistsExpression()
             {
-                SelectExpression = AcceptSelectExpression()
+                Body = AcceptSelectExpression()
             };
             AcceptOrThrowException(Token.RightParen);
             return result;
@@ -1193,7 +1193,7 @@ public class SqlParser
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlAnyExpression()
             {
-                SelectExpression = AcceptSelectExpression()
+                Body = AcceptSelectExpression()
             };
             AcceptOrThrowException(Token.RightParen);
             return result;
@@ -1203,7 +1203,7 @@ public class SqlParser
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlAllExpression()
             {
-                SelectExpression = AcceptSelectExpression()
+                Body = AcceptSelectExpression()
             };
             AcceptOrThrowException(Token.RightParen);
             return result;
@@ -1606,7 +1606,7 @@ public class SqlParser
 
                     var orderByItem = new SqlOrderByItemExpression()
                     {
-                        Expression = item,
+                        Body = item,
                         OrderByType = orderByType
                     };
                     items.Add(orderByItem);

@@ -13,13 +13,13 @@ public class SqlOrderByItemExpression : SqlExpression
         this.Type = SqlExpressionType.OrderByItem;
     }
 
-    public SqlExpression Expression { get; set; }
+    public SqlExpression Body { get; set; }
 
     public SqlOrderByType? OrderByType { get; set; }
 
     protected bool Equals(SqlOrderByItemExpression other)
     {
-        if (!Expression.Equals(other.Expression))
+        if (!Body.Equals(other.Body))
         {
             return false;
         }
@@ -53,7 +53,7 @@ public class SqlOrderByItemExpression : SqlExpression
     {
         unchecked
         {
-            return (Expression.GetHashCode() * 397) ^ OrderByType.GetHashCode();
+            return (Body.GetHashCode() * 397) ^ OrderByType.GetHashCode();
         }
     }
 }

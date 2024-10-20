@@ -15,7 +15,7 @@ public class UnitTestAstVisitorTest
         sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()

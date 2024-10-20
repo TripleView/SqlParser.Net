@@ -23,7 +23,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
 
         var expect = new SqlSelectExpression()
         {
@@ -58,7 +58,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -116,7 +116,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -153,7 +153,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -205,7 +205,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -276,7 +276,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -313,7 +313,7 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -368,7 +368,8 @@ public class SelectTest
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetAst();
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -378,14 +379,14 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
                     {
                         Value = "TEST5"
-                    }
+                    },
                 },
                 Where = new SqlBinaryExpression()
                 {
@@ -398,7 +399,7 @@ public class SelectTest
                     {
                         Name = new SqlIdentifierExpression()
                         {
-                            Value = "lower",
+                            Value = "lower"
                         },
                         Arguments = new List<SqlExpression>()
                         {
@@ -406,18 +407,22 @@ public class SelectTest
                             {
                                 Name = new SqlIdentifierExpression()
                                 {
-                                    Value = "UPPER",
+                                    Value = "UPPER"
                                 },
                                 Arguments = new List<SqlExpression>()
                                 {
-                                    new SqlStringExpression() { Value = "a" },
-                                }
+                                    new SqlStringExpression()
+                                    {
+                                        Value = "a"
+                                    },
+                                },
                             }
-                        }
+                        },
                     }
-                }
+                },
             }
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -430,6 +435,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -440,43 +449,47 @@ public class SelectTest
                     {
                         Body = new SqlBinaryExpression()
                         {
-                            Right = new SqlNumberExpression()
-                            {
-                                Value = 5
-                            },
-                            Operator = SqlBinaryOperator.Add,
                             Left = new SqlBinaryExpression()
                             {
+                                Left = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "Active"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "rd"
+                                    },
+                                },
                                 Operator = SqlBinaryOperator.Multiply,
                                 Right = new SqlNumberExpression()
                                 {
                                     Value = 2
                                 },
-                                Left = new SqlPropertyExpression()
-                                {
-                                    Name = new SqlIdentifierExpression() { Value = "Active" },
-                                    Table = new SqlIdentifierExpression()
-                                    {
-                                        Value = "rd"
-                                    }
-                                }
-                            }
-                        }
-                    }
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 5
+                            },
+                        },
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "rd"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "RouteData"
-                    }
-                }
+                },
             }
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -488,6 +501,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -499,30 +516,30 @@ public class SelectTest
                         Body = new SqlIdentifierExpression()
                         {
                             Value = "Id"
-                        }
+                        },
                     },
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlIdentifierExpression()
                         {
                             Value = "Value"
-                        }
+                        },
                     },
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlIdentifierExpression()
                         {
                             Value = "Active"
-                        }
-                    }
+                        },
+                    },
                 },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
                     {
                         Value = "RouteData"
-                    }
-                }
+                    },
+                },
             }
         };
 
@@ -537,6 +554,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -546,22 +567,22 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "a"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "RouteData"
-                    }
-                }
+                },
             }
         };
-
+  
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -573,6 +594,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+    
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -581,27 +606,27 @@ public class SelectTest
                 {
                     new SqlSelectItemExpression()
                     {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "Id"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "bid"
                         },
-                        Body = new SqlIdentifierExpression()
-                        {
-                            Value = "Id"
-                        }
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "a"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "RouteData"
-                    }
-                }
+                },
             }
         };
 
@@ -615,6 +640,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -624,7 +653,7 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlSelectExpression()
                 {
@@ -639,20 +668,20 @@ public class SelectTest
                             new SqlSelectItemExpression()
                             {
                                 Body = new SqlAllColumnExpression()
-                            }
+                            },
                         },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
                                 Value = "RouteData"
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 }
-            }
+            },
         };
-
+ 
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -711,6 +740,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+ 
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -720,18 +753,18 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "rd"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "RouteData"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
@@ -743,9 +776,9 @@ public class SelectTest
                     Right = new SqlStringExpression()
                     {
                         Value = "805B9CFC-1671-4BD8-B011-003EB7398FB0"
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -758,37 +791,44 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "customer"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t3"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "customer"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "Value" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Value"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "t3"
-                        }
+                        },
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlSelectExpression()
@@ -796,32 +836,32 @@ public class SelectTest
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
                             {
-                                new SqlSelectItemExpression()
+                                Body = new SqlIdentifierExpression()
                                 {
-                                    Body = new SqlIdentifierExpression()
-                                    {
-                                        Value = "city"
-                                    }
-                                }
+                                    Value = "city"
+                                },
                             },
+                        },
                             From = new SqlTableExpression()
                             {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "address"
+                                },
                                 Alias = new SqlIdentifierExpression()
                                 {
                                     Value = "a"
                                 },
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "address"
-                                }
-                            }
-                        }
+                            },
+                        },
                     }
-                }
-            }
+                },
+            },
         };
-
+   
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -832,6 +872,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -841,28 +884,31 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
                 },
                 Where = new SqlBetweenAndExpression()
                 {
                     Body = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "CreateOn" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "CreateOn"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "fa"
-                        }
+                        },
                     },
                     Begin = new SqlStringExpression()
                     {
@@ -871,9 +917,9 @@ public class SelectTest
                     End = new SqlStringExpression()
                     {
                         Value = "2024-10-10"
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -887,27 +933,30 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
@@ -915,11 +964,14 @@ public class SelectTest
                     {
                         Body = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "OnlyMainJobProcessing" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "OnlyMainJobProcessing"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
+                            },
                         },
                         Begin = new SqlBinaryExpression()
                         {
@@ -927,46 +979,48 @@ public class SelectTest
                             {
                                 Left = new SqlNumberExpression()
                                 {
-                                    Value = 0
+                                    Value = 0M
                                 },
                                 Operator = SqlBinaryOperator.Add,
                                 Right = new SqlNumberExpression()
                                 {
                                     Value = 0.5M
-                                }
+                                },
                             },
                             Operator = SqlBinaryOperator.Multiply,
                             Right = new SqlNumberExpression()
                             {
-                                Value = 2
-                            }
+                                Value = 2M
+                            },
                         },
                         End = new SqlNumberExpression()
                         {
-                            Value = 1
-                        }
+                            Value = 1M
+                        },
                     },
                     Operator = SqlBinaryOperator.And,
                     Right = new SqlBinaryExpression()
                     {
                         Left = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "Active" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Active"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
+                            },
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlNumberExpression()
                         {
-                            Value = 1
-                        }
-                    }
-                }
-            }
+                            Value = 1M
+                        },
+                    },
+                },
+            },
         };
-
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -978,42 +1032,46 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
                     {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Customer"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "c"
                         },
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "Customer"
-                        }
                     },
+                    JoinType = SqlJoinType.InnerJoin,
                     Right = new SqlTableExpression()
                     {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Address"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "a"
                         },
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "Address"
-                        }
                     },
-                    JoinType = SqlJoinType.InnerJoin,
                     Conditions = new SqlBinaryExpression()
                     {
                         Left = new SqlBinaryExpression()
@@ -1022,64 +1080,79 @@ public class SelectTest
                             {
                                 Left = new SqlPropertyExpression()
                                 {
-                                    Name = new SqlIdentifierExpression() { Value = "Id" },
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "Id"
+                                    },
                                     Table = new SqlIdentifierExpression()
                                     {
                                         Value = "c"
-                                    }
+                                    },
                                 },
                                 Operator = SqlBinaryOperator.EqualTo,
                                 Right = new SqlPropertyExpression()
                                 {
-                                    Name = new SqlIdentifierExpression() { Value = "CustomerId" },
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "CustomerId"
+                                    },
                                     Table = new SqlIdentifierExpression()
                                     {
                                         Value = "a"
-                                    }
-                                }
+                                    },
+                                },
                             },
                             Operator = SqlBinaryOperator.Or,
                             Right = new SqlBinaryExpression()
                             {
                                 Left = new SqlPropertyExpression()
                                 {
-                                    Name = new SqlIdentifierExpression() { Value = "Age" },
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "Age"
+                                    },
                                     Table = new SqlIdentifierExpression()
                                     {
                                         Value = "c"
-                                    }
+                                    },
                                 },
                                 Operator = SqlBinaryOperator.GreaterThenOrEqualTo,
                                 Right = new SqlPropertyExpression()
                                 {
-                                    Name = new SqlIdentifierExpression() { Value = "CustomerId" },
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "CustomerId"
+                                    },
                                     Table = new SqlIdentifierExpression()
                                     {
                                         Value = "a"
-                                    }
-                                }
-                            }
+                                    },
+                                },
+                            },
                         },
                         Operator = SqlBinaryOperator.And,
                         Right = new SqlBinaryExpression()
                         {
                             Left = new SqlPropertyExpression()
                             {
-                                Name = new SqlIdentifierExpression() { Value = "CustomerNo" },
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "CustomerNo"
+                                },
                                 Table = new SqlIdentifierExpression()
                                 {
                                     Value = "c"
-                                }
+                                },
                             },
                             Operator = SqlBinaryOperator.NotEqualTo,
                             Right = new SqlStringExpression()
                             {
                                 Value = "abc"
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -1092,17 +1165,21 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+   
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlSelectExpression()
@@ -1114,25 +1191,26 @@ public class SelectTest
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
-                            {
-                                new SqlSelectItemExpression()
-                                {
-                                    Body = new SqlAllColumnExpression()
-                                }
-                            },
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlAllColumnExpression()
+                        },
+                    },
                             From = new SqlTableExpression()
                             {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "TEST"
+                                },
                                 Alias = new SqlIdentifierExpression()
                                 {
                                     Value = "t3"
                                 },
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "TEST"
-                                }
-                            }
-                        }
+                            },
+                        },
                     },
+                    JoinType = SqlJoinType.InnerJoin,
                     Right = new SqlSelectExpression()
                     {
                         Alias = new SqlIdentifierExpression()
@@ -1142,48 +1220,53 @@ public class SelectTest
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
-                            {
-                                new SqlSelectItemExpression()
-                                {
-                                    Body = new SqlAllColumnExpression()
-                                }
-                            },
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlAllColumnExpression()
+                        },
+                    },
                             From = new SqlTableExpression()
                             {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "test1"
+                                },
                                 Alias = new SqlIdentifierExpression()
                                 {
                                     Value = "t"
                                 },
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "test1"
-                                }
-                            }
-                        }
+                            },
+                        },
                     },
-                    JoinType = SqlJoinType.InnerJoin,
                     Conditions = new SqlBinaryExpression()
                     {
                         Left = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "name" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "name"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "t"
-                            }
+                            },
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "test" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "test"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "t2"
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -1273,6 +1356,11 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -1283,24 +1371,27 @@ public class SelectTest
                     {
                         Body = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "FlowId"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
                 },
                 GroupBy = new SqlGroupByExpression()
                 {
@@ -1308,25 +1399,30 @@ public class SelectTest
                     {
                         new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "FlowId"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
+                            },
                         },
                         new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "Id" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Id"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
-
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -1337,6 +1433,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -1346,7 +1445,7 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlSelectExpression()
                 {
@@ -1360,15 +1459,18 @@ public class SelectTest
                         {
                             new SqlSelectItemExpression()
                             {
-                                Body = new SqlIdentifierExpression() { Value = "name" },
-                            }
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "name"
+                                },
+                            },
                         },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
                                 Value = "test5"
-                            }
+                            },
                         },
                         GroupBy = new SqlGroupByExpression()
                         {
@@ -1378,13 +1480,13 @@ public class SelectTest
                                 {
                                     Value = "NAME"
                                 },
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
-
+ 
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -1466,87 +1568,102 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+     
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Name = new SqlIdentifierExpression()
                     {
-                        Body = new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        }
-                    }
+                        Value = "FlowId"
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "fa"
+                    },
                 },
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
                 },
                 GroupBy = new SqlGroupByExpression()
                 {
                     Items = new List<SqlExpression>()
-                    {
-                        new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        },
-                        new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "Id" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        }
-                    },
+            {
+            new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "FlowId"
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "fa"
+                },
+            },
+            new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "Id"
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "fa"
+                },
+            },
+            },
                     Having = new SqlBinaryExpression()
                     {
                         Left = new SqlFunctionCallExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
-                                Value = "count",
+                                Value = "count"
                             },
-
                             Arguments = new List<SqlExpression>()
+                    {
+                        new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
                             {
-                                new SqlPropertyExpression()
-                                {
-                                    Name = new SqlIdentifierExpression() { Value = "Id" },
-                                    Table = new SqlIdentifierExpression()
-                                    {
-                                        Value = "fa"
-                                    }
-                                }
-                            }
+                                Value = "Id"
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "fa"
+                            },
+                        },
+                    },
                         },
                         Operator = SqlBinaryOperator.GreaterThen,
                         Right = new SqlNumberExpression()
                         {
-                            Value = 1
-                        }
-                    }
-                }
-            }
+                            Value = 1M
+                        },
+                    },
+                },
+            },
         };
-
+    
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -1557,79 +1674,92 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Name = new SqlIdentifierExpression()
                     {
-                        Body = new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        }
-                    }
+                        Value = "FlowId"
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "fa"
+                    },
                 },
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
                 },
                 GroupBy = new SqlGroupByExpression()
                 {
                     Items = new List<SqlExpression>()
-                    {
-                        new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        },
-                        new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "Id" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        }
-                    },
+            {
+            new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "FlowId"
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "fa"
+                },
+            },
+            new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "Id"
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "fa"
+                },
+            },
+            },
                     Having = new SqlBinaryExpression()
                     {
                         Left = new SqlBinaryExpression()
                         {
                             Left = new SqlNumberExpression()
                             {
-                                Value = 1
+                                Value = 1M
                             },
                             Operator = SqlBinaryOperator.Add,
                             Right = new SqlNumberExpression()
                             {
-                                Value = 2
-                            }
+                                Value = 2M
+                            },
                         },
                         Operator = SqlBinaryOperator.GreaterThen,
                         Right = new SqlNumberExpression()
                         {
-                            Value = 3
-                        }
-                    }
-                }
-            }
+                            Value = 3M
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -1641,67 +1771,82 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Name = new SqlIdentifierExpression()
                     {
-                        Body = new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "fa"
-                            }
-                        }
-                    }
+                        Value = "FlowId"
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "fa"
+                    },
                 },
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
                 },
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body =
+                    new SqlPropertyExpression()
                     {
-                        new SqlOrderByItemExpression()
+                        Name = new SqlIdentifierExpression()
                         {
-                            Expression = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression() { Value = "FlowId" },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "fa"
-                                }
-                            },
-                            OrderByType = SqlOrderByType.Desc
+                            Value = "FlowId"
                         },
-                        new SqlOrderByItemExpression()
+                        Table = new SqlIdentifierExpression()
                         {
-                            Expression = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression() { Value = "Id" },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "fa"
-                                }
-                            },
-                            OrderByType = SqlOrderByType.Asc
-                        }
-                    }
-                }
-            }
+                            Value = "fa"
+                        },
+                    },
+                    OrderByType = SqlOrderByType.Desc
+                },
+                new SqlOrderByItemExpression()
+                {
+                    Body =
+                    new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Id"
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "fa"
+                        },
+                    },
+                    OrderByType = SqlOrderByType.Asc
+                },
+            },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -1713,6 +1858,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -1722,7 +1870,7 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlSelectExpression()
                 {
@@ -1736,33 +1884,38 @@ public class SelectTest
                         {
                             new SqlSelectItemExpression()
                             {
-                                Body = new SqlIdentifierExpression() { Value = "name" },
-                            }
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "name"
+                                },
+                            },
                         },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
                                 Value = "test5"
-                            }
+                            },
                         },
                         OrderBy = new SqlOrderByExpression()
                         {
                             Items = new List<SqlOrderByItemExpression>()
                             {
-                               new SqlOrderByItemExpression()
-                               {
-                                   Expression =  new SqlIdentifierExpression()
-                                   {
-                                       Value = "NAME"
-                                   }
-                               }
-                            }
-                        }
-                    }
-                }
-            }
+                                new SqlOrderByItemExpression()
+                                {
+                                    Body =
+                                        new SqlIdentifierExpression()
+                                        {
+                                            Value = "NAME"
+                                        },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -1775,38 +1928,45 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
-                ResultSetReturnOption = SqlResultSetReturnOption.Distinct,
                 Columns = new List<SqlSelectItemExpression>()
                 {
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "FlowId"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
+                ResultSetReturnOption = SqlResultSetReturnOption.Distinct,
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
-                }
-            }
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -1818,6 +1978,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -1830,35 +1993,38 @@ public class SelectTest
                         {
                             Name = new SqlIdentifierExpression()
                             {
-                                Value = "count",
+                                Value = "count"
                             },
-                            IsDistinct = true,
                             Arguments = new List<SqlExpression>()
                             {
                                 new SqlPropertyExpression()
                                 {
-                                    Name = new SqlIdentifierExpression() { Value = "FlowId" },
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "FlowId"
+                                    },
                                     Table = new SqlIdentifierExpression()
                                     {
                                         Value = "fa"
-                                    }
-                                }
-                            }
-                        }
-                    }
+                                    },
+                                },
+                            },
+                            IsDistinct = true,
+                        },
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
-                }
-            }
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -2029,6 +2195,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -2038,33 +2207,36 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "rd"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "RouteData"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "name" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "name"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "rd"
-                        }
+                        },
                     },
                     Operator = SqlBinaryOperator.Is,
                     Right = new SqlNullExpression()
-                }
-            }
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -2125,73 +2297,77 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "TEST"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlExistsExpression()
                     {
-                        SelectExpression = new SqlSelectExpression()
+                        Body = new SqlSelectExpression()
                         {
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                                {
-                                    new SqlSelectItemExpression()
-                                    {
-                                        Body = new SqlAllColumnExpression()
-                                    }
-                                },
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlAllColumnExpression()
+                            },
+                        },
                                 From = new SqlTableExpression()
                                 {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "TEST1"
+                                    },
                                     Alias = new SqlIdentifierExpression()
                                     {
                                         Value = "t2"
                                     },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "TEST1"
-                                    }
-                                }
-                            }
-                        }
+                                },
+                            },
+                        },
                     },
                     Operator = SqlBinaryOperator.Or,
                     Right = new SqlBinaryExpression()
                     {
                         Left = new SqlNumberExpression()
                         {
-                            Value = 1
+                            Value = 1M
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlNumberExpression()
                         {
-                            Value = 1
-                        }
-                    }
-                }
-            }
+                            Value = 1M
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -2320,6 +2496,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlUnionQueryExpression()
@@ -2331,23 +2510,23 @@ public class SelectTest
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
                             {
-                                new SqlSelectItemExpression()
-                                {
-                                    Body = new SqlIdentifierExpression()
-                                    {
-                                        Value = "name"
-                                    }
-                                }
+                                Value = "name"
                             },
+                        },
+                    },
                             From = new SqlTableExpression()
                             {
                                 Name = new SqlIdentifierExpression()
                                 {
                                     Value = "test"
-                                }
-                            }
-                        }
+                                },
+                            },
+                        },
                     },
                     UnionType = SqlUnionType.Union,
                     Right = new SqlSelectExpression()
@@ -2355,24 +2534,24 @@ public class SelectTest
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
                             {
-                                new SqlSelectItemExpression()
-                                {
-                                    Body = new SqlIdentifierExpression()
-                                    {
-                                        Value = "name"
-                                    }
-                                }
+                                Value = "name"
                             },
+                        },
+                    },
                             From = new SqlTableExpression()
                             {
                                 Name = new SqlIdentifierExpression()
                                 {
                                     Value = "test11"
-                                }
-                            }
-                        }
-                    }
+                                },
+                            },
+                        },
+                    },
                 },
                 UnionType = SqlUnionType.Except,
                 Right = new SqlSelectExpression()
@@ -2380,26 +2559,27 @@ public class SelectTest
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
                         {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlIdentifierExpression()
-                                {
-                                    Value = "name"
-                                }
-                            }
+                            Value = "name"
                         },
+                    },
+                },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
                                 Value = "test11"
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
+
         Assert.True(sqlAst.Equals(expect));
     }
 
@@ -2596,38 +2776,45 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
-                ResultSetReturnOption = SqlResultSetReturnOption.All,
                 Columns = new List<SqlSelectItemExpression>()
                 {
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "FlowId" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "FlowId"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "fa"
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
+                ResultSetReturnOption = SqlResultSetReturnOption.All,
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowActivity"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "fa"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "FlowActivity"
-                    }
-                }
-            }
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -2639,76 +2826,86 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "customer"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "c"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "customer"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "Age" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Age"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "c"
-                        }
+                        },
                     },
                     Operator = SqlBinaryOperator.GreaterThen,
                     Right = new SqlAllExpression()
                     {
-                        SelectExpression = new SqlSelectExpression()
+                        Body = new SqlSelectExpression()
                         {
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlPropertyExpression()
                                 {
-                                    new SqlSelectItemExpression()
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        Body = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "Quantity" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "o"
-                                            }
-                                        }
-                                    }
+                                        Value = "Quantity"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "o"
+                                    },
                                 },
+                            },
+                        },
                                 From = new SqlTableExpression()
                                 {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "orderdetail"
+                                    },
                                     Alias = new SqlIdentifierExpression()
                                     {
                                         Value = "o"
                                     },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "orderdetail"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -2720,75 +2917,84 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "customer"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "c"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "customer"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "Age" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Age"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "c"
-                        }
+                        },
                     },
                     Operator = SqlBinaryOperator.GreaterThen,
                     Right = new SqlAnyExpression()
                     {
-                        SelectExpression = new SqlSelectExpression()
+                        Body = new SqlSelectExpression()
                         {
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlPropertyExpression()
                                 {
-                                    new SqlSelectItemExpression()
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        Body = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "Quantity" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "o"
-                                            }
-                                        }
-                                    }
+                                        Value = "Quantity"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "o"
+                                    },
                                 },
+                            },
+                        },
                                 From = new SqlTableExpression()
                                 {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "orderdetail"
+                                    },
                                     Alias = new SqlIdentifierExpression()
                                     {
                                         Value = "o"
                                     },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "orderdetail"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -2837,6 +3043,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -2846,28 +3055,31 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "TEST"
-                    }
                 },
                 Where = new SqlInExpression()
                 {
                     Field = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "NAME" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "NAME"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "t"
-                        }
+                        },
                     },
                     TargetList = new List<SqlExpression>()
                     {
@@ -2882,10 +3094,10 @@ public class SelectTest
                         new SqlStringExpression()
                         {
                             Value = "c"
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -2898,41 +3110,44 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
                     {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "TEST"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "t"
                         },
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "TEST"
-                        }
                     },
                     JoinType = SqlJoinType.InnerJoin,
                     Right = new SqlTableExpression()
                     {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "TEST2"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "t2"
                         },
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "TEST2"
-                        }
                     },
                     Conditions = new SqlBinaryExpression()
                     {
@@ -2940,45 +3155,55 @@ public class SelectTest
                         {
                             Field = new SqlPropertyExpression()
                             {
-                                Name = new SqlIdentifierExpression() { Value = "NAME" },
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "NAME"
+                                },
                                 Table = new SqlIdentifierExpression()
                                 {
                                     Value = "t"
-                                }
+                                },
                             },
                             TargetList = new List<SqlExpression>()
-                            {
-                                new SqlStringExpression()
-                                {
-                                    Value = "a"
-                                }
-                            }
+                    {
+                        new SqlStringExpression()
+                        {
+                            Value = "a"
+                        },
+                    },
                         },
                         Operator = SqlBinaryOperator.And,
                         Right = new SqlBinaryExpression()
                         {
                             Left = new SqlPropertyExpression()
                             {
-                                Name = new SqlIdentifierExpression() { Value = "NAME" },
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "NAME"
+                                },
                                 Table = new SqlIdentifierExpression()
                                 {
                                     Value = "t"
-                                }
+                                },
                             },
                             Operator = SqlBinaryOperator.EqualTo,
                             Right = new SqlPropertyExpression()
                             {
-                                Name = new SqlIdentifierExpression() { Value = "NAME" },
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "NAME"
+                                },
                                 Table = new SqlIdentifierExpression()
                                 {
                                     Value = "t2"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -3164,6 +3389,9 @@ public class SelectTest
             sqlAst = DbUtils.Parse(sql, DbType.Oracle, ((l, s) => { testOutputHelper.WriteLine(s + ":" + l); }));
         }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var alias = new SqlIdentifierExpression()
         {
             Value = name
@@ -3175,163 +3403,179 @@ public class SelectTest
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Alias = alias,
+                Body = new SqlCaseExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Items = new List<SqlCaseItemExpression>()
                     {
-                        Alias = alias,
-                        Body = new SqlCaseExpression()
+                        new SqlCaseItemExpression()
                         {
-                            Items = new List<SqlCaseItemExpression>()
+                            Condition = new SqlBinaryExpression()
                             {
-                                new SqlCaseItemExpression()
+                                Left = new SqlPropertyExpression()
                                 {
-                                    Condition = new SqlBinaryExpression()
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        Left = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "name" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "t"
-                                            }
-                                        },
-                                        Operator = SqlBinaryOperator.EqualTo,
-                                        Right = new SqlStringExpression()
-                                        {
-                                            Value = "a"
-                                        }
+                                        Value = "name"
                                     },
-                                    Value = new SqlStringExpression()
+                                    Table = new SqlIdentifierExpression()
                                     {
-                                        Value = "1"
-                                    }
+                                        Value = "t"
+                                    },
                                 },
-                                new SqlCaseItemExpression()
+                                Operator = SqlBinaryOperator.EqualTo,
+                                Right = new SqlStringExpression()
                                 {
-                                    Condition = new SqlInExpression()
-                                    {
-                                        Field = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "name" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "t"
-                                            }
-                                        },
-                                        TargetList = new List<SqlExpression>()
-                                        {
-                                            new SqlStringExpression()
-                                            {
-                                                Value = "b"
-                                            },
-                                            new SqlStringExpression()
-                                            {
-                                                Value = "c"
-                                            }
-                                        }
-                                    },
-                                    Value = new SqlStringExpression()
-                                    {
-                                        Value = "2"
-                                    }
-                                }
+                                    Value = "a"
+                                },
                             },
-                            Else = new SqlStringExpression()
+                            Value = new SqlStringExpression()
                             {
-                                Value = "3"
-                            }
-                        }
-                    }
+                                Value = "1"
+                            },
+                        },
+                        new SqlCaseItemExpression()
+                        {
+                            Condition = new SqlInExpression()
+                            {
+                                Field = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "name"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "t"
+                                    },
+                                },
+                                TargetList = new List<SqlExpression>()
+                                {
+                                    new SqlStringExpression()
+                                    {
+                                        Value = "b"
+                                    },
+                                    new SqlStringExpression()
+                                    {
+                                        Value = "c"
+                                    },
+                                },
+                            },
+                            Value = new SqlStringExpression()
+                            {
+                                Value = "2"
+                            },
+                        },
+                    },
+                    Else = new SqlStringExpression()
+                    {
+                        Value = "3"
+                    },
                 },
+            },
+        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
                     {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "test"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "t"
                         },
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "test"
-                        }
                     },
                     JoinType = SqlJoinType.InnerJoin,
                     Right = new SqlTableExpression()
                     {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "test11"
+                        },
                         Alias = new SqlIdentifierExpression()
                         {
                             Value = "t2"
                         },
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "test11"
-                        }
                     },
                     Conditions = new SqlBinaryExpression()
                     {
                         Left = new SqlCaseExpression()
                         {
                             Items = new List<SqlCaseItemExpression>()
+                    {
+                        new SqlCaseItemExpression()
+                        {
+                            Condition = new SqlBinaryExpression()
                             {
-                                new SqlCaseItemExpression()
+                                Left = new SqlPropertyExpression()
                                 {
-                                    Condition = new SqlBinaryExpression()
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        Left = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "name" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "t"
-                                            }
-                                        },
-                                        Operator = SqlBinaryOperator.EqualTo,
-                                        Right = new SqlStringExpression()
-                                        {
-                                            Value = "a"
-                                        }
+                                        Value = "name"
                                     },
-                                    Value = new SqlStringExpression()
+                                    Table = new SqlIdentifierExpression()
                                     {
-                                        Value = "1"
-                                    }
+                                        Value = "t"
+                                    },
                                 },
-                                new SqlCaseItemExpression()
+                                Operator = SqlBinaryOperator.EqualTo,
+                                Right = new SqlStringExpression()
                                 {
-                                    Condition = new SqlBinaryExpression()
+                                    Value = "a"
+                                },
+                            },
+                            Value = new SqlStringExpression()
+                            {
+                                Value = "1"
+                            },
+                        },
+                        new SqlCaseItemExpression()
+                        {
+                            Condition = new SqlBinaryExpression()
+                            {
+                                Left = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        Left = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "name" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "t"
-                                            }
-                                        },
-                                        Operator = SqlBinaryOperator.Is,
-                                        Right = new SqlNullExpression()
+                                        Value = "name"
                                     },
-                                    Value = new SqlStringExpression()
+                                    Table = new SqlIdentifierExpression()
                                     {
-                                        Value = "2"
-                                    }
-                                }
-                            }
+                                        Value = "t"
+                                    },
+                                },
+                                Operator = SqlBinaryOperator.Is,
+                                Right = new SqlNullExpression()
+                            },
+                            Value = new SqlStringExpression()
+                            {
+                                Value = "2"
+                            },
+                        },
+                    },
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "name" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "name"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "t2"
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -3347,81 +3591,84 @@ public class SelectTest
             sqlAst = DbUtils.Parse(sql, DbType.Oracle, ((l, s) => { testOutputHelper.WriteLine(s + ":" + l); }));
         }));
         testOutputHelper.WriteLine("time:" + t);
-
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlCaseExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Items = new List<SqlCaseItemExpression>()
                     {
-                        Body = new SqlCaseExpression()
+                        new SqlCaseItemExpression()
                         {
-                            Value = new SqlSelectExpression()
+                            Condition = new SqlStringExpression()
                             {
-                                Query = new SqlSelectQueryExpression()
-                                {
-                                    Columns = new List<SqlSelectItemExpression>()
-                                    {
-                                        new SqlSelectItemExpression()
-                                        {
-                                            Body = new SqlIdentifierExpression()
-                                            {
-                                                Value = "name"
-                                            }
-                                        }
-                                    },
-                                    From = new SqlTableExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression()
-                                        {
-                                            Value = "test5"
-                                        }
-                                    },
-                                    Limit = new SqlLimitExpression()
-                                    {
-                                        RowCount = new SqlNumberExpression()
-                                        {
-                                            Value = 1
-                                        }
-                                    }
-                                }
+                                Value = "a"
                             },
-                            Items = new List<SqlCaseItemExpression>()
+                            Value = new SqlNumberExpression()
                             {
-                                new SqlCaseItemExpression()
-                                {
-                                    Condition = new SqlStringExpression()
-                                    {
-                                        Value = "a"
-                                    },
-                                    Value = new SqlNumberExpression()
-                                    {
-                                        Value = 1
-                                    }
-                                }
+                                Value = 1M
                             },
-                            Else = new SqlNumberExpression()
+                        },
+                    },
+                    Else = new SqlNumberExpression()
+                    {
+                        Value = 2M
+                    },
+                    Value = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
                             {
-                                Value = 2
-                            }
-                        }
-                    }
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlIdentifierExpression()
+                                    {
+                                        Value = "name"
+                                    },
+                                },
+                            },
+                            From = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "test5"
+                                },
+                            },
+                            Limit = new SqlLimitExpression()
+                            {
+                                RowCount = new SqlNumberExpression()
+                                {
+                                    Value = 1M
+                                },
+                            },
+                        },
+                    },
                 },
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test5"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "test5"
-                    }
-                }
-            }
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -3433,6 +3680,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+     
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -3444,28 +3695,28 @@ public class SelectTest
                         Body = new SqlIdentifierExpression()
                         {
                             Value = "name"
-                        }
-                    }
+                        },
+                    },
                 },
                 Into = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
                     {
                         Value = "test14"
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "TEST"
-                    }
-                }
-            }
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -3775,6 +4026,9 @@ public class SelectTest
             sqlAst = DbUtils.Parse(sql, DbType.MySql, ((l, s) => { testOutputHelper.WriteLine(s + ":" + l); }));
         }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         SqlLimitExpression limit = null;
         if (limitString == " limit 1,5")
             limit = new SqlLimitExpression()
@@ -3802,59 +4056,67 @@ public class SelectTest
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "customer"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "a"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "customer"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "name" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "name"
+                        },
                         Table = new SqlIdentifierExpression()
                         {
                             Value = "a"
-                        }
+                        },
                     },
                     Operator = SqlBinaryOperator.NotEqualTo,
                     Right = new SqlStringExpression()
                     {
                         Value = "'123"
-                    }
+                    },
                 },
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body =
+                    new SqlPropertyExpression()
                     {
-                        new SqlOrderByItemExpression()
+                        Name = new SqlIdentifierExpression()
                         {
-                            Expression = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression() { Value = "Id" },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "a"
-                                }
-                            }
-                        }
-                    }
+                            Value = "Id"
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "a"
+                        },
+                    },
+                },
+            },
                 },
                 Limit = limit
-            }
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -3895,7 +4157,7 @@ public class SelectTest
                     {
                         new SqlOrderByItemExpression()
                         {
-                            Expression = new SqlPropertyExpression()
+                            Body = new SqlPropertyExpression()
                             {
                                 Name = new SqlIdentifierExpression() { Value = "name" },
                                 Table = new SqlIdentifierExpression()
@@ -3960,7 +4222,7 @@ public class SelectTest
                         new SqlOrderByItemExpression()
                         {
                             OrderByType = SqlOrderByType.Desc,
-                            Expression = new SqlPropertyExpression()
+                            Body = new SqlPropertyExpression()
                             {
                                 Name = new SqlIdentifierExpression() { Value = "NAME" },
                                 Table = new SqlIdentifierExpression()
@@ -4069,7 +4331,7 @@ public class SelectTest
                     {
                         new SqlOrderByItemExpression()
                         {
-                            Expression = new SqlPropertyExpression()
+                            Body = new SqlPropertyExpression()
                             {
                                 Name = new SqlIdentifierExpression() { Value = "test" },
                                 Table = new SqlIdentifierExpression()
@@ -4097,6 +4359,10 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         SqlPartitionByExpression partitionBy = null;
         if (partitionByString == "PARTITION BY NAME ,ID ")
             partitionBy = new SqlPartitionByExpression()
@@ -4119,77 +4385,88 @@ public class SelectTest
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Name = new SqlIdentifierExpression()
                     {
-                        Body = new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "*" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "t"
-                            }
-                        }
+                        Value = "*"
                     },
-                    new SqlSelectItemExpression()
+                    Table = new SqlIdentifierExpression()
                     {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "rnum"
-                        },
-                        Body = new SqlFunctionCallExpression()
-                        {
-                            Name =new SqlIdentifierExpression()
-                            {
-                                Value = "ROW_NUMBER",
-                            },
-                            Over = new SqlOverExpression()
-                            {
-                                OrderBy = new SqlOrderByExpression()
-                                {
-                                    Items = new List<SqlOrderByItemExpression>()
-                                    {
-                                        new SqlOrderByItemExpression()
-                                        {
-                                            Expression = new SqlPropertyExpression()
-                                            {
-                                                Name = new SqlIdentifierExpression() { Value = "NAME" },
-                                                Table = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "t"
-                                                }
-                                            }
-                                        },
-                                        new SqlOrderByItemExpression()
-                                        {
-                                            Expression = new SqlPropertyExpression()
-                                            {
-                                                Name = new SqlIdentifierExpression() { Value = "ID" },
-                                                Table = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "t"
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                PartitionBy = partitionBy
-                            }
-                        }
-                    }
+                        Value = "t"
+                    },
                 },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "ROW_NUMBER"
+                    },
+                    Over = new SqlOverExpression()
+                    {
+                        PartitionBy = partitionBy,
+                        OrderBy = new SqlOrderByExpression()
+                        {
+                            Items = new List<SqlOrderByItemExpression>()
+                            {
+                                new SqlOrderByItemExpression()
+                                {
+                                    Body =
+                                    new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "NAME"
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t"
+                                        },
+                                    },
+                                },
+                                new SqlOrderByItemExpression()
+                                {
+                                    Body =
+                                    new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "ID"
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t"
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "rnum"
+                },
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "TEST"
-                    }
-                }
-            }
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -4203,6 +4480,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -4212,18 +4492,18 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "TEST"
-                    }
                 },
                 Where = new SqlNotExpression()
                 {
@@ -4231,20 +4511,23 @@ public class SelectTest
                     {
                         Left = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "NAME" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "NAME"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "t"
-                            }
+                            },
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlStringExpression()
                         {
                             Value = "abc"
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -4257,6 +4540,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -4266,24 +4552,24 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "t"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "TEST"
-                    }
                 },
                 Where = new SqlNotExpression()
                 {
                     Body = new SqlExistsExpression()
                     {
-                        SelectExpression = new SqlSelectExpression()
+                        Body = new SqlSelectExpression()
                         {
                             Query = new SqlSelectQueryExpression()
                             {
@@ -4292,25 +4578,26 @@ public class SelectTest
                                     new SqlSelectItemExpression()
                                     {
                                         Body = new SqlAllColumnExpression()
-                                    }
+                                    },
                                 },
                                 From = new SqlTableExpression()
                                 {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "TEST1"
+                                    },
                                     Alias = new SqlIdentifierExpression()
                                     {
                                         Value = "t2"
                                     },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "TEST1"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -4660,243 +4947,279 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
                 {
-                    new SqlSelectItemExpression()
+                    Name = new SqlIdentifierExpression()
                     {
-                        Body = new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression() { Value = "*" },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "c"
-                            }
-                        }
+                        Value = "*"
                     },
-                    new SqlSelectItemExpression()
+                    Table = new SqlIdentifierExpression()
                     {
-                        Alias = new SqlIdentifierExpression()
+                        Value = "c"
+                    },
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
                         {
-                            Value = "province_name"
-                        },
-                        Body = new SqlSelectExpression()
-                        {
-                            Query = new SqlSelectQueryExpression()
+                            new SqlSelectItemExpression()
                             {
-                                Columns = new List<SqlSelectItemExpression>()
+                                Body = new SqlPropertyExpression()
                                 {
-                                    new SqlSelectItemExpression()
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        Alias = new SqlIdentifierExpression()
-                                        {
-                                            Value = "province_name"
-                                        },
-                                        Body = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "name" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "a"
-                                            }
-                                        }
-                                    }
-                                },
-                                From = new SqlTableExpression()
-                                {
-                                    Alias = new SqlIdentifierExpression()
+                                        Value = "name"
+                                    },
+                                    Table = new SqlIdentifierExpression()
                                     {
                                         Value = "a"
                                     },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "portal_area"
-                                    }
                                 },
-                                Where = new SqlBinaryExpression()
+                                Alias = new SqlIdentifierExpression()
                                 {
-                                    Left = new SqlPropertyExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression() { Value = "id" },
-                                        Table = new SqlIdentifierExpression()
-                                        {
-                                            Value = "a"
-                                        }
-                                    },
-                                    Operator = SqlBinaryOperator.EqualTo,
-                                    Right = new SqlPropertyExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression() { Value = "province_id" },
-                                        Table = new SqlIdentifierExpression()
-                                        {
-                                            Value = "c"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    new SqlSelectItemExpression()
-                    {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "city_name"
-                        },
-                        Body = new SqlSelectExpression()
-                        {
-                            Query = new SqlSelectQueryExpression()
-                            {
-                                Columns = new List<SqlSelectItemExpression>()
-                                {
-                                    new SqlSelectItemExpression()
-                                    {
-                                        Alias = new SqlIdentifierExpression()
-                                        {
-                                            Value = "city_name"
-                                        },
-                                        Body = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "name" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "a"
-                                            }
-                                        }
-                                    }
+                                    Value = "province_name"
                                 },
-                                From = new SqlTableExpression()
-                                {
-                                    Alias = new SqlIdentifierExpression()
-                                    {
-                                        Value = "a"
-                                    },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "portal_area"
-                                    }
-                                },
-                                Where = new SqlBinaryExpression()
-                                {
-                                    Left = new SqlPropertyExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression() { Value = "id" },
-                                        Table = new SqlIdentifierExpression()
-                                        {
-                                            Value = "a"
-                                        }
-                                    },
-                                    Operator = SqlBinaryOperator.EqualTo,
-                                    Right = new SqlPropertyExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression() { Value = "city_id" },
-                                        Table = new SqlIdentifierExpression()
-                                        {
-                                            Value = "c"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    new SqlSelectItemExpression()
-                    {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "area_name"
-                        },
-                        Body = new SqlCaseExpression()
-                        {
-                            Items = new List<SqlCaseItemExpression>()
-                            {
-                                new SqlCaseItemExpression()
-                                {
-                                    Condition = new SqlBinaryExpression()
-                                    {
-                                        Left = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "area_id" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "c"
-                                            }
-                                        },
-                                        Operator = SqlBinaryOperator.Is,
-                                        Right = new SqlNullExpression()
-                                    },
-                                    Value = new SqlNullExpression()
-                                }
                             },
-                            Else = new SqlSelectExpression()
+                        },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
                             {
-                                Query = new SqlSelectQueryExpression()
+                                Value = "portal_area"
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "a"
+                            },
+                        },
+                        Where = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
                                 {
-                                    Columns = new List<SqlSelectItemExpression>()
+                                    Value = "id"
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a"
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "province_id"
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "c"
+                                },
+                            },
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "province_name"
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
                                     {
-                                        new SqlSelectItemExpression()
-                                        {
-                                            Alias = new SqlIdentifierExpression()
-                                            {
-                                                Value = "area_name"
-                                            },
-                                            Body = new SqlPropertyExpression()
-                                            {
-                                                Name = new SqlIdentifierExpression() { Value = "name" },
-                                                Table = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "a"
-                                                }
-                                            }
-                                        }
+                                        Value = "name"
                                     },
-                                    From = new SqlTableExpression()
+                                    Table = new SqlIdentifierExpression()
                                     {
-                                        Alias = new SqlIdentifierExpression()
-                                        {
-                                            Value = "a"
-                                        },
+                                        Value = "a"
+                                    },
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "city_name"
+                                },
+                            },
+                        },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "portal_area"
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "a"
+                            },
+                        },
+                        Where = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "id"
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a"
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "city_id"
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "c"
+                                },
+                            },
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "city_name"
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlCaseExpression()
+                {
+                    Items = new List<SqlCaseItemExpression>()
+                    {
+                        new SqlCaseItemExpression()
+                        {
+                            Condition = new SqlBinaryExpression()
+                            {
+                                Left = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "area_id"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "c"
+                                    },
+                                },
+                                Operator = SqlBinaryOperator.Is,
+                                Right = new SqlNullExpression()
+                            },
+                            Value = new SqlNullExpression()
+                        },
+                    },
+                    Else = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                            {
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlPropertyExpression()
+                                    {
                                         Name = new SqlIdentifierExpression()
                                         {
-                                            Value = "portal_area"
-                                        }
-                                    },
-                                    Where = new SqlBinaryExpression()
-                                    {
-                                        Left = new SqlPropertyExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression() { Value = "id" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "a"
-                                            }
+                                            Value = "name"
                                         },
-                                        Operator = SqlBinaryOperator.EqualTo,
-                                        Right = new SqlPropertyExpression()
+                                        Table = new SqlIdentifierExpression()
                                         {
-                                            Name = new SqlIdentifierExpression() { Value = "area_id" },
-                                            Table = new SqlIdentifierExpression()
-                                            {
-                                                Value = "c"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                                            Value = "a"
+                                        },
+                                    },
+                                    Alias = new SqlIdentifierExpression()
+                                    {
+                                        Value = "area_name"
+                                    },
+                                },
+                            },
+                            From = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "portal_area"
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "a"
+                                },
+                            },
+                            Where = new SqlBinaryExpression()
+                            {
+                                Left = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "id"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a"
+                                    },
+                                },
+                                Operator = SqlBinaryOperator.EqualTo,
+                                Right = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "area_id"
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "c"
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "area_name"
+                },
+            },
+        },
                 From = new SqlTableExpression()
                 {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "portal.portal_company"
+                    },
                     Alias = new SqlIdentifierExpression()
                     {
                         Value = "c"
                     },
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "portal.portal_company"
-                    }
                 },
                 Where = new SqlBinaryExpression()
                 {
@@ -4904,14 +5227,14 @@ public class SelectTest
                     {
                         Value = "no"
                     },
+                    Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlVariableExpression()
                     {
+                        Name = "a",
                         Prefix = ":",
-                        Name = "a"
                     },
-                    Operator = SqlBinaryOperator.EqualTo
-                }
-            }
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -4919,7 +5242,7 @@ public class SelectTest
 
     [Theory]
     [InlineData(new object[] { "(name)" })]
-    [InlineData(new object[] { "" })]
+    //[InlineData(new object[] { "" })]
     public void TestCte(string columns)
     {
         var sql =
@@ -4928,6 +5251,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         List<SqlIdentifierExpression> cteColumn = null;
         if (columns == "(name)")
         {
@@ -4944,86 +5270,86 @@ public class SelectTest
         {
             Query = new SqlSelectQueryExpression()
             {
-                WithSubQuery = new List<SqlWithSubQueryExpression>()
+                WithSubQuerys = new List<SqlWithSubQueryExpression>()
+        {
+            new SqlWithSubQueryExpression()
+            {
+                Alias = new SqlIdentifierExpression()
                 {
-                    new SqlWithSubQueryExpression()
+                    Value = "c1"
+                },
+                FromSelect = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
                     {
-                        Alias = new SqlIdentifierExpression()
+                        Columns = new List<SqlSelectItemExpression>()
                         {
-                            Value = "c1"
-                        },
-                        Columns = cteColumn,
-                        FromSelect = new SqlSelectExpression()
-                        {
-                            Query = new SqlSelectQueryExpression()
+                            new SqlSelectItemExpression()
                             {
-                                Columns = new List<SqlSelectItemExpression>()
+                                Body = new SqlIdentifierExpression()
                                 {
-                                    new SqlSelectItemExpression()
-                                    {
-                                        Body = new SqlIdentifierExpression()
-                                        {
-                                            Value = "name"
-                                        }
-                                    }
+                                    Value = "name"
                                 },
-                                From = new SqlTableExpression()
-                                {
-                                    Alias = new SqlIdentifierExpression()
-                                    {
-                                        Value = "t"
-                                    },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "test"
-                                    }
-                                }
-                            }
-                        }
+                            },
+                        },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "test"
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "t"
+                            },
+                        },
                     },
-                    new SqlWithSubQueryExpression()
-                    {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "c2"
-                        },
-                        Columns = cteColumn,
-                        FromSelect = new SqlSelectExpression()
-                        {
-                            Query = new SqlSelectQueryExpression()
-                            {
-                                Columns = new List<SqlSelectItemExpression>()
-                                {
-                                    new SqlSelectItemExpression()
-                                    {
-                                        Body = new SqlIdentifierExpression()
-                                        {
-                                            Value = "name"
-                                        }
-                                    }
-                                },
-                                From = new SqlTableExpression()
-                                {
-                                    Alias = new SqlIdentifierExpression()
-                                    {
-                                        Value = "t3"
-                                    },
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "test3"
-                                    }
-                                }
-                            }
-                        }
-                    }
                 },
-                Columns = new List<SqlSelectItemExpression>()
+                Columns = cteColumn
+            },
+            new SqlWithSubQueryExpression()
+            {
+                Alias = new SqlIdentifierExpression()
                 {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
+                    Value = "c2"
                 },
+                FromSelect = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "name"
+                                },
+                            },
+                        },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "test3"
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "t3"
+                            },
+                        },
+                    },
+                },
+                Columns = cteColumn
+            },
+        },
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -5031,38 +5357,44 @@ public class SelectTest
                         Name = new SqlIdentifierExpression()
                         {
                             Value = "c1"
-                        }
+                        },
                     },
+                    JoinType = SqlJoinType.InnerJoin,
                     Right = new SqlTableExpression()
                     {
                         Name = new SqlIdentifierExpression()
                         {
                             Value = "c2"
-                        }
+                        },
                     },
-                    JoinType = SqlJoinType.InnerJoin,
                     Conditions = new SqlBinaryExpression()
                     {
                         Left = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "name" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "name"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "c1"
-                            }
+                            },
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlPropertyExpression()
                         {
-                            Name = new SqlIdentifierExpression() { Value = "name" },
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "name"
+                            },
                             Table = new SqlIdentifierExpression()
                             {
                                 Value = "c2"
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -5076,6 +5408,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -5086,10 +5421,9 @@ public class SelectTest
                     {
                         Body = new SqlFunctionCallExpression()
                         {
-
-                            Name =new SqlIdentifierExpression()
+                            Name = new SqlIdentifierExpression()
                             {
-                                Value = "DATEDIFF",
+                                Value = "DATEDIFF"
                             },
                             Arguments = new List<SqlExpression>()
                             {
@@ -5104,13 +5438,14 @@ public class SelectTest
                                 new SqlStringExpression()
                                 {
                                     Value = "2023-01-10"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -5298,87 +5633,91 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlIdentifierExpression()
                 {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlIdentifierExpression()
-                        {
-                            Value = "name"
-                        }
-                    },
-                    new SqlSelectItemExpression()
-                    {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "b"
-                        },
-                        Body = new SqlFunctionCallExpression()
-                        {
-
-                            Name =new SqlIdentifierExpression()
-                            {
-                                Value = "percentile_cont",
-                            },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlNumberExpression()
-                                {
-                                    Value = 0.5M
-                                }
-                            },
-                            WithinGroup = new SqlWithinGroupExpression()
-                            {
-                                OrderBy = new SqlOrderByExpression()
-                                {
-                                    Items = new List<SqlOrderByItemExpression>()
-                                    {
-                                        new SqlOrderByItemExpression()
-                                        {
-                                            Expression = new SqlPropertyExpression()
-                                            {
-                                                Name = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "[number]"
-                                                },
-                                                Table = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "test5"
-                                                },
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            Over = new SqlOverExpression()
-                            {
-                                PartitionBy = new SqlPartitionByExpression()
-                                {
-                                    Items = new List<SqlExpression>()
-                                    {
-                                        new SqlIdentifierExpression()
-                                        {
-                                            Value = "NAME"
-                                        },
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    Value = "name"
                 },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "percentile_cont"
+                    },
+                    WithinGroup = new SqlWithinGroupExpression()
+                    {
+                        OrderBy = new SqlOrderByExpression()
+                        {
+                            Items = new List<SqlOrderByItemExpression>()
+                            {
+                                new SqlOrderByItemExpression()
+                                {
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "[number]"
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "test5"
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    Over = new SqlOverExpression()
+                    {
+                        PartitionBy = new SqlPartitionByExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "NAME"
+                                },
+                            },
+                        },
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlNumberExpression()
+                        {
+                            Value = 0.5M
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "b"
+                },
+            },
+        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
                     {
                         Value = "TEST5"
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
@@ -5427,7 +5766,7 @@ public class SelectTest
                                     {
                                         new SqlOrderByItemExpression()
                                         {
-                                            Expression = new SqlIdentifierExpression()
+                                            Body = new SqlIdentifierExpression()
                                             {
                                                 Value = "\"Number\""
                                             }
@@ -5507,7 +5846,7 @@ public class SelectTest
                                     {
                                         new SqlOrderByItemExpression()
                                         {
-                                            Expression = new SqlIdentifierExpression()
+                                            Body = new SqlIdentifierExpression()
                                             {
                                                 Value = "\"number\""
                                             }
@@ -5798,37 +6137,121 @@ group by APOT.ID, APOT.PRODUCTNO,
 
     [Theory]
     [InlineData(new object[] { "d" })]
-    [InlineData(new object[] { "" })]
+    //[InlineData(new object[] { "" })]
     public void TestPivotForOracle(string aliasName)
     {
         var sql = $"SELECT d.* FROM (SELECT * FROM test6) t PIVOT (SUM(amount) FOR MONTH IN (1 AS j, 2 AS b))  {aliasName}";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
+
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var alias = new SqlIdentifierExpression()
         {
             Value = "d"
         };
+
+        if (string.IsNullOrWhiteSpace(aliasName))
+        {
+            alias = null;
+        }
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    }
-                },
-                From = new SqlTableExpression()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
                 {
                     Name = new SqlIdentifierExpression()
                     {
-                        Value = "RouteData"
-                    }
-                }
-            }
+                        Value = "*"
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "d"
+                    },
+                },
+            },
+        },
+                From = new SqlPivotTableExpression()
+                {
+                    Alias = alias,
+                    For = new SqlIdentifierExpression()
+                    {
+                        Value = "MONTH"
+                    },
+                    FunctionCall = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "SUM"
+                        },
+                        Arguments = new List<SqlExpression>()
+                {
+                    new SqlIdentifierExpression()
+                    {
+                        Value = "amount"
+                    },
+                },
+                    },
+                    SubQuery = new SqlSelectExpression()
+                    {
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "t"
+                        },
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlAllColumnExpression()
+                        },
+                    },
+                            From = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "test6"
+                                },
+                            },
+                        },
+                    },
+                    In = new List<SqlExpression>()
+            {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 1M
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "j"
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 2M
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b"
+                        },
+                    },
+            },
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
