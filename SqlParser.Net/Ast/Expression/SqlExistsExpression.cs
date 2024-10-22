@@ -8,15 +8,25 @@ public class SqlExistsExpression : SqlExpression
     {
         visitor.VisitSqlExistsExpression(this);
     }
+
     public SqlExistsExpression()
     {
         this.Type = SqlExpressionType.Exists;
     }
 
+    /// <summary>
+    /// not exist
+    /// </summary>
+    public bool IsNot { get; set; }
+
     public SqlSelectExpression Body { get; set; }
 
     protected bool Equals(SqlExistsExpression other)
     {
+        if (IsNot != other.IsNot)
+        {
+            return false;
+        }
         return Body.Equals(other.Body);
     }
 

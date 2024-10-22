@@ -59,6 +59,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
     {
         AppendLine("new SqlBetweenAndExpression()");
         AppendLine("{");
+        if (sqlBetweenAndExpression.IsNot)
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("IsNot = true,");
+            });
+        }
         if (sqlBetweenAndExpression.Body != null)
         {
             AdvanceNext(() =>
@@ -222,7 +229,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlExistsExpression()");
         AppendLine("{");
 
-
+        if (sqlExistsExpression.IsNot)
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("IsNot = true,");
+            });
+        }
         if (sqlExistsExpression.Body != null)
         {
             AdvanceNext(() =>
@@ -323,7 +336,12 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("{");
         AdvanceNext(() =>
         {
-            AppendLine($"Value = \"{sqlIdentifierExpression.Value}\"");
+            var value = sqlIdentifierExpression.Value;
+            if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
+            {
+                value = "\\\"" + value.Substring(1, value.Length - 2) + "\\\"";
+            }
+            AppendLine($"Value = \"{value}\"");
         });
         AppendLine("},");
     }
@@ -332,7 +350,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlInExpression()");
         AppendLine("{");
 
-
+        if (sqlInExpression.IsNot)
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("IsNot = true,");
+            });
+        }
         if (sqlInExpression.Field != null)
         {
             AdvanceNext(() =>

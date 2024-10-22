@@ -15,6 +15,11 @@ public class SqlInExpression : SqlExpression
         this.Type = SqlExpressionType.In;
     }
 
+    /// <summary>
+    /// not in
+    /// </summary>
+    public bool IsNot { get; set; }
+
     public SqlExpression Field { get; set; }
 
     public List<SqlExpression> TargetList { get; set; }
@@ -22,6 +27,10 @@ public class SqlInExpression : SqlExpression
     public SqlSelectExpression SubQuery { get; set; }
     protected bool Equals(SqlInExpression other)
     {
+        if (IsNot != other.IsNot)
+        {
+            return false;
+        }
         if (!Field.Equals(other.Field))
         {
             return false;

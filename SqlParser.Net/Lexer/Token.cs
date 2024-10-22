@@ -198,4 +198,5 @@ public struct Token
     public static readonly Token Pivot = new Token("Pivot", "Pivot", 103);
 
     public static readonly Token For = new Token("For", "For", 104);
+
 }

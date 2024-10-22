@@ -145,12 +145,12 @@ public class SqlParser
                 continue;
             }
 
-            if (i >= 1 && i <= this.tokens.Count - 1)
+            if (i >= 1 && i <= this.tokens.Count - 2)
             {
                 var previewToken = this.tokens[i - 1];
 
                 var nextToken = this.tokens[i + 1];
-                if (previewToken.IsToken(leftEscapeCharacter) && currentToken.IsToken(Token.IdentifierString) &&
+                if (previewToken.IsToken(leftEscapeCharacter) && (currentToken.IsToken(Token.IdentifierString) || currentToken.IsToken(Token.NumberConstant)) &&
                     nextToken.IsToken(rightEscapeCharacter))
                 {
                     previewToken.IsRemove = true;
@@ -893,25 +893,19 @@ public class SqlParser
                 this.isOnlyRecursiveFourArithmeticOperations = false;
                 var result = new SqlBetweenAndExpression()
                 {
+                    IsNot = isNot,
                     Begin = begin,
                     End = end,
                     Body = left
                 };
-                if (isNot)
-                {
-                    var notResult = new SqlNotExpression()
-                    {
-                        Body = result
-                    };
-                    return notResult;
-                }
                 return result;
             }
             else if (Accept(Token.In))
             {
                 var result = new SqlInExpression()
                 {
-                    Field = left
+                    Field = left,
+                    IsNot = isNot
                 };
                 AcceptOrThrowException(Token.LeftParen);
                 var subQuery = AcceptSelectExpression();
@@ -937,14 +931,6 @@ public class SqlParser
                     result.TargetList = targetList;
                 }
                 AcceptOrThrowException(Token.RightParen);
-                if (isNot)
-                {
-                    var notResult = new SqlNotExpression()
-                    {
-                        Body = result
-                    };
-                    return notResult;
-                }
                 return result;
             }
             else if (Accept(Token.Like))
@@ -957,8 +943,15 @@ public class SqlParser
             }
             else if (Accept(Token.Not))
             {
-                isNot = true;
-                continue;
+                if (Accept(Token.Like))
+                {
+                    @operator = SqlBinaryOperator.NotLike;
+                }
+                else
+                {
+                    isNot = true;
+                    continue;
+                }
             }
             else
             {
@@ -978,11 +971,28 @@ public class SqlParser
             };
             if (isNot)
             {
-                var notResult = new SqlNotExpression()
+                isNot = false;
+                if (left is SqlExistsExpression sqlExistsExpression)
                 {
-                    Body = left
-                };
-                return notResult;
+                    sqlExistsExpression.IsNot = true;
+                }
+                else if (left is SqlInExpression sqlInExpression)
+                {
+                    sqlInExpression.IsNot = true;
+                }
+                else if (left is SqlBetweenAndExpression sqlBetweenAndExpression)
+                {
+                    sqlBetweenAndExpression.IsNot = true;
+                }
+                else
+                {
+                    var notResult = new SqlNotExpression()
+                    {
+                        Body = left
+                    };
+                    return notResult;
+                }
+
             }
             right = null;
         }
@@ -1285,16 +1295,35 @@ public class SqlParser
 
     }
 
-    private SqlNotExpression AcceptNot()
+    private SqlExpression AcceptNot()
     {
         if (Accept(Token.Not))
         {
             var expression = AcceptLogicalExpression();
-            var result = new SqlNotExpression()
+            if (expression is SqlExistsExpression sqlExistsExpression)
             {
-                Body = expression
-            };
-            return result;
+                sqlExistsExpression.IsNot = true;
+                return sqlExistsExpression;
+            }
+            else if (expression is SqlInExpression sqlInExpression)
+            {
+                sqlInExpression.IsNot = true;
+                return sqlInExpression;
+            }
+            else if (expression is SqlBetweenAndExpression sqlBetweenAndExpression)
+            {
+                sqlBetweenAndExpression.IsNot = true;
+                return sqlBetweenAndExpression;
+            }
+            else
+            {
+                var result = new SqlNotExpression()
+                {
+                    Body = expression
+                };
+                return result;
+            }
+
         }
 
         return null;

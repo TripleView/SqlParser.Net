@@ -13,12 +13,21 @@ public class SqlBetweenAndExpression : SqlExpression
         this.Type = SqlExpressionType.BetweenAnd;
     }
 
+    /// <summary>
+    /// not in
+    /// </summary>
+    public bool IsNot { get; set; }
+
     public SqlExpression Body { get; set; }
     public SqlExpression Begin { get; set; }
     public SqlExpression End { get; set; }
 
     protected bool Equals(SqlBetweenAndExpression other)
     {
+        if (IsNot != other.IsNot)
+        {
+            return false;
+        }
         if (Body is null ^ other.Body is null)
         {
             return false;

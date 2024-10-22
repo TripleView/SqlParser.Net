@@ -12,675 +12,549 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     private int numberOfLevels = 0;
 
     private bool addSpace = true;
+    private DbType dbType = DbType.MySql;
+
+    private bool isFirst = true;
+
+    public SqlGenerationAstVisitor(DbType dbType)
+    {
+        this.dbType = dbType;
+    }
 
     public string GetResult()
     {
-        return sb.ToString();
+        return sb.ToString().Trim(' ');
     }
     public override void VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
     {
-        AppendLine("new SqlAllColumnExpression()");
+        Append("*");
     }
     public override void VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
     {
-        AppendLine("new SqlAllExpression()");
-        AppendLine("{");
-
-
+        Append("all");
         if (sqlAllExpression.Body != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Body = ");
-                sqlAllExpression.Body.Accept(this);
-            });
+            WithBrackets(() => { sqlAllExpression.Body.Accept(this); });
         }
-
-        AppendLine("},");
     }
     public override void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
     {
-        AppendLine("new SqlAnyExpression()");
-        AppendLine("{");
-
-
+        Append("any");
         if (sqlAnyExpression.Body != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Body = ");
-                sqlAnyExpression.Body.Accept(this);
-            });
+            WithBrackets(() => { sqlAnyExpression.Body.Accept(this); });
         }
-
-        AppendLine("},");
     }
     public override void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
     {
-        AppendLine("new SqlBetweenAndExpression()");
-        AppendLine("{");
         if (sqlBetweenAndExpression.Body != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Body = ");
-                sqlBetweenAndExpression.Body.Accept(this);
-            });
+            sqlBetweenAndExpression.Body.Accept(this);
         }
 
+        if (sqlBetweenAndExpression.IsNot)
+        {
+            Append("not");
+        }
+        Append("between");
         if (sqlBetweenAndExpression.Begin != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Begin = ");
-                sqlBetweenAndExpression.Begin.Accept(this);
-            });
+            sqlBetweenAndExpression.Begin.Accept(this);
         }
+
+        Append("and");
+
         if (sqlBetweenAndExpression.End != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("End = ");
-                sqlBetweenAndExpression.End.Accept(this);
-            });
+            sqlBetweenAndExpression.End.Accept(this);
         }
-        AppendLine("},");
+
     }
     public override void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
     {
-        AppendLine("new SqlBinaryExpression()");
-        AppendLine("{");
-        if (sqlBinaryExpression.Left != null)
+        WithBrackets(() =>
         {
-            AdvanceNext(() =>
+            if (sqlBinaryExpression.Left != null)
             {
-                AppendAndNotRequiredNextSpace("Left = ");
                 sqlBinaryExpression.Left?.Accept(this);
-            });
-        }
-        if (sqlBinaryExpression.Operator != null)
-        {
-            AdvanceNext(() =>
+            }
+            if (sqlBinaryExpression.Operator != null)
             {
-                AppendLine($"Operator = SqlBinaryOperator.{sqlBinaryExpression.Operator.Name},");
-            });
-        }
-        if (sqlBinaryExpression.Right != null)
-        {
-            AdvanceNext(() =>
+                Append(sqlBinaryExpression.Operator.Value.ToString().ToLowerInvariant());
+            }
+            if (sqlBinaryExpression.Right != null)
             {
-                AppendAndNotRequiredNextSpace("Right = ");
                 sqlBinaryExpression.Right?.Accept(this);
-            });
-        }
-        AppendLine("},");
+            }
+
+        });
+
     }
     public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
-        AppendLine("new SqlCaseExpression()");
-        AppendLine("{");
+        Append("case");
+
+        if (sqlCaseExpression.Value != null)
+        {
+            sqlCaseExpression.Value.Accept(this);
+        }
 
         if (sqlCaseExpression.Items != null)
         {
-            AdvanceNext(() =>
+            foreach (var item in sqlCaseExpression.Items)
             {
-                AppendLine("Items = new List<SqlCaseItemExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlCaseExpression.Items)
-                {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
-
-                }
-                AppendLine("},");
-            });
+                item.Accept(this);
+            }
         }
 
         if (sqlCaseExpression.Else != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Else = ");
-                sqlCaseExpression.Else.Accept(this);
-            });
-        }
-        if (sqlCaseExpression.Value != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Value = ");
-                sqlCaseExpression.Value.Accept(this);
-            });
+            Append("else");
+            sqlCaseExpression.Else.Accept(this);
         }
 
-        AppendLine("},");
+        Append("end");
     }
     public override void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
     {
-        AppendLine("new SqlCaseItemExpression()");
-        AppendLine("{");
 
         if (sqlCaseItemExpression.Condition != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Condition = ");
-                sqlCaseItemExpression.Condition.Accept(this);
-            });
-        }
-        if (sqlCaseItemExpression.Value != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Value = ");
-                sqlCaseItemExpression.Value.Accept(this);
-            });
+            Append("when");
+            sqlCaseItemExpression.Condition.Accept(this);
         }
 
-        AppendLine("},");
+        if (sqlCaseItemExpression.Value != null)
+        {
+            Append("then");
+            sqlCaseItemExpression.Value.Accept(this);
+        }
+
     }
     public override void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
-        var isFirst = numberOfLevels == 0;
-        if (isFirst)
-        {
-            sb.Append("var expect = ");
-        }
-        AppendLine("new SqlDeleteExpression()");
-        AppendLine("{");
+        Append("delete from");
 
 
         if (sqlDeleteExpression.Table != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Table = ");
-                sqlDeleteExpression.Table.Accept(this);
-            });
+            sqlDeleteExpression.Table.Accept(this);
         }
         if (sqlDeleteExpression.Where != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Where = ");
-                sqlDeleteExpression.Where.Accept(this);
-            });
+            Append("where");
+            sqlDeleteExpression.Where.Accept(this);
         }
-        if (isFirst)
-        {
-            AppendLine("};");
-        }
-        else
-        {
-            AppendLine("},");
-        }
+
     }
     public override void VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
     {
-        AppendLine("new SqlExistsExpression()");
-        AppendLine("{");
+        if (sqlExistsExpression.IsNot)
+        {
+            Append("not");
+        }
 
+        Append("exists");
 
         if (sqlExistsExpression.Body != null)
         {
-            AdvanceNext(() =>
+            WithBrackets(() =>
             {
-                AppendAndNotRequiredNextSpace("Body = ");
                 sqlExistsExpression.Body.Accept(this);
             });
         }
 
-        AppendLine("},");
     }
 
     public override void VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
     {
-        AppendLine("new SqlFunctionCallExpression()");
-        AppendLine("{");
+
         if (sqlFunctionCallExpression.Name != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Name = ");
-                sqlFunctionCallExpression.Name?.Accept(this);
-            });
-        }
-        if (sqlFunctionCallExpression.WithinGroup != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("WithinGroup = ");
-                sqlFunctionCallExpression.WithinGroup?.Accept(this);
-            });
-        }
-        if (sqlFunctionCallExpression.Over != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Over = ");
-                sqlFunctionCallExpression.Over?.Accept(this);
-            });
+            sqlFunctionCallExpression.Name?.Accept(this);
         }
         if (sqlFunctionCallExpression.Arguments != null)
         {
-            AdvanceNext(() =>
+            WithBrackets(() =>
             {
-                AppendLine("Arguments = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var argument in sqlFunctionCallExpression.Arguments)
+                for (var i = 0; i < sqlFunctionCallExpression.Arguments.Count; i++)
                 {
-                    AdvanceNext(() =>
+                    if (i == 0)
                     {
-                        argument.Accept(this);
-                    });
+                        if (sqlFunctionCallExpression.IsDistinct)
+                        {
+                            Append("distinct");
+                        }
+                    }
+                    var argument = sqlFunctionCallExpression.Arguments[i];
+                    argument.Accept(this);
+                    if (i < sqlFunctionCallExpression.Arguments.Count - 1)
+                    {
+                        AppendWithSpace(",");
+                    }
                 }
-                AppendLine("},");
             });
         }
-        if (sqlFunctionCallExpression.IsDistinct)
+        else
         {
-            AdvanceNext(() =>
-            {
-                AppendLine($"IsDistinct = true,");
-            });
+            AppendWithSpace("()");
         }
-        AppendLine("},");
+
+        if (sqlFunctionCallExpression.WithinGroup != null)
+        {
+            sqlFunctionCallExpression.WithinGroup?.Accept(this);
+        }
+
+        if (sqlFunctionCallExpression.Over != null)
+        {
+            sqlFunctionCallExpression.Over?.Accept(this);
+        }
+
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
-        AppendLine("new SqlGroupByExpression()");
-        AppendLine("{");
+        Append("group by");
         if (sqlGroupByExpression.Items != null)
         {
-            AdvanceNext(() =>
+            for (var i = 0; i < sqlGroupByExpression.Items.Count; i++)
             {
-                AppendLine("Items = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlGroupByExpression.Items)
+                var item = sqlGroupByExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlGroupByExpression.Items.Count - 1)
                 {
-                    item.Accept(this);
+                    AppendWithSpace(",");
                 }
-                AppendLine("},");
-            });
+            }
         }
 
         if (sqlGroupByExpression.Having != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Having = ");
-                sqlGroupByExpression.Having.Accept(this);
-            });
+            Append("having");
+            sqlGroupByExpression.Having.Accept(this);
         }
 
-        AppendLine("},");
     }
     public override void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
     {
-       Append(sqlIdentifierExpression.Value);
+        Append(sqlIdentifierExpression.Value);
     }
     public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
     {
-        AppendLine("new SqlInExpression()");
-        AppendLine("{");
-
-
         if (sqlInExpression.Field != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Field = ");
-                sqlInExpression.Field.Accept(this);
-            });
+            sqlInExpression.Field.Accept(this);
         }
 
+        if (sqlInExpression.IsNot)
+        {
+            Append("not");
+        }
+        Append("in");
 
         if (sqlInExpression.TargetList != null)
         {
-            AdvanceNext(() =>
+            WithBrackets(() =>
             {
-                AppendLine("TargetList = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlInExpression.TargetList)
+                for (var i = 0; i < sqlInExpression.TargetList.Count; i++)
                 {
-                    AdvanceNext(() =>
+                    var item = sqlInExpression.TargetList[i];
+                    item.Accept(this);
+                    if (i < sqlInExpression.TargetList.Count - 1)
                     {
-                        item.Accept(this);
-                    });
-
+                        AppendWithSpace(",");
+                    }
                 }
-                AppendLine("},");
             });
         }
-        AppendLine("},");
+
+        if (sqlInExpression.SubQuery != null)
+        {
+            sqlInExpression.SubQuery.Accept(this);
+        }
     }
     public override void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
-        var isFirst = numberOfLevels == 0;
-        if (isFirst)
+        if (sqlInsertExpression.Table != null)
         {
-            sb.Append("var expect = ");
+            sqlInsertExpression.Table?.Accept(this);
         }
 
-        AppendLine("new SqlInsertExpression()");
-        AppendLine("{");
         if (sqlInsertExpression.Columns != null)
         {
-            AdvanceNext(() =>
+            WithBrackets(() =>
             {
-                AppendLine("Columns = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlInsertExpression.Columns)
+                for (var i = 0; i < sqlInsertExpression.Columns.Count; i++)
                 {
-                    AdvanceNext(() =>
+                    var item = sqlInsertExpression.Columns[i];
+                    item.Accept(this);
+                    if (i < sqlInsertExpression.Columns.Count - 1)
                     {
-                        item.Accept(this);
-                    });
-
+                        AppendWithSpace(",");
+                    }
                 }
-                AppendLine("},");
             });
         }
         if (sqlInsertExpression.ValuesList != null)
         {
-            AdvanceNext(() =>
+            Append("values");
+            for (var i = 0; i < sqlInsertExpression.ValuesList.Count; i++)
             {
-                AppendLine("ValuesList = new List<List<SqlExpression>>()");
-                AppendLine("{");
-                foreach (var items in sqlInsertExpression.ValuesList)
+                var items = sqlInsertExpression.ValuesList[i];
+                WithBrackets((() =>
                 {
-                    AdvanceNext(() =>
+                    for (var j = 0; j < items.Count; j++)
                     {
-                        AppendLine("new List<SqlExpression>()");
-                        AppendLine("{");
-                        foreach (var item in items)
+                        var item = items[j];
+                        item.Accept(this);
+                        if (j < items.Count - 1)
                         {
-                            AdvanceNext(() =>
-                            {
-                                item.Accept(this);
-                            });
-
+                            AppendWithSpace(",");
                         }
-                        AppendLine("},");
-                    });
+                    }
+                }));
+
+
+                if (i < sqlInsertExpression.ValuesList.Count - 1)
+                {
+                    AppendWithSpace(",");
                 }
-                AppendLine("},");
-            });
+            }
+
         }
-        if (sqlInsertExpression.Table != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Table = ");
-                sqlInsertExpression.Table?.Accept(this);
-            });
-        }
+
         if (sqlInsertExpression.FromSelect != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("FromSelect = ");
-                sqlInsertExpression.FromSelect?.Accept(this);
-            });
-        }
-
-
-        if (isFirst)
-        {
-            AppendLine("};");
-        }
-        else
-        {
-            AppendLine("},");
+            sqlInsertExpression.FromSelect?.Accept(this);
         }
     }
     public override void VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
     {
-        AppendLine("new SqlJoinTableExpression()");
-        AppendLine("{");
+
         if (sqlJoinTableExpression.Left != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Left = ");
-                sqlJoinTableExpression.Left.Accept(this);
-            });
+            sqlJoinTableExpression.Left.Accept(this);
         }
         if (sqlJoinTableExpression.JoinType != null)
         {
-            AdvanceNext(() =>
+            var joinType = "";
+            switch (sqlJoinTableExpression.JoinType)
             {
-                AppendLine($"JoinType = SqlJoinType.{sqlJoinTableExpression.JoinType.ToString()},");
-            });
+                case SqlJoinType.InnerJoin:
+                    joinType = "inner join";
+                    break;
+                case SqlJoinType.LeftJoin:
+                    joinType = "left join";
+                    break;
+                case SqlJoinType.RightJoin:
+                    joinType = "right join";
+                    break;
+                case SqlJoinType.FullJoin:
+                    joinType = "full join";
+                    break;
+                case SqlJoinType.CrossJoin:
+                    joinType = "cross join";
+                    break;
+            }
+            Append(joinType);
+
         }
         if (sqlJoinTableExpression.Right != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Right = ");
-                sqlJoinTableExpression.Right.Accept(this);
-            });
+            sqlJoinTableExpression.Right.Accept(this);
         }
 
         if (sqlJoinTableExpression.Conditions != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Conditions = ");
-                sqlJoinTableExpression.Conditions.Accept(this);
-            });
+            Append("on");
+            sqlJoinTableExpression.Conditions.Accept(this);
         }
-        AppendLine("},");
+
     }
     public override void VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
     {
-        AppendLine("new SqlLimitExpression()");
-        AppendLine("{");
-
-        if (sqlLimitExpression.Offset != null)
+        switch (dbType)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Offset = ");
-                sqlLimitExpression.Offset.Accept(this);
-            });
-        }
-        if (sqlLimitExpression.RowCount != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("RowCount = ");
-                sqlLimitExpression.RowCount.Accept(this);
-            });
+            case DbType.Oracle:
+                Append("FETCH FIRST");
+                if (sqlLimitExpression.RowCount != null)
+                {
+                    sqlLimitExpression.RowCount.Accept(this);
+                }
+                Append("rows ONLY");
+                break;
+            case DbType.MySql:
+                Append("limit");
+                if (sqlLimitExpression.Offset != null)
+                {
+                    sqlLimitExpression.Offset.Accept(this);
+                    AppendWithSpace(",");
+                }
+                if (sqlLimitExpression.RowCount != null)
+                {
+                    sqlLimitExpression.RowCount.Accept(this);
+                }
+
+                break;
+            case DbType.SqlServer:
+                Append("OFFSET");
+                if (sqlLimitExpression.Offset != null)
+                {
+                    sqlLimitExpression.Offset.Accept(this);
+                }
+                Append("ROWS FETCH NEXT");
+                if (sqlLimitExpression.RowCount != null)
+                {
+                    sqlLimitExpression.RowCount.Accept(this);
+                }
+                Append("ROWS ONLY");
+                break;
+            case DbType.Pgsql:
+
+                if (sqlLimitExpression.RowCount != null)
+                {
+                    Append("limit");
+                    sqlLimitExpression.RowCount.Accept(this);
+                }
+
+                if (sqlLimitExpression.Offset != null)
+                {
+                    Append("offset");
+                    sqlLimitExpression.Offset.Accept(this);
+                }
+
+                break;
         }
 
-        AppendLine("},");
+
+
     }
     public override void VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
     {
-        AppendLine("new SqlNotExpression()");
-        AppendLine("{");
-
-
+        Append("not");
         if (sqlNotExpression.Body != null)
         {
-            AdvanceNext(() =>
+            WithBrackets(() =>
             {
-                AppendAndNotRequiredNextSpace("Body = ");
                 sqlNotExpression.Body.Accept(this);
             });
         }
-
-        AppendLine("},");
     }
     public override void VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
     {
-        AppendLine("new SqlNullExpression()");
+        Append("null");
     }
     public override void VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
     {
-        AppendLine("new SqlNumberExpression()");
-        AppendLine("{");
-        AdvanceNext(() =>
-        {
-            AppendLine($"Value = {sqlNumberExpression.Value}M");
-        });
-        AppendLine("},");
+        Append(sqlNumberExpression.Value.ToString());
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
-        AppendLine("new SqlOrderByExpression()");
-        AppendLine("{");
+        Append("order by");
         if (sqlOrderByExpression.Items != null)
         {
-            AdvanceNext(() =>
+            for (var i = 0; i < sqlOrderByExpression.Items.Count; i++)
             {
-                AppendLine("Items = new List<SqlOrderByItemExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlOrderByExpression.Items)
+                var item = sqlOrderByExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlOrderByExpression.Items.Count - 1)
                 {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
-
+                    AppendWithSpace(",");
                 }
-                AppendLine("},");
-            });
-        }
+            }
 
-        AppendLine("},");
+        }
     }
     public override void VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
     {
-        AppendLine("new SqlOrderByItemExpression()");
-        AppendLine("{");
         if (sqlOrderByItemExpression.Body != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Body = ");
-                sqlOrderByItemExpression.Body?.Accept(this);
-            });
+            sqlOrderByItemExpression.Body?.Accept(this);
         }
-        if (sqlOrderByItemExpression.OrderByType != null)
+        if (sqlOrderByItemExpression.OrderByType.HasValue)
         {
-
-            AdvanceNext(() =>
-            {
-                AppendLine($"OrderByType = SqlOrderByType.{sqlOrderByItemExpression.OrderByType?.ToString()}");
-
-            });
+            Append(sqlOrderByItemExpression.OrderByType == SqlOrderByType.Asc ? "asc" : "desc");
         }
-        AppendLine("},");
     }
     public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
     {
-        AppendLine("new SqlOverExpression()");
-        AppendLine("{");
-
-
-        if (sqlOverExpression.PartitionBy != null)
+        Append("over");
+        WithBrackets((() =>
         {
-            AdvanceNext(() =>
+            if (sqlOverExpression.PartitionBy != null)
             {
-                AppendAndNotRequiredNextSpace("PartitionBy = ");
                 sqlOverExpression.PartitionBy.Accept(this);
-            });
-        }
-        if (sqlOverExpression.OrderBy != null)
-        {
-            AdvanceNext(() =>
+            }
+            if (sqlOverExpression.OrderBy != null)
             {
-                AppendAndNotRequiredNextSpace("OrderBy = ");
                 sqlOverExpression.OrderBy.Accept(this);
-            });
-        }
-        AppendLine("},");
+            }
+        }));
+
     }
     public override void VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
     {
-        AppendLine("new SqlPartitionByExpression()");
-        AppendLine("{");
-
+        Append("partition by");
 
         if (sqlPartitionByExpression.Items != null)
         {
-            AdvanceNext(() =>
+            for (var i = 0; i < sqlPartitionByExpression.Items.Count; i++)
             {
-                AppendLine("Items = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlPartitionByExpression.Items)
+                var item = sqlPartitionByExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlPartitionByExpression.Items.Count - 1)
                 {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
-
+                    AppendWithSpace(",");
                 }
-                AppendLine("},");
-            });
+            }
         }
-        AppendLine("},");
     }
     public override void VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
     {
-        AppendLine("new SqlPivotTableExpression()");
-        AppendLine("{");
+        if (sqlPivotTableExpression.SubQuery != null)
+        {
+            sqlPivotTableExpression.SubQuery.Accept(this);
+        }
+
+        Append("pivot");
+        WithBrackets(() =>
+        {
+            if (sqlPivotTableExpression.FunctionCall != null)
+            {
+                sqlPivotTableExpression.FunctionCall.Accept(this);
+            }
+            if (sqlPivotTableExpression.For != null)
+            {
+                Append("for");
+                sqlPivotTableExpression.For.Accept(this);
+            }
+            if (sqlPivotTableExpression.In != null)
+            {
+                Append("in");
+                WithBrackets(() =>
+                {
+                    for (var i = 0; i < sqlPivotTableExpression.In.Count; i++)
+                    {
+                        var item = sqlPivotTableExpression.In[i];
+                        item.Accept(this);
+                        if (i < sqlPivotTableExpression.In.Count - 1)
+                        {
+                            AppendWithSpace(",");
+                        }
+                    }
+                });
+            }
+        });
 
 
         if (sqlPivotTableExpression.Alias != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Alias = ");
-                sqlPivotTableExpression.Alias.Accept(this);
-            });
-        }
-        if (sqlPivotTableExpression.For != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("For = ");
-                sqlPivotTableExpression.For.Accept(this);
-            });
-        }
-        if (sqlPivotTableExpression.FunctionCall != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("FunctionCall = ");
-                sqlPivotTableExpression.FunctionCall.Accept(this);
-            });
-        }
-        if (sqlPivotTableExpression.SubQuery != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("SubQuery = ");
-                sqlPivotTableExpression.SubQuery.Accept(this);
-            });
-        }
-        if (sqlPivotTableExpression.In != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendLine("In = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlPivotTableExpression.In)
-                {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
+            //if (dbType == DbType.SqlServer)
+            //{
+            //    Append("as");
+            //}
 
-                }
-                AppendLine("},");
-            });
+            sqlPivotTableExpression.Alias.Accept(this);
         }
-        AppendLine("},");
     }
     public override void VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
     {
@@ -689,228 +563,179 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlPropertyExpression.Table?.Accept(this);
             sb.Append(".");
+            this.addSpace = false;
         }
 
         if (sqlPropertyExpression.Name != null)
         {
             sqlPropertyExpression.Name?.Accept(this);
         }
-      
+
     }
     public override void VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
     {
-        AppendLine("new SqlReferenceTableExpression()");
-        AppendLine("{");
         if (sqlReferenceTableExpression.FunctionCall != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("FunctionCall = ");
-                sqlReferenceTableExpression.FunctionCall?.Accept(this);
-            });
+            sqlReferenceTableExpression.FunctionCall?.Accept(this);
         }
-        AppendLine("}");
     }
     public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
-        var isFirst = numberOfLevels == 0;
         if (isFirst)
         {
-            sb.Append("var sql = ");
-        }
-
-       
-
-        if (sqlSelectExpression.Alias != null)
-        {
-         
-        }
-
-        if (sqlSelectExpression.Query != null)
-        {
-            AdvanceNext(() =>
+            isFirst = false;
+            if (sqlSelectExpression.Query != null)
             {
-                AppendAndNotRequiredNextSpace("Query = ");
                 sqlSelectExpression.Query?.Accept(this);
-            });
-        }
-
-        if (isFirst)
-        {
-            AppendLine("};");
+            }
         }
         else
         {
-            AppendLine("},");
+            WithBrackets((() =>
+            {
+                if (sqlSelectExpression.Query != null)
+                {
+                    sqlSelectExpression.Query?.Accept(this);
+                }
+            }));
+        }
+
+        if (sqlSelectExpression.Alias != null)
+        {
+            sqlSelectExpression.Alias.Accept(this);
         }
     }
     public override void VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
     {
-        AdvanceNext(() =>
+        sqlSelectItemExpression.Body?.Accept(this);
+        if (sqlSelectItemExpression.Alias != null)
         {
-            AppendLine("new SqlSelectItemExpression()");
-            AppendLine("{");
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Body = ");
-                sqlSelectItemExpression.Body?.Accept(this);
-            });
-            if (sqlSelectItemExpression.Alias != null)
-            {
-                AdvanceNext(() =>
-                {
-                    AppendAndNotRequiredNextSpace("Alias = ");
-                    sqlSelectItemExpression.Alias?.Accept(this);
-                });
-            }
-            AppendLine("},");
-        });
+            //Append("as");
+            sqlSelectItemExpression.Alias?.Accept(this);
+        }
     }
 
-    private void AdvanceNext(Action action)
+    private void WithBrackets(Action action)
     {
-        Append(" ( ");
+        sb.Append("(");
+        this.addSpace = false;
         action();
-        Append(" ) ");
+        sb.Append(")");
     }
     public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
-      
-
         if (sqlSelectQueryExpression.WithSubQuerys != null)
         {
-            foreach (var item in sqlSelectQueryExpression.WithSubQuerys)
+            Append(" with");
+            for (var i = 0; i < sqlSelectQueryExpression.WithSubQuerys.Count; i++)
             {
+                var item = sqlSelectQueryExpression.WithSubQuerys[i];
                 item.Accept(this);
+                if (i < sqlSelectQueryExpression.WithSubQuerys.Count - 1)
+                {
+                    AppendWithSpace(",");
+                }
             }
         }
 
-        Append("select ");
+        Append("select");
 
-        if (sqlSelectQueryExpression.ResultSetReturnOption != null)
+        if (sqlSelectQueryExpression.ResultSetReturnOption.HasValue)
         {
-            Append(sqlSelectQueryExpression.ResultSetReturnOption.ToString());
+            var resultSetReturnOption = "";
+            switch (sqlSelectQueryExpression.ResultSetReturnOption.Value)
+            {
+                case SqlResultSetReturnOption.Distinct:
+                    resultSetReturnOption = "distinct";
+                    break;
+                case SqlResultSetReturnOption.All:
+                    resultSetReturnOption = "all";
+                    break;
+                case SqlResultSetReturnOption.Unique:
+                    resultSetReturnOption = "unique";
+                    break;
+            }
+            Append(resultSetReturnOption);
         }
 
         if (sqlSelectQueryExpression.Columns != null)
         {
-            foreach (var column in sqlSelectQueryExpression.Columns)
+            for (var i = 0; i < sqlSelectQueryExpression.Columns.Count; i++)
             {
-                column.Accept(this);
+                var item = sqlSelectQueryExpression.Columns[i];
+                item.Accept(this);
+                if (i < sqlSelectQueryExpression.Columns.Count - 1)
+                {
+                    AppendWithSpace(",");
+                }
             }
         }
 
         if (sqlSelectQueryExpression.Into != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Into = ");
-                sqlSelectQueryExpression.Into.Accept(this);
-            });
+            Append("into");
+            sqlSelectQueryExpression.Into.Accept(this);
         }
         if (sqlSelectQueryExpression.From != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("From = ");
-                sqlSelectQueryExpression.From.Accept(this);
-            });
+            Append("from");
+            sqlSelectQueryExpression.From.Accept(this);
         }
         if (sqlSelectQueryExpression.Where != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Where = ");
-                sqlSelectQueryExpression.Where.Accept(this);
-            });
+            Append("where");
+            sqlSelectQueryExpression.Where.Accept(this);
         }
         if (sqlSelectQueryExpression.OrderBy != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("OrderBy = ");
-                sqlSelectQueryExpression.OrderBy.Accept(this);
-            });
+            sqlSelectQueryExpression.OrderBy.Accept(this);
         }
         if (sqlSelectQueryExpression.GroupBy != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("GroupBy = ");
-                sqlSelectQueryExpression.GroupBy.Accept(this);
-            });
+            sqlSelectQueryExpression.GroupBy.Accept(this);
         }
         if (sqlSelectQueryExpression.Limit != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Limit = ");
-                sqlSelectQueryExpression.Limit.Accept(this);
-            });
+            sqlSelectQueryExpression.Limit.Accept(this);
         }
-        AppendLine("},");
-
-    }
-
-    private void AppendLine(string str)
-    {
-        if (addSpace)
-        {
-            for (int i = 0; i < numberOfLevels; i++)
-            {
-                sb.Append(fourSpace);
-            }
-        }
-        else
-        {
-            addSpace = true;
-        }
-
-        sb.Append(str + "\r\n");
-    }
-
-    private void AppendAndNotRequiredNextSpace(string str)
-    {
-        if (addSpace)
-        {
-            for (int i = 0; i < numberOfLevels; i++)
-            {
-                sb.Append(fourSpace);
-            }
-        }
-        sb.Append(str);
-        this.addSpace = false;
     }
 
     private void Append(string str)
     {
         if (addSpace)
         {
-            for (int i = 0; i < numberOfLevels; i++)
-            {
-                sb.Append(fourSpace);
-            }
+            sb.Append($" {str}");
         }
-        sb.Append(str);
+        else
+        {
+            sb.Append($"{str}");
+            addSpace = true;
+        }
+
     }
+    private void AppendWithSpace(string str)
+    {
+        sb.Append($"{str}");
+    }
+
     public override void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
-        Append($"'{sqlStringExpression.Value}'");
+        Append($"'{sqlStringExpression.Value.Replace("'", "''")}'");
     }
     public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
         sqlTableExpression.Name?.Accept(this);
         if (sqlTableExpression.Alias != null)
         {
-            Append(" as ");
+            //Append("as");
             sqlTableExpression.Alias?.Accept(this);
         }
-  
+
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
-    
-        AppendLine("(");
+
+        Append("(");
 
 
         if (sqlUnionQueryExpression.Left != null)
@@ -920,109 +745,92 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlUnionQueryExpression.UnionType != null)
         {
-          Append($" {sqlUnionQueryExpression.UnionType.ToString()} ");
+            var unionType = "";
+            switch (sqlUnionQueryExpression.UnionType)
+            {
+                case SqlUnionType.Except:
+                    unionType = "except";
+                    break;
+                case SqlUnionType.ExceptAll:
+                    unionType = "except all";
+                    break;
+                case SqlUnionType.Intersect:
+                    unionType = "intersect";
+                    break;
+                case SqlUnionType.IntersectAll:
+                    unionType = "intersect all";
+                    break;
+                case SqlUnionType.Minus:
+                    unionType = "minus";
+                    break;
+                case SqlUnionType.Union:
+                    unionType = "union";
+                    break;
+                case SqlUnionType.UnionAll:
+                    unionType = "union all";
+                    break;
+            }
+            Append(unionType);
         }
 
         if (sqlUnionQueryExpression.Right != null)
         {
             sqlUnionQueryExpression.Right.Accept(this);
         }
-        AppendLine(")");
+        Append(")");
     }
     public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
-        var isFirst = numberOfLevels == 0;
-        if (isFirst)
-        {
-            sb.Append("var expect = ");
-        }
-        AppendLine("new SqlUpdateExpression()");
-        AppendLine("{");
-
-
         if (sqlUpdateExpression.Table != null)
         {
-            AdvanceNext(() =>
+            sqlUpdateExpression.Table.Accept(this);
+        }
+
+        if (sqlUpdateExpression.Items != null)
+        {
+            Append("set");
+            for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
             {
-                AppendAndNotRequiredNextSpace("Table = ");
-                sqlUpdateExpression.Table.Accept(this);
-            });
+                var item = sqlUpdateExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlUpdateExpression.Items.Count - 1)
+                {
+                    AppendWithSpace(",");
+                }
+            }
         }
         if (sqlUpdateExpression.Where != null)
         {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Where = ");
-                sqlUpdateExpression.Where.Accept(this);
-            });
+            sb.Append("where");
+            sqlUpdateExpression.Where.Accept(this);
         }
-        if (sqlUpdateExpression.Items != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendLine("Items = new List<SqlExpression>()");
-                AppendLine("{");
-                foreach (var item in sqlUpdateExpression.Items)
-                {
-                    AdvanceNext(() =>
-                    {
-                        item.Accept(this);
-                    });
 
-                }
-                AppendLine("},");
-            });
-        }
-        if (isFirst)
-        {
-            AppendLine("};");
-        }
-        else
-        {
-            AppendLine("},");
-        }
+
     }
     public override void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
     {
-
-        AppendLine("new SqlVariableExpression()");
-        AppendLine("{");
-
-
-        if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Name))
-        {
-            AdvanceNext(() =>
-            {
-                AppendLine($"Name = \"{sqlVariableExpression.Name}\",");
-            });
-        }
-
         if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Prefix))
         {
-            AdvanceNext(() =>
-            {
-                AppendLine($"Prefix = \"{sqlVariableExpression.Prefix}\",");
-            });
+            sb.Append(sqlVariableExpression.Prefix);
         }
-        AppendLine("},");
+        if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Name))
+        {
+            sb.Append(sqlVariableExpression.Name);
+        }
     }
     public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
-        
-        if (sqlWithinGroupExpression.OrderBy != null)
+        Append("within group");
+        WithBrackets((() =>
         {
-            AdvanceNext(() =>
+            if (sqlWithinGroupExpression.OrderBy != null)
             {
-                AppendAndNotRequiredNextSpace("OrderBy = ");
                 sqlWithinGroupExpression.OrderBy.Accept(this);
-            });
-        }
-
-        AppendLine("},");
+            }
+        }));
     }
     public override void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
     {
-        Append(" with ");
         if (sqlWithSubQueryExpression.Alias != null)
         {
             sqlWithSubQueryExpression.Alias.Accept(this);
@@ -1030,26 +838,28 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlWithSubQueryExpression.Columns != null)
         {
-            Append("( ");
-            foreach (var item in sqlWithSubQueryExpression.Columns)
+            WithBrackets((() =>
             {
-                item.Accept(this);
+                for (var i = 0; i < sqlWithSubQueryExpression.Columns.Count; i++)
+                {
+                    var item = sqlWithSubQueryExpression.Columns[i];
+                    item.Accept(this);
+                    if (i < sqlWithSubQueryExpression.Columns.Count - 1)
+                    {
+                        AppendWithSpace(",");
+                    }
+                }
+            }));
 
-            }
-            Append(" ) ");
         }
 
-        Append(" as ");
+        Append("as");
         if (sqlWithSubQueryExpression.FromSelect != null)
         {
-            AdvanceNext(() =>
+            WithBrackets(() =>
             {
-                AppendAndNotRequiredNextSpace("FromSelect = ");
-              
+                sqlWithSubQueryExpression.FromSelect.Accept(this);
             });
         }
-
-
-        AppendLine("},");
     }
 }

@@ -19,7 +19,7 @@ public class SqlBinaryOperator
     public static readonly SqlBinaryOperator GreaterThenOrEqualTo = new SqlBinaryOperator("GreaterThenOrEqualTo", ">=");
     public static readonly SqlBinaryOperator LessThenOrEqualTo = new SqlBinaryOperator("LessThenOrEqualTo", "<=");
     public static readonly SqlBinaryOperator Is = new SqlBinaryOperator("Is", "Is");
-    public static readonly SqlBinaryOperator IsNot = new SqlBinaryOperator("IsNot", "IsNot");
+    public static readonly SqlBinaryOperator IsNot = new SqlBinaryOperator("IsNot", "Is Not");
     public static readonly SqlBinaryOperator Or = new SqlBinaryOperator("Or", "Or");
     public static readonly SqlBinaryOperator And = new SqlBinaryOperator("And", "And");
     public static readonly SqlBinaryOperator Xor = new SqlBinaryOperator("Xor", "Xor");
@@ -31,6 +31,8 @@ public class SqlBinaryOperator
     public static readonly SqlBinaryOperator Divide = new SqlBinaryOperator("Divide", "/");
     public static readonly SqlBinaryOperator Mod = new SqlBinaryOperator("Mod", "%");
     public static readonly SqlBinaryOperator Concat = new SqlBinaryOperator("Concat", "||");
+    public static readonly SqlBinaryOperator NotLike = new SqlBinaryOperator("NotLike", "Not Like");
+
     protected bool Equals(SqlBinaryOperator other)
     {
         return Name == other.Name && Value.Equals(other.Value);

@@ -16,7 +16,7 @@ c#中所有数字都可以用decimal表示
 
 自然语言和形式语言的一个重要区别是，自然语言的一个语句，可能有多重含义，而形式语言的一个语句，只能有一个语义;形式语言的语法是人为规定的，有了一定的语法规则，语法解析器就能根据语法规则，解析出一个语句的一个唯一含义
 
-visit 负数  select 5|3 
+visit 负数  select 5|3  TestNot3
 行转列的SQL操作通常称为“透视”。不同的数据库有不同的实现方式
 在 Oracle 中，(+) 是用于表示外连接（Outer Join）的旧式语法符号。它是特有于 Oracle 的非标准 SQL 语法。以下是它的用法：
 用法
@@ -74,9 +74,14 @@ SELECT * FROM TABLE(function_name(parameters));
 
 visitor 结构与算法分离，你可以根据结构自己任意解析这颗语法树
 
+sql格式化工具
+
+
 如何加入本项目
 1.在token.cs中添加新的token，注意CompareIndex是token的唯一标识符，要逐渐递增，不能与原有的冲突，
 2.如果新的token是关键字，需要在SqlLexer.cs的InitTokenDic()方法中添加关键字字典
 3.如果是新的语法类型，可能需要定义新的sqlexpression，定义的新的sqlExpression里,需要参考已有其他sqlExpression重写Equals和Accept方法
 定义后需要在SqlParser.cs里添加处理逻辑
 4.在SqlParser.Net.Test项目里添加新的单元测试，使用TestHelper.cs自动生成IAcceptVisitor.cs和BaseAstVisitor.cs的代码，然后更新SqlParser.Net项目里的IAcceptVisitor.cs和BaseAstVisitor.cs
+
+Quote Symbol
