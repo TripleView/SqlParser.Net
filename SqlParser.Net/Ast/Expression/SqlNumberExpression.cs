@@ -2,7 +2,7 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlNumberExpression : SqlExpression
+public class SqlNumberExpression : SqlExpression, IQualifierExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
@@ -13,10 +13,25 @@ public class SqlNumberExpression : SqlExpression
         this.Type = SqlExpressionType.Number;
     }
 
+    /// <summary>
+    /// Left Qualifiers
+    /// 左限定符
+    /// </summary>
+    public string LeftQualifiers { get; set; }
+    /// <summary>
+    /// right Qualifiers
+    /// 右限定符
+    /// </summary>
+    public string RightQualifiers { get; set; }
+
     public decimal Value { get; set; }
 
     protected bool Equals(SqlNumberExpression other)
     {
+        if (LeftQualifiers != other.LeftQualifiers || RightQualifiers != other.RightQualifiers)
+        {
+            return false;
+        }
         return Value == other.Value;
     }
 

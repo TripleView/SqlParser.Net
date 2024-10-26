@@ -16,7 +16,7 @@ c#中所有数字都可以用decimal表示
 
 自然语言和形式语言的一个重要区别是，自然语言的一个语句，可能有多重含义，而形式语言的一个语句，只能有一个语义;形式语言的语法是人为规定的，有了一定的语法规则，语法解析器就能根据语法规则，解析出一个语句的一个唯一含义
 
-visit 负数  select 5|3  TestNot3
+visit 负数  select 5|3  TestNot3 oracle表别名 select * from ATL_Login.dbo.[ATLReportingRelationship] ar 
 行转列的SQL操作通常称为“透视”。不同的数据库有不同的实现方式
 在 Oracle 中，(+) 是用于表示外连接（Outer Join）的旧式语法符号。它是特有于 Oracle 的非标准 SQL 语法。以下是它的用法：
 用法

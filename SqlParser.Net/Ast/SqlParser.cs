@@ -19,15 +19,15 @@ public class SqlParser
     private List<string> comments = new List<string>();
     private DbType dbType;
     /// <summary>
-    /// Left Escape Character token
-    /// 左转义字符token
+    /// Left Qualifiers token
+    /// 左限定符token
     /// </summary>
-    private Token leftEscapeCharacter { get; set; }
+    private Token leftQualifiers { get; set; }
     /// <summary>
-    /// right Escape Character token
-    /// 右转义字符token
+    /// right Qualifiers token
+    /// 右限定符token
     /// </summary>
-    private Token rightEscapeCharacter { get; set; }
+    private Token rightQualifiers { get; set; }
 
     public string Sql { get; set; }
     /// <summary>
@@ -42,7 +42,7 @@ public class SqlParser
         this.tokens = tokens;
         this.Sql = sql;
         InitEscapeCharacter();
-        MergeEscapeCharacterCharAndRemoveAllComment();
+        MergeQualifiersAndRemoveAllComment();
         GetNextToken();
         //var t2 = TimeUtils.TestMicrosecond((() =>
         //{
@@ -98,26 +98,26 @@ public class SqlParser
         {
             case DbType.MySql:
             case DbType.Sqlite:
-                leftEscapeCharacter = Token.Backtick;
-                rightEscapeCharacter = Token.Backtick;
+                leftQualifiers = Token.Backtick;
+                rightQualifiers = Token.Backtick;
                 break;
             case DbType.SqlServer:
-                leftEscapeCharacter = Token.LeftSquareBracket;
-                rightEscapeCharacter = Token.RightSquareBracket;
+                leftQualifiers = Token.LeftSquareBracket;
+                rightQualifiers = Token.RightSquareBracket;
                 break;
             case DbType.Pgsql:
             case DbType.Oracle:
-                leftEscapeCharacter = Token.DoubleQuotes;
-                rightEscapeCharacter = Token.DoubleQuotes;
+                leftQualifiers = Token.DoubleQuotes;
+                rightQualifiers = Token.DoubleQuotes;
                 break;
         }
     }
 
     /// <summary>
-    /// Combine special field names with the escape character in front of the field，then  remove all comment
-    /// 合并特殊字段名前面的转义字符和字段，然后移除所有注释
+    /// Merge qualifiers and fields, then remove any comments
+    /// 合并限定符和字段，然后移除所有注释
     /// </summary>
-    private void MergeEscapeCharacterCharAndRemoveAllComment()
+    private void MergeQualifiersAndRemoveAllComment()
     {
         var hasLeft = false;
         for (var i = 0; i < this.tokens.Count; i++)
@@ -128,7 +128,7 @@ public class SqlParser
                 continue;
             }
 
-            if (currentToken.IsToken(leftEscapeCharacter))
+            if (currentToken.IsToken(leftQualifiers))
             {
                 hasLeft = true;
                 continue;
@@ -150,14 +150,15 @@ public class SqlParser
                 var previewToken = this.tokens[i - 1];
 
                 var nextToken = this.tokens[i + 1];
-                if (previewToken.IsToken(leftEscapeCharacter) && (currentToken.IsToken(Token.IdentifierString) || currentToken.IsToken(Token.NumberConstant)) &&
-                    nextToken.IsToken(rightEscapeCharacter))
+                if (previewToken.IsToken(leftQualifiers) && (currentToken.IsToken(Token.IdentifierString) || currentToken.IsToken(Token.NumberConstant)) &&
+                    nextToken.IsToken(rightQualifiers))
                 {
                     previewToken.IsRemove = true;
                     this.tokens[i - 1] = previewToken;
                     nextToken.IsRemove = true;
                     this.tokens[i + 1] = nextToken;
-                    currentToken.Value = leftEscapeCharacter.Value.ToString() + currentToken.Value + rightEscapeCharacter.Value;
+                    currentToken.LeftQualifiers = leftQualifiers.Value.ToString();
+                    currentToken.RightQualifiers = rightQualifiers.Value.ToString();
                     this.tokens[i] = currentToken;
                     hasLeft = false;
                 }
@@ -308,6 +309,12 @@ public class SqlParser
         {
             var subQuery = AcceptSelectExpression();
             AcceptOrThrowException(Token.RightParen);
+            //oracle not support subQuery as
+            if (dbType != DbType.Oracle)
+            {
+                Accept(Token.As);
+            }
+
             if (Accept(Token.IdentifierString))
             {
                 var subQueryAlias = GetCurrentTokenValue();
@@ -323,6 +330,9 @@ public class SqlParser
         AcceptOrThrowException(Token.IdentifierString);
 
         var name = GetCurrentTokenValue();
+        var mainToken = currentToken;
+        var nameList = new List<string>() { name };
+        var dbLinkName = "";
         //such as:SELECT * FROM TABLE(splitstr('a;b',';'))
         if (isFrom && CheckNextToken(Token.LeftParen))
         {
@@ -338,13 +348,24 @@ public class SqlParser
             while (true)
             {
                 var isOracleDbLink = dbType == DbType.Oracle && Accept(Token.At);
-                if (Accept(Token.Dot) || isOracleDbLink)
+                if (Accept(Token.Dot))
                 {
-                    name += isOracleDbLink ? "@" : ".";
                     if (Accept(Token.IdentifierString))
                     {
                         var value = GetCurrentTokenValue();
-                        name += value;
+                        mainToken = currentToken;
+                        nameList.Add(value);
+                    }
+                    else
+                    {
+                        throw new Exception("sql error");
+                    }
+                }
+                else if (isOracleDbLink)
+                {
+                    if (Accept(Token.IdentifierString))
+                    {
+                        dbLinkName = GetCurrentTokenValue();
                     }
                     else
                     {
@@ -357,6 +378,34 @@ public class SqlParser
                 }
             }
 
+            var table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                    RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
+                    Value = nameList.Last()
+                }
+            };
+
+            if (!string.IsNullOrWhiteSpace(dbLinkName))
+            {
+                table.DbLink = new SqlIdentifierExpression()
+                {
+                    Value = dbLinkName
+                };
+            }
+
+            if (nameList.Count > 1)
+            {
+                nameList.RemoveAt(nameList.Count - 1);
+                var schema = string.Join(".", nameList);
+                table.Schema = new SqlIdentifierExpression()
+                {
+                    Value = schema
+                };
+            }
+
             var alias = "";
             if (Accept(Token.As))
             {
@@ -367,14 +416,6 @@ public class SqlParser
             {
                 alias = GetCurrentTokenValue();
             }
-
-            var table = new SqlTableExpression()
-            {
-                Name = new SqlIdentifierExpression()
-                {
-                    Value = name
-                }
-            };
 
             if (!string.IsNullOrWhiteSpace(alias))
             {
@@ -1106,7 +1147,7 @@ public class SqlParser
         if (Accept(Token.IdentifierString))
         {
             var name = GetCurrentTokenValue();
-
+            var mainToken = currentToken;
             if (Accept(Token.Dot))
             {
                 if (Accept(Token.IdentifierString) || Accept(Token.Star))
@@ -1115,10 +1156,14 @@ public class SqlParser
                     var sqlPropertyExpression = new SqlPropertyExpression();
                     var sqlIdentifierExpression = new SqlIdentifierExpression()
                     {
+                        LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                        RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
                         Value = name
                     };
                     var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
                     {
+                        LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                        RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                         Value = propertyName
                     };
                     sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
@@ -1148,6 +1193,8 @@ public class SqlParser
             {
                 var sqlIdentifierExpression = new SqlIdentifierExpression()
                 {
+                    LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                    RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
                     Value = name
                 };
                 body = sqlIdentifierExpression;
@@ -1157,10 +1204,12 @@ public class SqlParser
         {
             if (Accept(Token.NumberConstant))
             {
-                var txt = GetCurrentTokenValue();
+                var number = GetCurrentTokenNumberValue();
                 body = new SqlNumberExpression()
                 {
-                    Value = decimal.Parse(txt, NumberStyles.Any, CultureInfo.InvariantCulture)
+                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
+                    Value = number
                 };
             }
             else if (Accept(Token.StringConstant))
@@ -1763,6 +1812,15 @@ public class SqlParser
         return "";
     }
 
+    private decimal GetCurrentTokenNumberValue()
+    {
+        if (currentToken.HasValue)
+        {
+            return (decimal)currentToken.Value.Value;
+        }
+
+        return 0;
+    }
     private bool Accept(Token token)
     {
         if (nextToken.HasValue && nextToken.Value.IsToken(token))

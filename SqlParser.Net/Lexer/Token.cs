@@ -26,11 +26,20 @@ public struct Token
     /// </summary>
     public int StartPositionIndex { get; set; }
     /// <summary>
-    /// token结束位置索引
     /// Token end position index
+    /// token结束位置索引
     /// </summary>
     public int EndPositionIndex { get; set; }
-
+    /// <summary>
+    /// Left Qualifiers
+    /// 左限定符
+    /// </summary>
+    public string LeftQualifiers { get; set; }
+    /// <summary>
+    /// right Qualifiers
+    /// 右限定符
+    /// </summary>
+    public string RightQualifiers { get; set; }
     public Token(string name, object value, int compareIndex, bool isKeyWord = true)
     {
         Name = name;
@@ -46,7 +55,6 @@ public struct Token
 
     public override string ToString()
     {
-
         return $"{(IsKeyWord ? "Keyword-" + Name : Name),-20} | {Value,-5}";
     }
 

@@ -17,17 +17,53 @@ public class SqlTableExpression : SqlExpression
     public SqlIdentifierExpression Alias { get; set; }
 
     public SqlIdentifierExpression Name { get; set; }
-
+    /// <summary>
+    /// Schema,such as:select * from test.test
+    /// 数据库模式,如select * from test.test
+    /// </summary>
+    public SqlIdentifierExpression Schema { get; set; }
+    /// <summary>
+    /// oracle support db link,such as:SELECT * FROM remote_table@remote_db_link;
+    /// oracle数据库支持的dblink,例如:SELECT * FROM remote_table@remote_db_link;
+    /// </summary>
+    public SqlIdentifierExpression DbLink { get; set; }
     protected bool Equals(SqlTableExpression other)
     {
         var result = true;
+        if (DbLink == null ^ other.DbLink == null)
+        {
+            return false;
+        }
+        else if (DbLink != null && other.DbLink != null)
+        {
+            if (!DbLink.Equals(other.DbLink))
+            {
+                return false;
+            }
+        }
+
+        if (Schema == null ^ other.Schema == null)
+        {
+            return false;
+        }
+        else if (Schema != null && other.Schema != null)
+        {
+            if (!Schema.Equals(other.Schema))
+            {
+                return false;
+            }
+        }
+
         if (Alias == null ^ other.Alias == null)
         {
             return false;
         }
         else if (Alias != null && other.Alias != null)
         {
-            result &= Alias.Equals(other.Alias);
+            if (!Alias.Equals(other.Alias))
+            {
+                return false;
+            }
         }
 
         result &= Name.Equals(other.Name);

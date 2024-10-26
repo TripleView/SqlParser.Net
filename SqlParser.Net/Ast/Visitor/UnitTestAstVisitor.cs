@@ -337,11 +337,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AdvanceNext(() =>
         {
             var value = sqlIdentifierExpression.Value;
-            if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
-            {
-                value = "\\\"" + value.Substring(1, value.Length - 2) + "\\\"";
-            }
-            AppendLine($"Value = \"{value}\"");
+
+            AppendLine($"Value = \"{value}\",");
+            HandleQualifiers(sqlIdentifierExpression);
         });
         AppendLine("},");
     }
@@ -555,9 +553,33 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("{");
         AdvanceNext(() =>
         {
-            AppendLine($"Value = {sqlNumberExpression.Value}M");
+            AppendLine($"Value = {sqlNumberExpression.Value}M,");
+            HandleQualifiers(sqlNumberExpression);
+
         });
         AppendLine("},");
+    }
+
+    private void HandleQualifiers(IQualifierExpression qualifierExpression)
+    {
+        if (!string.IsNullOrWhiteSpace(qualifierExpression.LeftQualifiers))
+        {
+            var value = qualifierExpression.LeftQualifiers;
+            if (value == "\"")
+            {
+                value = "\\\"";
+            }
+            AppendLine($"LeftQualifiers = \"{value}\",");
+        }
+        if (!string.IsNullOrWhiteSpace(qualifierExpression.RightQualifiers))
+        {
+            var value = qualifierExpression.RightQualifiers;
+            if (value == "\"")
+            {
+                value = "\\\"";
+            }
+            AppendLine($"RightQualifiers = \"{value}\",");
+        }
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
@@ -971,6 +993,16 @@ public class UnitTestAstVisitor : BaseAstVisitor
         {
             AppendAndNotRequiredNextSpace("Name = ");
             sqlTableExpression.Name?.Accept(this);
+            if (sqlTableExpression.Schema != null)
+            {
+                AppendAndNotRequiredNextSpace("Schema = ");
+                sqlTableExpression.Schema?.Accept(this);
+            }
+            if (sqlTableExpression.DbLink != null)
+            {
+                AppendAndNotRequiredNextSpace("DbLink = ");
+                sqlTableExpression.DbLink?.Accept(this);
+            }
         });
         if (sqlTableExpression.Alias != null)
         {

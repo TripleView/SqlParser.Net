@@ -260,21 +260,17 @@ public class InsertTest
     {
         var sql = "insert into message.dbo.TempSMS(sms) values ('333')";
         var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
             {
                 new SqlIdentifierExpression()
                 {
-                    Value = "sms"
-                }
-            },
-            Table = new SqlTableExpression()
-            {
-                Name = new SqlIdentifierExpression()
-                {
-                    Value = "message.dbo.TempSMS"
-                }
+                    Value = "sms",
+                },
             },
             ValuesList = new List<List<SqlExpression>>()
             {
@@ -283,10 +279,20 @@ public class InsertTest
                     new SqlStringExpression()
                     {
                         Value = "333"
-                    }
-                }
-
-            }
+                    },
+                },
+            },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "TempSMS",
+                },
+                Schema = new SqlIdentifierExpression()
+                {
+                    Value = "message.dbo",
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -297,25 +303,25 @@ public class InsertTest
     {
         var sql = "INSERT INTO \"TEST\"  \r\n           (\"Value\",\"Age\")\r\n     VALUES\r\n           (:Value,:Age) ";
         var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
             {
                 new SqlIdentifierExpression()
                 {
-                    Value = "\"Value\""
+                    Value = "Value",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
                 },
                 new SqlIdentifierExpression()
                 {
-                    Value = "\"Age\""
+                    Value = "Age",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
                 },
-            },
-            Table = new SqlTableExpression()
-            {
-                Name = new SqlIdentifierExpression()
-                {
-                    Value = "\"TEST\""
-                }
             },
             ValuesList = new List<List<SqlExpression>>()
             {
@@ -324,16 +330,26 @@ public class InsertTest
                     new SqlVariableExpression()
                     {
                         Name = "Value",
-                        Prefix = ":"
+                        Prefix = ":",
                     },
                     new SqlVariableExpression()
                     {
                         Name = "Age",
-                        Prefix = ":"
+                        Prefix = ":",
                     },
-                }
-            }
+                },
+            },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "TEST",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+            },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }
