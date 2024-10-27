@@ -1604,18 +1604,18 @@ public class SqlParser
                 isRequireOnCondition = false;
                 joinType = SqlJoinType.CrossJoin;
             }
-            else if (CheckNextToken(Token.Comma))
+            else if (Accept(Token.Comma))
             {
                 isRequireOnCondition = false;
                 isCommaJoin = true;
-                joinType = SqlJoinType.InnerJoin;
+                joinType = SqlJoinType.CommaJoin;
             }
             else
             {
                 break;
             }
 
-            if (Accept(Token.Join) || (isCommaJoin && Accept(Token.Comma)))
+            if (Accept(Token.Join) || (isCommaJoin ))
             {
 
                 var right = AcceptTableExpression();

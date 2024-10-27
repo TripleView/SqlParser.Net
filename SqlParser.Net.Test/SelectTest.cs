@@ -2658,6 +2658,9 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -2667,55 +2670,61 @@ public class SelectTest
                     new SqlSelectItemExpression()
                     {
                         Body = new SqlAllColumnExpression()
-                    }
+                    },
                 },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
                     {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "t"
-                        },
                         Name = new SqlIdentifierExpression()
                         {
-                            Value = "test"
-                        }
+                            Value = "test",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
                     },
+                    JoinType = SqlJoinType.CommaJoin,
                     Right = new SqlTableExpression()
                     {
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "t1"
-                        },
                         Name = new SqlIdentifierExpression()
                         {
-                            Value = "test11"
-                        }
+                            Value = "test11",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "t1",
+                        },
                     },
-                    JoinType = SqlJoinType.InnerJoin
                 },
                 Where = new SqlBinaryExpression()
                 {
                     Left = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "name" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
                         Table = new SqlIdentifierExpression()
                         {
-                            Value = "t"
-                        }
+                            Value = "t",
+                        },
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression() { Value = "name" },
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
                         Table = new SqlIdentifierExpression()
                         {
-                            Value = "t1"
-                        }
-                    }
-                }
-            }
+                            Value = "t1",
+                        },
+                    },
+                },
+            },
         };
 
         Assert.True(sqlAst.Equals(expect));
@@ -2723,7 +2732,7 @@ public class SelectTest
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t where(exists((select * from TEST1 t2)) or(1 = 1))", generationSql);
+        Assert.Equal("select * from test t , test11 t1 where(t.name = t1.name)", generationSql);
     }
 
     [Fact]

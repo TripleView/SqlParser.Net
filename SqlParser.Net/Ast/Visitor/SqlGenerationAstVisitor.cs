@@ -361,6 +361,9 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 case SqlJoinType.CrossJoin:
                     joinType = "cross join";
                     break;
+                case SqlJoinType.CommaJoin:
+                    joinType = ",";
+                    break;
             }
             Append(joinType);
 

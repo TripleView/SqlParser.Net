@@ -6,5 +6,6 @@ public enum SqlJoinType
     LeftJoin,
     RightJoin,
     FullJoin,
-    CrossJoin
+    CrossJoin,
+    CommaJoin
 }
