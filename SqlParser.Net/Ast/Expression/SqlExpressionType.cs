@@ -40,5 +40,6 @@ public enum SqlExpressionType
     Over,
     PartitionBy,
     Not,
-    WithinGroup
+    WithinGroup,
+    Bool
 }

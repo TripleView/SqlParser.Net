@@ -12,6 +12,7 @@ public interface IAstVisitor
     void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression);
     void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression);
     void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression);
+    void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression);
     void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression);
     void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression);
     void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression);

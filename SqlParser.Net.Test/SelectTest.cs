@@ -298,6 +298,49 @@ public class SelectTest
     }
 
     [Fact]
+    public void TestStringColumn3ForUnicode()
+    {
+        var sql = "select N'2'' ''2' from RouteData";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlStringExpression()
+                        {
+                            IsUniCode = true,
+                            Value = "2' '2"
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select N'2'' ''2' from RouteData", generationSql);
+    }
+
+    [Fact]
     public void TestNumberColumn()
     {
         var sql = "select 5.20 from RouteData";
@@ -6480,175 +6523,15 @@ public class SelectTest
     [Fact]
     public void AForTest()
     {
-        var sql =
-            @" SELECT COUNT(1) FROM (SELECT t.* FROM  (select * from (select APOT.ID,APOT.PRODUCTNO,
-           APOT.PLANDATE,
-           APOT.WIND_ZLAX,
-           D.Medium AS ZLAX,
-           APOT.WIPTYPE,
-           APOT.QUANTITY,
-           AL.OPERATIONNAME,
-           NVL(MAX(AL.ACTUALCOMPLETIONDATE),MAX(AL.SCHEDULEDCOMPLETIONDATE))+1/3  SCHEDULEDSTARTDATE,
-           (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 1
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 2
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE AND sysdate-1/3 <= SCHEDULEDCOMPLETIONDATE then 3
-                             when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDCOMPLETIONDATE then 4
-                                when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then 5
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then 6
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 7
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'JGQX' and ATLPRETRANSPLANID =APOT.ID  ) as mixshow,
-              (SELECT case
-                  when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 1
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 2
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE AND sysdate-1/3 <= SCHEDULEDCOMPLETIONDATE then 3
-                             when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDCOMPLETIONDATE then 4
-                                when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then 5
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then 6
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 7
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'COATA' and ATLPRETRANSPLANID =APOT.ID  ) as coatashow,
-             (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 1
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 2
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE AND sysdate-1/3 <= SCHEDULEDCOMPLETIONDATE then 3
-                             when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDCOMPLETIONDATE then 4
-                                when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then 5
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then 6
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 7
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'COATB' and ATLPRETRANSPLANID =APOT.ID  ) as coatbshow,
-            (SELECT case
-                  when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 1
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 2
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE AND sysdate-1/3 <= SCHEDULEDCOMPLETIONDATE then 3
-                             when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDCOMPLETIONDATE then 4
-                                when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then 5
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then 6
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 7
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'LY' and ATLPRETRANSPLANID =APOT.ID  ) as lyshow,
-            (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 1
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 2
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE AND sysdate-1/3 <= SCHEDULEDCOMPLETIONDATE then 3
-                             when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDCOMPLETIONDATE then 4
-                                when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then 5
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then 6
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 7
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'FT' and ATLPRETRANSPLANID =APOT.ID  ) as ftshow,
-            (SELECT case
-                    when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 1
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 2
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE AND sysdate-1/3 <= SCHEDULEDCOMPLETIONDATE then 3
-                             when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDCOMPLETIONDATE then 4
-                                when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then 5
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then 6
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 7
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'DWDS' and ATLPRETRANSPLANID =APOT.ID  ) as dwdsshow,
- (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 0
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - sysdate-1/3), 1)
-                             when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - ACTUALCOMPLETIONDATE), 1)
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then ROUND(to_number(ACTUALCOMPLETIONDATE - SCHEDULEDCOMPLETIONDATE), 1)
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'JGQX' and ATLPRETRANSPLANID =APOT.ID  ) as mixday,
-              (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 0
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - sysdate-1/3), 1)
-                             when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - ACTUALCOMPLETIONDATE), 1)
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then ROUND(to_number(ACTUALCOMPLETIONDATE - SCHEDULEDCOMPLETIONDATE), 1)
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'COATA' and ATLPRETRANSPLANID =APOT.ID  ) as coataday,
-             (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 0
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - sysdate-1/3), 1)
-                             when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - ACTUALCOMPLETIONDATE), 1)
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then ROUND(to_number(ACTUALCOMPLETIONDATE - SCHEDULEDCOMPLETIONDATE), 1)
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'COATB' and ATLPRETRANSPLANID =APOT.ID  ) as coatbday,
-            (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 0
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - sysdate-1/3), 1)
-                             when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - ACTUALCOMPLETIONDATE), 1)
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then ROUND(to_number(ACTUALCOMPLETIONDATE - SCHEDULEDCOMPLETIONDATE), 1)
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'LY' and ATLPRETRANSPLANID =APOT.ID  ) as lyday,
-            (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 0
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - sysdate-1/3), 1)
-                             when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - ACTUALCOMPLETIONDATE), 1)
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then ROUND(to_number(ACTUALCOMPLETIONDATE - SCHEDULEDCOMPLETIONDATE), 1)
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'FT' and ATLPRETRANSPLANID =APOT.ID  ) as ftday,
-            (SELECT case
-                   when ACTUALCOMPLETIONDATE IS NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                      when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 <= SCHEDULEDSTARTDATE then 0
-                         when ACTUALCOMPLETIONDATE IS NULL AND sysdate-1/3 > SCHEDULEDSTARTDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - sysdate-1/3), 1)
-                             when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE <= SCHEDULEDCOMPLETIONDATE then ROUND(to_number(SCHEDULEDCOMPLETIONDATE - ACTUALCOMPLETIONDATE), 1)
-                                    when ACTUALCOMPLETIONDATE IS NOT NULL AND ACTUALCOMPLETIONDATE > SCHEDULEDCOMPLETIONDATE then ROUND(to_number(ACTUALCOMPLETIONDATE - SCHEDULEDCOMPLETIONDATE), 1)
-                                       when ACTUALCOMPLETIONDATE IS NOT NULL AND SCHEDULEDSTARTDATE IS NULL then 0
-                     ELSE 0
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'DWDS' and ATLPRETRANSPLANID =APOT.ID  ) as dwdsday,
-             (SELECT case
-                   when SCHEDULEDCOMPLETIONDATE -1>=ACTUALCOMPLETIONDATE  then 'Y'
-                     ELSE 'N'
-                       END AS Tshow
-           FROM ATLPRETRANSPLAN_LIST WHERE OPERATIONNAME = 'DWDS' and ATLPRETRANSPLANID =APOT.ID  ) AS isdwds,
-          case  when APOT.STATUS = 2  then 'Y'
-                     ELSE 'N'
-                       END AS isstock
-      from ATL_PRE_OPR_TRANSPLAN APOT
-      LEFT JOIN ATLPRETRANSPLAN_LIST AL
-        ON APOT.ID = AL.ATLPRETRANSPLANID
- LEFT JOIN WIP_LINE W ON APOT.ZLAX = W.ProductionLineNo
-        LEFT JOIN TEXT_TRANSLATION D ON W.TextID = D.TextID AND D.LanguageID = @LanguageID
-          where  APOT.active = 1 and  AL.active =1
+        var sql = @" SELECT COUNT(1) FROM (SELECT t.* FROM  (select EMPNO,
+                           PASSWORD,
+                           LASTUPDATEON,
+                           LASTUPDATEDBY,
+                           CREATEDON,
+                           CREATEDBY
+                      from ATL_EQUIPMENTNGAUTHORIZATION
+                     WHERE 1=1    order by EMPNO ) t  ) CountTable ";
 
-group by APOT.ID, APOT.PRODUCTNO,
-           APOT.PLANDATE,
-           APOT.WIND_ZLAX,
-           D.Medium,
-           APOT.WIPTYPE,
-           APOT.STATUS ,
-           APOT.QUANTITY,
-           AL.OPERATIONNAME )T
-          pivot(
-   max(SCHEDULEDSTARTDATE) FOR  OPERATIONNAME IN(
-      'JGQX' AS mix,
-       'COATA' AS coata,
-        'COATB' AS coatb,
-        'LY' AS ly,
-         'FT' AS ft,
-          'DWDS' AS dwds
-
-    )
-  ) WHERE 1=1    and  (isstock = 'N' OR PLANDATE>=dwds)) t  ) CountTable ";
 
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
@@ -7011,5 +6894,155 @@ group by APOT.ID, APOT.PRODUCTNO,
         Assert.Equal(
             "select year, [1], [2] from(select t.[year], t.[month], t.amount from test6 as t) as sourceTable pivot(sum(amount) for [month] in([1], [2])) as PivotTable",
             generationSql);
+    }
+
+    [Fact]
+    public void TestPassword()
+    {
+        var sql = "select Password from RouteData";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "Password",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RouteData",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select Password from RouteData", generationSql);
+    }
+
+    [Theory]
+    [InlineData(new object[] { true })]
+    [InlineData(new object[] { false })]
+    public void TestBool(bool value)
+    {
+        var sql = $"select {value.ToString().ToLowerInvariant()}";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBoolExpression()
+                        {
+                            Value = value
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal(sql, generationSql);
+    }
+    [Fact]
+    public void TestBool2()
+    {
+        var sql = $"select * from customer a where true and a.name='a';";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "customer",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBoolExpression()
+                    {
+                        Value = true
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "name",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "a"
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal(sql, generationSql);
     }
 }

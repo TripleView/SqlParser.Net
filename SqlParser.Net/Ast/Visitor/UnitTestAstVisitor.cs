@@ -979,12 +979,32 @@ public class UnitTestAstVisitor : BaseAstVisitor
     {
         AppendLine("new SqlStringExpression()");
         AppendLine("{");
+        if (sqlStringExpression.IsUniCode)
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine($"IsUniCode = true,");
+            });
+        }
         AdvanceNext(() =>
         {
             AppendLine($"Value = \"{sqlStringExpression.Value}\"");
         });
         AppendLine("},");
     }
+
+    public override void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    {
+        AppendLine("new SqlBoolExpression()");
+        AppendLine("{");
+
+        AdvanceNext(() =>
+        {
+            AppendLine($"Value = {sqlBoolExpression.Value.ToString().ToLowerInvariant()}");
+        });
+        AppendLine("},");
+    }
+
     public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
         AppendLine("new SqlTableExpression()");

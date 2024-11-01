@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SqlParser.Net.Ast.Expression;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -736,11 +737,14 @@ public class SqlLexer
         tokenDic.TryAdd("Over".ToLowerInvariant(), Token.Over);
         tokenDic.TryAdd("Partition".ToLowerInvariant(), Token.Partition);
         //mysql
-        tokenDic.TryAdd("True".ToLowerInvariant(), Token.True);
-        tokenDic.TryAdd("False".ToLowerInvariant(), Token.False);
+        if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
+        {
+            tokenDic.TryAdd("True".ToLowerInvariant(), Token.True);
+            tokenDic.TryAdd("False".ToLowerInvariant(), Token.False);
+        }
 
         tokenDic.TryAdd("Identified".ToLowerInvariant(), Token.Identified);
-        tokenDic.TryAdd("Password".ToLowerInvariant(), Token.Password);
+        //tokenDic.TryAdd("Password".ToLowerInvariant(), Token.Password);
 
         tokenDic.TryAdd("Exists".ToLowerInvariant(), Token.Exists);
         tokenDic.TryAdd("With".ToLowerInvariant(), Token.With);

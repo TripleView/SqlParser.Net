@@ -2,22 +2,20 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlStringExpression : SqlExpression
+public class SqlBoolExpression : SqlExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlStringExpression(this);
+        visitor.VisitSqlBoolExpression(this);
     }
-    public SqlStringExpression()
+    public SqlBoolExpression()
     {
-        this.Type = SqlExpressionType.String;
+        this.Type = SqlExpressionType.Bool;
     }
 
-    public string Value { get; set; }
+    public bool Value { get; set; }
 
-    public bool IsUniCode { get; set; }
-
-    protected bool Equals(SqlStringExpression other)
+    protected bool Equals(SqlBoolExpression other)
     {
         return Value == other.Value;
     }
@@ -27,11 +25,13 @@ public class SqlStringExpression : SqlExpression
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((SqlStringExpression)obj);
+        return Equals((SqlBoolExpression)obj);
     }
 
     public override int GetHashCode()
     {
-        return Value.GetHashCode();
+        throw new System.NotImplementedException();
     }
+
+
 }

@@ -27,6 +27,10 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+    public virtual void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    {
+
+    }
     public virtual void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
 

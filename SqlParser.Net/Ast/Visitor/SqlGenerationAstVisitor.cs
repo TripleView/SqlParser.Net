@@ -739,9 +739,18 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         sb.Append($"{str}");
     }
 
+    public override void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    {
+        if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
+        {
+            sb.Append($" {sqlBoolExpression.Value.ToString().ToLowerInvariant()}");
+        }
+
+    }
+
     public override void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
-        Append($"'{sqlStringExpression.Value.Replace("'", "''")}'");
+        Append($"{(sqlStringExpression.IsUniCode ? "N" : "")}'{sqlStringExpression.Value.Replace("'", "''")}'");
     }
     public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {

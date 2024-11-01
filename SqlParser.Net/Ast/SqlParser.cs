@@ -1189,6 +1189,16 @@ public class SqlParser
                 //}
 
             }
+            else if (name.ToLowerInvariant() == "n" && Accept(Token.StringConstant))
+            {
+                //nchar
+                var txt = GetCurrentTokenValue();
+                body = new SqlStringExpression()
+                {
+                    IsUniCode = true,
+                    Value = txt
+                };
+            }
             else
             {
                 var sqlIdentifierExpression = new SqlIdentifierExpression()
@@ -1304,6 +1314,20 @@ public class SqlParser
         else if (Accept(Token.Null))
         {
             return new SqlNullExpression();
+        }
+        else if (Accept(Token.True))
+        {
+            return new SqlBoolExpression()
+            {
+                Value = true
+            };
+        }
+        else if (Accept(Token.False))
+        {
+            return new SqlBoolExpression()
+            {
+                Value = false
+            };
         }
         else if (nextToken == null)
         {
@@ -1615,7 +1639,7 @@ public class SqlParser
                 break;
             }
 
-            if (Accept(Token.Join) || (isCommaJoin ))
+            if (Accept(Token.Join) || (isCommaJoin))
             {
 
                 var right = AcceptTableExpression();
