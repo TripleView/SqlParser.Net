@@ -978,6 +978,19 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.Like;
             }
+            else if (Accept(Token.Bar))
+            {
+                @operator = SqlBinaryOperator.BitwiseOr;
+            }
+            else if (Accept(Token.BitwiseAnd))
+            {
+                @operator = SqlBinaryOperator.BitwiseAnd;
+            }
+            else if (Accept(Token.BitwiseXor))
+            {
+                @operator = SqlBinaryOperator.BitwiseXor;
+            }
+            
             else if (Accept(Token.BarBar))
             {
                 @operator = SqlBinaryOperator.Concat;
@@ -1210,8 +1223,9 @@ public class SqlParser
                 body = sqlIdentifierExpression;
             }
         }
-        else if (CheckNextToken(Token.NumberConstant) || CheckNextToken(Token.StringConstant))
+        else if (CheckNextToken(Token.NumberConstant)|| CheckNextToken(Token.Sub))
         {
+            var isNegative = Accept(Token.Sub);
             if (Accept(Token.NumberConstant))
             {
                 var number = GetCurrentTokenNumberValue();
@@ -1219,17 +1233,18 @@ public class SqlParser
                 {
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                    Value = number
+                    Value = (isNegative?-1:1)* number
                 };
             }
-            else if (Accept(Token.StringConstant))
+         
+        }
+        else if (Accept(Token.StringConstant))
+        {
+            var txt = GetCurrentTokenValue();
+            body = new SqlStringExpression()
             {
-                var txt = GetCurrentTokenValue();
-                body = new SqlStringExpression()
-                {
-                    Value = txt
-                };
-            }
+                Value = txt
+            };
         }
         else if (Accept(Token.Star))
         {

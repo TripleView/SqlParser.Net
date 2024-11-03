@@ -32,7 +32,10 @@ public class SqlBinaryOperator
     public static readonly SqlBinaryOperator Mod = new SqlBinaryOperator("Mod", "%");
     public static readonly SqlBinaryOperator Concat = new SqlBinaryOperator("Concat", "||");
     public static readonly SqlBinaryOperator NotLike = new SqlBinaryOperator("NotLike", "Not Like");
-
+    public static readonly SqlBinaryOperator BitwiseOr = new SqlBinaryOperator("BitwiseOr", "|");
+    public static readonly SqlBinaryOperator BitwiseAnd = new SqlBinaryOperator("BitwiseAnd", "&");
+    public static readonly SqlBinaryOperator BitwiseXor = new SqlBinaryOperator("BitwiseXor", "^");
+    
     protected bool Equals(SqlBinaryOperator other)
     {
         return Name == other.Name && Value.Equals(other.Value);

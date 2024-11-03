@@ -506,6 +506,20 @@ public class SqlLexer
             tokens.Add(token);
             return true;
         }
+        if (Accept('&'))
+        {
+            var token = Token.BitwiseAnd;
+            UpdateTokenPosition(ref token);
+            tokens.Add(token);
+            return true;
+        }
+        if (Accept('^'))
+        {
+            var token = Token.BitwiseXor;
+            UpdateTokenPosition(ref token);
+            tokens.Add(token);
+            return true;
+        }
         if (Accept('@'))
         {
             var token = Token.At;
@@ -718,7 +732,8 @@ public class SqlLexer
         tokenDic.TryAdd("And".ToLowerInvariant(), Token.And);
         tokenDic.TryAdd("Or".ToLowerInvariant(), Token.Or);
         tokenDic.TryAdd("Xor".ToLowerInvariant(), Token.Xor);
-
+        tokenDic.TryAdd("BitwiseAnd".ToLowerInvariant(), Token.BitwiseAnd);
+        tokenDic.TryAdd("BitwiseXor".ToLowerInvariant(), Token.BitwiseXor);
 
         tokenDic.TryAdd("Case".ToLowerInvariant(), Token.Case);
         tokenDic.TryAdd("When".ToLowerInvariant(), Token.When);

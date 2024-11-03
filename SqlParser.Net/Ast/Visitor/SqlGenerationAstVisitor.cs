@@ -743,7 +743,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
         {
-            sb.Append($" {sqlBoolExpression.Value.ToString().ToLowerInvariant()}");
+            sb.Append($" {sqlBoolExpression.Value.ToString().ToLowerInvariant()} ");
         }
 
     }

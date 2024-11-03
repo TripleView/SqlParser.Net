@@ -7043,6 +7043,229 @@ public class SelectTest
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal(sql, generationSql);
+        Assert.Equal("select * from customer as a where( true and(a.name = 'a'))", generationSql);
+    }
+
+
+    [Fact]
+    public void TestBar()
+    {
+        var sql = $"select 3|5";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Operator = SqlBinaryOperator.BitwiseOr,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select(3 | 5)", generationSql);
+    }
+
+    [Fact]
+    public void TestBitwiseAnd()
+    {
+        var sql = $"select 3&5";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Operator = SqlBinaryOperator.BitwiseAnd,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select(3 & 5)", generationSql);
+    }
+
+    [Fact]
+    public void TestBitwiseXor()
+    {
+        var sql = $"select 3^5";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Operator = SqlBinaryOperator.BitwiseXor,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select(3 ^ 5)", generationSql);
+    }
+
+    [Fact]
+    public void TestNegativenumber()
+    {
+        var sql = $"select -3*5";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = -3M,
+                            },
+                            Operator = SqlBinaryOperator.Multiply,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select(-3 * 5)", generationSql);
+    }
+
+    [Fact]
+    public void TestNegativenumber2()
+    {
+        var sql = $"select 5*-3";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                            Operator = SqlBinaryOperator.Multiply,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = -3M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select(5 * -3)", generationSql);
     }
 }

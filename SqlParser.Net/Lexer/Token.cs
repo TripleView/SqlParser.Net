@@ -207,4 +207,10 @@ public struct Token
 
     public static readonly Token For = new Token("For", "For", 104);
 
+    public static readonly Token BitwiseAnd = new Token("BitwiseAnd", "&", 105);
+    public static readonly Token BitwiseXor = new Token("BitwiseXor", "^", 106);
+    
+
+
+
 }
