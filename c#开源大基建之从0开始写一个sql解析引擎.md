@@ -1,6 +1,9 @@
 
 
 # 序列序言
+1.为什么需要sql解析引擎
+
+2.什么是sql解析引擎
 大家好我是三合，
 开源项目应该是出自我自己的需求，我自己解决后，分享出来给大家，那么必须附上前因后果，不然看的人就容易晕，同时要附上整个项目的代码的大概思路，免得读者在代码的海洋里调试的头痛欲裂，我想要添加一个软删除的功能，那么如果能在sql上为每张表动态添加active=1这个条件，不就可以了，同时比如单租户应用变成多租户，动态检查where条件等等。
 antlr
@@ -19,7 +22,29 @@ c#中所有数字都可以用decimal表示
 
 自然语言和形式语言的一个重要区别是，自然语言的一个语句，可能有多重含义，而形式语言的一个语句，只能有一个语义;形式语言的语法是人为规定的，有了一定的语法规则，语法解析器就能根据语法规则，解析出一个语句的一个唯一含义
 
-负数 
+有一种和dba大佬交锋的感觉，每次感觉这次终于要搞完了，去实际环境已测试，就会暴露出新问题，解决新问题的过程中，可能要推翻之前的设计，进行重构，测试的时候就会发出这种感叹，还能这么玩？这么玩也行？这是要玩死我吧？
+每次重构完，跑一遍一百多个单元测试，失败几十个，天都塌了，然后开始一个一个排错
+想写一个根据sql自动分析表与表之间是如何关联的工具
+想着给sql动态添加条件，那就需要解析sql
+写一个sql格式化工具
+
+
+例如oracle中
+ SELECT id from ADDRESS join;
+  SELECT LEFT.id from ADDRESS left
+     select 1 AS PARTITION FROM dual  PARTITION 
+      select PARTITION.PARTITION from PARTITION
+       select PARTITION from PARTITION
+        select * from ADDRESS left left join dual  on 1=1
+            SELECT LEFT.id from ADDRESS LEFT right JOIN test ON 1=1
+      join和left作为别名也行。partition本来是关键字，作为表别名和列别名也行
+        SELECT id from ADDRESS ORDER BY 1+2    
+        order by后面跟表达式也行
+待处理
+   select * from TEST5 t order by t.NAME  desc nulls last
+   
+      select * from TEST5 t order by t.NAME  desc nulls first
+SELECT LEVEL l FROM DUAL CONNECT BY LEVEL<=100
 行转列的SQL操作通常称为“透视”。不同的数据库有不同的实现方式
 在 Oracle 中，(+) 是用于表示外连接（Outer Join）的旧式语法符号。它是特有于 Oracle 的非标准 SQL 语法。以下是它的用法：
 用法

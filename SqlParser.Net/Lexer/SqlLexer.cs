@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace SqlParser.Net.Lexer;
 
@@ -240,7 +241,7 @@ public class SqlLexer
 
     private bool AcceptEmptyChar()
     {
-        if (Accept('\n') || Accept('\t') || Accept(' '))
+        if (Accept('\n') || Accept('\t') || Accept(' ') || AcceptNextEmptyChar())
         {
             return true;
         }
@@ -253,18 +254,21 @@ public class SqlLexer
         if (AcceptDigits())
         {
             var startIndex = pos - 1;
-            var txt = GetCurrentCharValue();
+            var sb = new StringBuilder();
+            var ch = GetCurrentCharValue();
+            sb.Append(ch);
 
             while (Accept('.') || AcceptDigits())
             {
-                if (currentChar == '.' && txt.IndexOf(".", StringComparison.InvariantCulture) != -1)
-                {
-                    throw new Exception("数字里不允许出现多个.");
-                }
-                txt += GetCurrentCharValue();
+                //if (currentChar == '.' && txt.IndexOf(".", StringComparison.InvariantCulture) != -1)
+                //{
+                //    throw new Exception("数字里不允许出现多个.");
+                //}
+                ch = GetCurrentCharValue();
+                sb.Append(ch);
             }
 
-            var token = AcceptNumberToken(txt);
+            var token = AcceptNumberToken(sb.ToString());
             var endIndex = pos - 1;
             token.StartPositionIndex = startIndex;
             token.EndPositionIndex = endIndex;
@@ -275,14 +279,14 @@ public class SqlLexer
         return false;
     }
 
-    private string GetCurrentCharValue()
+    private char GetCurrentCharValue()
     {
         if (currentChar.HasValue)
         {
-            return currentChar.Value.ToString();
+            return currentChar.Value;
         }
 
-        return "";
+        return default;
     }
     private string GetNextCharValue()
     {
@@ -298,13 +302,18 @@ public class SqlLexer
         if (AcceptLetters())
         {
             var startIndex = pos - 1;
-            var txt = GetCurrentCharValue();
+            var sb = new StringBuilder();
+            var ch = GetCurrentCharValue();
+            sb.Append(ch);
             while (AcceptLetters() || Accept('_') || AcceptDigits())
             {
-                txt += GetCurrentCharValue();
+                ch = GetCurrentCharValue();
+                sb.Append(ch);
             }
 
+            var txt = sb.ToString();
             var token = AcceptIdentifierOrKeywordToken(txt);
+            token.RawValue = txt;
             var endIndex = pos - 1;
             token.StartPositionIndex = startIndex;
             token.EndPositionIndex = endIndex;
@@ -379,7 +388,7 @@ public class SqlLexer
             return true;
         }
 
-        if (Accept('('))
+        if (Accept('(')||(dbType==DbType.Oracle&&Accept('（')))
         {
             var token = Token.LeftParen;
             UpdateTokenPosition(ref token);
@@ -387,7 +396,7 @@ public class SqlLexer
             return true;
         }
 
-        if (Accept(')'))
+        if (Accept(')') || (dbType == DbType.Oracle && Accept('）')))
         {
             var token = Token.RightParen;
             UpdateTokenPosition(ref token);
@@ -877,6 +886,17 @@ public class SqlLexer
     private bool Accept(char ch)
     {
         if (nextChar != null && nextChar == ch)
+        {
+            GetNextChar();
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool AcceptNextEmptyChar()
+    {
+        if (nextChar != null &&char.IsWhiteSpace(nextChar.Value))
         {
             GetNextChar();
             return true;

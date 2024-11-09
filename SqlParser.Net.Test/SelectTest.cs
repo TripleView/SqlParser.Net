@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Ast.Visitor;
 using System.Xml.Linq;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace SqlParser.Net.Test;
@@ -1425,6 +1427,74 @@ public class SelectTest
         Assert.Equal("select * from(select * from TEST as t3) as t inner join(select * from test1 as t) as t2 on(t.name = t2.test)",
             generationSql);
     }
+
+    [Fact]
+    public void TestJoin3()
+    {
+        var sql =
+            "select * from Customer  join Address  on 1=1";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Customer",
+                        },
+                    },
+                    JoinType = SqlJoinType.InnerJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Address",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal(
+            "select * from Customer inner join Address on(1 = 1)",
+            generationSql);
+    }
+
+
 
     [Theory]
     [InlineData(new object[]
@@ -6523,15 +6593,63 @@ public class SelectTest
     [Fact]
     public void AForTest()
     {
-        var sql = @" SELECT COUNT(1) FROM (SELECT t.* FROM  (select EMPNO,
-                           PASSWORD,
-                           LASTUPDATEON,
-                           LASTUPDATEDBY,
-                           CREATEDON,
-                           CREATEDBY
-                      from ATL_EQUIPMENTNGAUTHORIZATION
-                     WHERE 1=1    order by EMPNO ) t  ) CountTable ";
+        var oracleFields =
+            "\r\nACCESS\tELSE\tMODIFY\tSTART\r\nADD\tEXCLUSIVE\tNOAUDIT\tSELECT\r\nALL\tEXISTS\tNOCOMPRESS\tSESSION\r\nALTER\tFILE\tNOT\tSET\r\nAND\tFLOAT\tNOTFOUND\tSHARE\r\nANY\tFOR\tNOWAIT\tSIZE\r\nARRAYLEN\tFROM\tNULL\tSMALLINT\r\nAS\tGRANT\tNUMBER\tSQLBUF\r\nASC\tGROUP\tOF\tSUCCESSFUL\r\nAUDIT\tHAVING\tOFFLINE\tSYNONYM\r\nBETWEEN\tIDENTIFIED\tON\tSYSDATE\r\nBY\tIMMEDIATE\tONLINE\tTABLE\r\nCHAR\tIN\tOPTION\tTHEN\r\nCHECK\tINCREMENT\tOR\tTO\r\nCLUSTER\tINDEX\tORDER\tTRIGGER\r\nCOLUMN\tINITIAL\tPCTFREE\tUID\r\nCOMMENT\tINSERT\tPRIOR\tUNION\r\nCOMPRESS\tINTEGER\tPRIVILEGES\tUNIQUE\r\nCONNECT\tINTERSECT\tPUBLIC\tUPDATE\r\nCREATE\tINTO\tRAW\tUSER\r\nCURRENT\tIS\tRENAME\tVALIDATE\r\nDATE\tLEVEL\tRESOURCE\tVALUES\r\nDECIMAL\tLIKE\tREVOKE\tVARCHAR\r\nDEFAULT\tLOCK\tROW\tVARCHAR2\r\nDELETE\tLONG\tROWID\tVIEW\r\nDESC\tMAXEXTENTS\tROWLABEL\tWHENEVER\r\nDISTINCT\tMINUS\tROWNUM\tWHERE\r\nDROP\tMODE\tROWS\tWITH".Replace("\t",";").Replace("\r\n",";");
 
+        var sql = @" SELECT COUNT(1) FROM (SELECT t.* FROM  (SELECT
+	wo.WipOrderNo,
+	wo.WIpOrderType,
+	wo.ParentWipOrderNo,
+	p.ProductNo,
+	wol.LotNo,
+	wc.TotalProcessed,
+	awo.ReportedQuantity,
+	wl.Location,
+	wo.ActualCompletionDate,
+	awo.IsReport
+FROM
+	Wip_Order wo
+LEFT JOIN ATL_Wip_Order awo ON
+	wo.WipOrderNo = awo.WipOrderNo
+	AND wo.WipOrderType = awo.WipOrderType
+LEFT JOIN Product p ON
+	wo.ProductID = p.ID
+LEFT JOIN Wip_Order_Lot wol ON
+	wo.WIpOrderNo = wol.WipOrderNo
+	AND wo.WipOrderType = wol.WIpOrderType
+LEFT JOIN WIp_Line wl ON
+	wo.ProductionLineNo = wl.ProductionLineNo
+LEFT JOIN Facility f ON
+	wl.OwnedFacility = f.Facility
+	--and f.objectclass =3
+LEFT JOIN (
+	SELECT
+		WipOrderNo,
+		WipOrderType,
+		SUM(NVL(TotalProcessed, 0)) AS TotalProcessed
+	FROM
+		Wip_Content wc
+	WHERE
+		wc.WipContentClass = 1
+	GROUP BY
+		WipOrderNo,
+		WipOrderType ) wc ON
+	wo.WipOrderNo = wc.WIpOrderNo
+	AND wo.WipOrderType = wc.WipOrderType
+LEFT JOIN Container con ON
+	wo.WipOrderNo = con.Container
+LEFT JOIN Warehouse_Location wl ON
+	con.WarehouseLocationID = wl.ID
+LEFT JOIN Wip_Order pwo ON
+	wo.ParentWipOrderNo = pwo.WipOrderNo
+	AND wo.ParentWipOrderType = pwo.WipOrderType
+WHERE
+	awo.IsReport IN(0)
+	AND wo.Active = 1
+	AND wo.WipOrderType = '10601'
+	AND pwo.WorkOrderStatus NOT IN(1,
+	6)
+	AND wo.WorkOrderStatus = 6  and 1=1  order by ActualCompletionDate desc nulls last) t  ) CountTable ";
 
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
@@ -7267,5 +7385,743 @@ public class SelectTest
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal("select(5 * -3)", generationSql);
+    }
+
+    [Fact]
+    public void TestKeywordAsIdentifier()
+    {
+        var sql = $"select * from test6 t where t.partition ='a'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test6",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "partition",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlStringExpression()
+                    {
+                        Value = "a"
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select * from test6 as t where(t.partition = 'a')", generationSql);
+    }
+
+    [Fact]
+    public void TestKeywordAsIdentifier3()
+    {
+        var sql = $" select PARTITION.PARTITION from PARTITION";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "PARTITION",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "PARTITION",
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "PARTITION",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select PARTITION.PARTITION from PARTITION", generationSql);
+    }
+
+    [Theory]
+    [InlineData(new object[] { "left" })]
+    [InlineData(new object[] { "right" })]
+    [InlineData(new object[] { "inner" })]
+    [InlineData(new object[] { "full" })]
+    public void TestKeywordAsIdentifier4(string joinType)
+    {
+        var sql = $"SELECT LEFT.id from ADDRESS LEFT {joinType} JOIN test ON 1=1";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+        SqlJoinType sqlJoinType = SqlJoinType.CommaJoin;
+        switch (joinType)
+        {
+            case "left":
+                sqlJoinType = SqlJoinType.LeftJoin;
+                break;
+            case "right":
+                sqlJoinType = SqlJoinType.RightJoin;
+                break;
+            case "inner":
+                sqlJoinType = SqlJoinType.InnerJoin;
+                break;
+            case "full":
+                sqlJoinType = SqlJoinType.FullJoin;
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "LEFT",
+                            },
+                        },
+                    },
+                },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "ADDRESS",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "LEFT",
+                        },
+                    },
+                    JoinType = sqlJoinType,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "test",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal($"select LEFT.id from ADDRESS LEFT {joinType} join test on(1 = 1)", generationSql);
+    }
+    [Fact]
+    public void TestKeywordAsIdentifier2()
+    {
+        var sql = $"select 5*3 AS PARTITION FROM dual  PARTITION JOIN TEST t ON 1=1";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                            Operator = SqlBinaryOperator.Multiply,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "PARTITION",
+                        },
+                    },
+                },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "dual",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "PARTITION",
+                        },
+                    },
+                    JoinType = SqlJoinType.InnerJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "TEST",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select(5 * 3) as PARTITION from dual PARTITION inner join TEST t on(1 = 1)", generationSql);
+    }
+
+    [Fact]
+    public void TestKeywordAsIdentifier5()
+    {
+        var sql = $"SELECT LEFT.id from ADDRESS left";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "LEFT",
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "ADDRESS",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "left",
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select LEFT.id from ADDRESS left", generationSql);
+    }
+    [Fact]
+    public void TestKeywordAsIdentifier6()
+    {
+        var sql = $"select g.group_ \"GROUP\" from group_ g inner join group_class gc on g.groupclassid = gc.id where gc.name = 'CellGroup' order by group_";
+
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "group_",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "g",
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "GROUP",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+            },
+        },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "group_",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "g",
+                        },
+                    },
+                    JoinType = SqlJoinType.InnerJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "group_class",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "gc",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "groupclassid",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "g",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "gc",
+                            },
+                        },
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "gc",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlStringExpression()
+                    {
+                        Value = "CellGroup"
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "group_",
+                    },
+                },
+            },
+                },
+            },
+        };
+
+
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select g.group_ as \"GROUP\" from group_ g inner join group_class gc on(g.groupclassid = gc.id) where(gc.name = 'CellGroup') order by group_", generationSql);
+    }
+
+    [Fact]
+    public void TestOracleSpecialParen()
+    {
+        var sql = "select * from TEST5 t WHERE t.NAME  IN £¨'a','b','c'£©";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "TEST5",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlInExpression()
+                {
+                    Field = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "NAME",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    TargetList = new List<SqlExpression>()
+                    {
+                        new SqlStringExpression()
+                        {
+                            Value = "a"
+                        },
+                        new SqlStringExpression()
+                        {
+                            Value = "b"
+                        },
+                        new SqlStringExpression()
+                        {
+                            Value = "c"
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select * from TEST5 t where t.NAME in('a', 'b', 'c')", generationSql);
+    }
+
+    [Fact]
+    public void TestEmptyChar()
+    {
+        var sql = "SELECT F.FACILITY, F.FACILITY || '__' ||TT.MEDIUM AS NAME¡¡FROM FACILITY  F   LEFT JOIN TEXT_TRANSLATION TT ON TT.TEXTID = F.TEXTID WHERE TT.LANGUAGEID ='2052' AND F.OBJECTCLASS = '1'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FACILITY",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "F",
+                    },
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "FACILITY",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "F",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.Concat,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "__"
+                        },
+                    },
+                    Operator = SqlBinaryOperator.Concat,
+                    Right = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "MEDIUM",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "TT",
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "NAME",
+                },
+            },
+        },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "FACILITY",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "F",
+                        },
+                    },
+                    JoinType = SqlJoinType.LeftJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "TEXT_TRANSLATION",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "TT",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "TEXTID",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "TT",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "TEXTID",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "F",
+                            },
+                        },
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "LANGUAGEID",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "TT",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "2052"
+                        },
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "OBJECTCLASS",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "F",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "1"
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select F.FACILITY,((F.FACILITY || '__') || TT.MEDIUM) as NAME from FACILITY F left join TEXT_TRANSLATION TT on(TT.TEXTID = F.TEXTID) where((TT.LANGUAGEID = '2052') and(F.OBJECTCLASS = '1'))", generationSql);
     }
 }

@@ -9,6 +9,14 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast;
 
+public enum ParseType
+{
+    Select,
+    Delete,
+    Update,
+    Insert
+}
+
 public class SqlParser
 {
     private int pos = -1;
@@ -18,6 +26,8 @@ public class SqlParser
     private List<Token> tokens = new List<Token>();
     private List<string> comments = new List<string>();
     private DbType dbType;
+
+    private ParseType? parseType;
     /// <summary>
     /// Left Qualifiers token
     /// 左限定符token
@@ -35,6 +45,8 @@ public class SqlParser
     /// true:仅递归四则运算,false:递归所有逻辑运算
     /// </summary>
     private bool isOnlyRecursiveFourArithmeticOperations = false;
+
+
 
     public SqlExpression Parse(List<Token> tokens, string sql, DbType dbType)
     {
@@ -56,6 +68,7 @@ public class SqlParser
 
         if (CheckNextToken(Token.Select) || CheckNextToken(Token.With) || CheckNextToken(Token.LeftParen))
         {
+            parseType = ParseType.Select;
             var result = new SqlSelectExpression();
             result = AcceptSelectExpression();
             result.Comments = comments;
@@ -69,18 +82,21 @@ public class SqlParser
         }
         else if (CheckNextToken(Token.Update))
         {
+            parseType = ParseType.Update;
             var result = AcceptUpdateExpression();
             result.Comments = comments;
             return result;
         }
         else if (CheckNextToken(Token.Delete))
         {
+            parseType = ParseType.Delete;
             var result = AcceptDeleteExpression();
             result.Comments = comments;
             return result;
         }
         else if (CheckNextToken(Token.Insert))
         {
+            parseType = ParseType.Insert;
             var result = AcceptInsertExpression();
             result.Comments = comments;
             return result;
@@ -150,7 +166,7 @@ public class SqlParser
                 var previewToken = this.tokens[i - 1];
 
                 var nextToken = this.tokens[i + 1];
-                if (previewToken.IsToken(leftQualifiers) && (currentToken.IsToken(Token.IdentifierString) || currentToken.IsToken(Token.NumberConstant)) &&
+                if (previewToken.IsToken(leftQualifiers) && (currentToken.IsToken(Token.IdentifierString) || currentToken.IsToken(Token.NumberConstant) ) &&
                     nextToken.IsToken(rightQualifiers))
                 {
                     previewToken.IsRemove = true;
@@ -160,6 +176,21 @@ public class SqlParser
                     currentToken.LeftQualifiers = leftQualifiers.Value.ToString();
                     currentToken.RightQualifiers = rightQualifiers.Value.ToString();
                     this.tokens[i] = currentToken;
+                    hasLeft = false;
+                }
+                if (previewToken.IsToken(leftQualifiers) && ( currentToken.TokenType == TokenType.Keyword) &&
+                    nextToken.IsToken(rightQualifiers))
+                {
+                    previewToken.IsRemove = true;
+                    this.tokens[i - 1] = previewToken;
+                    nextToken.IsRemove = true;
+                    this.tokens[i + 1] = nextToken;
+                    var newToken = Token.IdentifierString;
+                    newToken.LeftQualifiers = leftQualifiers.Value.ToString();
+                    newToken.RightQualifiers = rightQualifiers.Value.ToString();
+                    newToken.Value = currentToken.RawValue;
+                    newToken.RawValue = currentToken.RawValue;
+                    this.tokens[i] = newToken;
                     hasLeft = false;
                 }
             }
@@ -320,6 +351,8 @@ public class SqlParser
                 var subQueryAlias = GetCurrentTokenValue();
                 subQuery.Alias = new SqlIdentifierExpression()
                 {
+                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = subQueryAlias
                 };
             }
@@ -421,6 +454,8 @@ public class SqlParser
             {
                 table.Alias = new SqlIdentifierExpression()
                 {
+                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = alias
                 };
             }
@@ -807,6 +842,8 @@ public class SqlParser
             {
                 item.Alias = new SqlIdentifierExpression()
                 {
+                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = asStr
                 };
             }
@@ -1128,6 +1165,130 @@ public class SqlParser
         return left;
     }
 
+
+    private int savePoint = -1;
+    private int savePoint2 = -1;
+    private bool SavePoint()
+    {
+        if (pos == tokens.Count - 1)
+        {
+            return false;
+        }
+        savePoint = pos;
+        return true;
+    }
+    private bool SavePoint2()
+    {
+        if (pos == tokens.Count - 1)
+        {
+            return false;
+        }
+        savePoint2 = pos;
+        return true;
+    }
+    private void RestoreSavePoint()
+    {
+        if (savePoint != -1)
+        {
+            pos = savePoint;
+            if (pos - 1 >= 0)
+            {
+                currentToken = tokens[pos - 1];
+            }
+            nextToken = tokens[pos];
+            savePoint = -1;
+        }
+      
+    }
+    private void RestoreSavePoint2()
+    {
+        if (savePoint2 != -1)
+        {
+            pos = savePoint2;
+            if (pos - 1 >= 0)
+            {
+                currentToken = tokens[pos - 1];
+            }
+            nextToken = tokens[pos];
+            savePoint2 = -1;
+        }
+
+    }
+    private bool AcceptKeywordAsIdentifier()
+    {
+        var notAllowTokens = new List<Token>()
+        {
+            Token.Comma,
+            Token.When,
+            Token.Comma,
+            Token.Where,
+            Token.Group,
+            Token.Order,
+            Token.Limit,
+            Token.Offset,
+            Token.And,
+            Token.Or,
+            Token.Xor,
+            Token.LeftParen,
+            Token.RightParen,
+            Token.From,
+            Token.Join,
+            Token.Dot,
+            Token.Union
+     
+        };
+        //if (CheckNextTokenIsOperatorOrSymbol())
+        //{
+        //    return false;
+        //}
+        if (notAllowTokens.Any(it => CheckNextToken(it)))
+        {
+            return false;
+        }
+        SavePoint();
+        if (AcceptKeyword())
+        {
+            var name = GetCurrentTokenValue();
+            SavePoint2();
+            if (AcceptAnyOne())
+            {
+                
+                if (currentToken?.IsToken(Token.Join)==true&&(name.ToLowerInvariant()=="left"|| name.ToLowerInvariant() == "right")|| name.ToLowerInvariant() == "full"|| name.ToLowerInvariant() == "cross"|| name.ToLowerInvariant() == "inner")
+                {
+                    RestoreSavePoint();
+                    return false;
+                }
+              
+                if (notAllowTokens.Any(it=> currentToken?.IsToken(it)==true) || currentToken?.TokenType == TokenType.Symbol || currentToken?.TokenType == TokenType.Operator)
+                {
+                    RestoreSavePoint2();
+                    return true;
+                }
+
+                var joinTokens = new List<Token>()
+                {
+                    Token.Left,
+                    Token.Right,
+                    Token.Inner,
+                    Token.Full,
+                    Token.Cross
+                };
+                if (joinTokens.Any(it => currentToken?.IsToken(it) == true))
+                {
+                    RestoreSavePoint2();
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+
+        }
+        RestoreSavePoint();
+        return false;
+    }
+
     /// <summary>
     /// Analyze the basic units in the four arithmetic operations
     /// 解析四则运算中的基础单元
@@ -1157,73 +1318,7 @@ public class SqlParser
 
         SqlExpression body = new SqlExpression();
 
-        if (Accept(Token.IdentifierString))
-        {
-            var name = GetCurrentTokenValue();
-            var mainToken = currentToken;
-            if (Accept(Token.Dot))
-            {
-                if (Accept(Token.IdentifierString) || Accept(Token.Star))
-                {
-                    var propertyName = GetCurrentTokenValue();
-                    var sqlPropertyExpression = new SqlPropertyExpression();
-                    var sqlIdentifierExpression = new SqlIdentifierExpression()
-                    {
-                        LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
-                        RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                        Value = name
-                    };
-                    var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
-                    {
-                        LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
-                        RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                        Value = propertyName
-                    };
-                    sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
-                    sqlPropertyExpression.Table = sqlIdentifierExpression;
-                    body = sqlPropertyExpression;
-                }
-                else
-                {
-                    throw new Exception("sql syntc error");
-                }
-            }
-            else if (CheckNextToken(Token.LeftParen))
-            {
-                var result = AcceptFunctionCall(name);
-                return result;
-                //if (functions.Any(it => it.ToLower() == txt.ToLower()))
-                //{
-
-                //}
-                //else
-                //{
-                //    throw new Exception($"无法识别函数{txt}");
-                //}
-
-            }
-            else if (name.ToLowerInvariant() == "n" && Accept(Token.StringConstant))
-            {
-                //nchar
-                var txt = GetCurrentTokenValue();
-                body = new SqlStringExpression()
-                {
-                    IsUniCode = true,
-                    Value = txt
-                };
-            }
-            else
-            {
-                var sqlIdentifierExpression = new SqlIdentifierExpression()
-                {
-                    LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
-                    RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                    Value = name
-                };
-                body = sqlIdentifierExpression;
-            }
-        }
-        else if (CheckNextToken(Token.NumberConstant)|| CheckNextToken(Token.Sub))
+        if (CheckNextToken(Token.NumberConstant)|| CheckNextToken(Token.Sub))
         {
             var isNegative = Accept(Token.Sub);
             if (Accept(Token.NumberConstant))
@@ -1347,6 +1442,72 @@ public class SqlParser
         else if (nextToken == null)
         {
             return null;
+        }
+        else if (Accept(Token.IdentifierString))
+        {
+            var name = GetCurrentTokenValue();
+            var mainToken = currentToken;
+            if (Accept(Token.Dot))
+            {
+                if (Accept(Token.IdentifierString) || Accept(Token.Star))
+                {
+                    var propertyName = GetCurrentTokenValue();
+                    var sqlPropertyExpression = new SqlPropertyExpression();
+                    var sqlIdentifierExpression = new SqlIdentifierExpression()
+                    {
+                        LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                        RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
+                        Value = name
+                    };
+                    var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
+                    {
+                        LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                        RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
+                        Value = propertyName
+                    };
+                    sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
+                    sqlPropertyExpression.Table = sqlIdentifierExpression;
+                    body = sqlPropertyExpression;
+                }
+                else
+                {
+                    throw new Exception("sql syntc error");
+                }
+            }
+            else if (CheckNextToken(Token.LeftParen))
+            {
+                var result = AcceptFunctionCall(name);
+                return result;
+                //if (functions.Any(it => it.ToLower() == txt.ToLower()))
+                //{
+
+                //}
+                //else
+                //{
+                //    throw new Exception($"无法识别函数{txt}");
+                //}
+
+            }
+            else if (name.ToLowerInvariant() == "n" && Accept(Token.StringConstant))
+            {
+                //nchar
+                var txt = GetCurrentTokenValue();
+                body = new SqlStringExpression()
+                {
+                    IsUniCode = true,
+                    Value = txt
+                };
+            }
+            else
+            {
+                var sqlIdentifierExpression = new SqlIdentifierExpression()
+                {
+                    LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                    RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
+                    Value = name
+                };
+                body = sqlIdentifierExpression;
+            }
         }
         else
         {
@@ -1564,6 +1725,8 @@ public class SqlParser
                     var alias = GetCurrentTokenValue();
                     item.Alias = new SqlIdentifierExpression()
                     {
+                        LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                        RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                         Value = alias
                     };
                 }
@@ -1586,6 +1749,8 @@ public class SqlParser
                 var alias = GetCurrentTokenValue();
                 result.Alias = new SqlIdentifierExpression()
                 {
+                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = alias
                 };
             }
@@ -1845,6 +2010,10 @@ public class SqlParser
     {
         if (currentToken.HasValue)
         {
+            if (currentToken.Value.TokenType == TokenType.Keyword)
+            {
+                return currentToken.Value.RawValue;
+            }
             return currentToken.Value.Value.ToString();
         }
 
@@ -1868,6 +2037,10 @@ public class SqlParser
             return true;
         }
 
+        if (parseType==ParseType.Select&&token.IsToken(Token.IdentifierString))
+        {
+            return AcceptKeywordAsIdentifier();
+        }
         return false;
     }
 
@@ -1891,6 +2064,16 @@ public class SqlParser
 
         return false;
     }
+    private bool AcceptKeyword()
+    {
+        if (nextToken?.TokenType==TokenType.Keyword)
+        {
+            GetNextToken();
+            return true;
+        }
+
+        return false;
+    }
     private bool CheckNextToken(Token token)
     {
         if (nextToken.HasValue && nextToken.Value.IsToken(token))
@@ -1900,7 +2083,15 @@ public class SqlParser
 
         return false;
     }
+    private bool CheckNextTokenIsOperatorOrSymbol()
+    {
+        if (nextToken.HasValue && (nextToken.Value.TokenType==TokenType.Operator|| nextToken.Value.TokenType == TokenType.Symbol))
+        {
+            return true;
+        }
 
+        return false;
+    }
     private bool CheckCurrentToken(Token token)
     {
         if (currentToken.HasValue && currentToken.Value.IsToken(token))
