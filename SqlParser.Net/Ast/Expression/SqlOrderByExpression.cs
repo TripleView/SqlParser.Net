@@ -16,8 +16,20 @@ public class SqlOrderByExpression : SqlExpression
 
     public List<SqlOrderByItemExpression> Items { get; set; }
 
+    /// <summary>
+    /// just for oracle ,such as:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e  CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID
+    /// 仅oracle使用，例如sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e  CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID
+    /// </summary>
+    public bool IsSiblings { get; set; }
+
+
     protected bool Equals(SqlOrderByExpression other)
     {
+        if (IsSiblings != other.IsSiblings)
+        {
+            return false;
+        }
+       
         if (Items.Count != other.Items.Count)
         {
             return false;

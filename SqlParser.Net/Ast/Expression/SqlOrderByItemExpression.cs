@@ -14,8 +14,10 @@ public class SqlOrderByItemExpression : SqlExpression
     }
 
     public SqlExpression Body { get; set; }
-
+    
     public SqlOrderByType? OrderByType { get; set; }
+
+    public SqlOrderByNullsType? NullsType { get; set; }
 
     protected bool Equals(SqlOrderByItemExpression other)
     {
@@ -24,21 +26,22 @@ public class SqlOrderByItemExpression : SqlExpression
             return false;
         }
 
-
-        if (OrderByType == other.OrderByType)
-        {
-            return true;
-        }
-        else if (OrderByType == null && other.OrderByType == SqlOrderByType.Asc ||
+        if (OrderByType == null && other.OrderByType == SqlOrderByType.Asc ||
                  (OrderByType == SqlOrderByType.Asc && other.OrderByType == null))
         {
-            return true;
+           
         }
-        else
+        else if (OrderByType != other.OrderByType)
         {
             return false;
         }
 
+        if (NullsType != other.NullsType)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public override bool Equals(object? obj)

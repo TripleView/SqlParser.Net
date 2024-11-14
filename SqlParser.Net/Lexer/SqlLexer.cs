@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Expression;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,7 +30,7 @@ public class SqlLexer
     /// Token dictionary for all database types
     /// 所有数据库类型的token字典
     /// </summary>
-    private static ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>> allDbTypeTokenDic = new ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>>();
+    public static ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>> AllDbTypeTokenDic = new ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>>();
     private List<Token> tokens = new List<Token>();
     private DbType dbType
         ;
@@ -45,7 +46,6 @@ public class SqlLexer
         //Only recognize line breaks \n
         //仅识别换行符\n
         sql = sql.Replace("\r\n", "\n");
-
         chars = sql.Select(it => it).ToList();
 
         InitCharDic();
@@ -510,10 +510,20 @@ public class SqlLexer
 
         if (Accept(':'))
         {
-            var token = Token.Colon;
-            UpdateTokenPosition(ref token);
-            tokens.Add(token);
-            return true;
+            if (Accept(':'))
+            {
+                var token = Token.ColonColon;
+                UpdateTokenPosition(ref token, 2);
+                tokens.Add(token);
+                return true;
+            }
+            else
+            {
+                var token = Token.Colon;
+                UpdateTokenPosition(ref token);
+                tokens.Add(token);
+                return true;
+            }
         }
         if (Accept('&'))
         {
@@ -694,7 +704,7 @@ public class SqlLexer
     /// </summary>
     private void InitTokenDic()
     {
-        if (allDbTypeTokenDic.TryGetValue(dbType, out tokenDic))
+        if (AllDbTypeTokenDic.TryGetValue(dbType, out tokenDic))
         {
             return;
         }
@@ -782,9 +792,19 @@ public class SqlLexer
         if (dbType == DbType.Oracle)
         {
             tokenDic.TryAdd("Unique".ToLowerInvariant(), Token.Unique);
-            tokenDic.TryAdd("First".ToLowerInvariant(), Token.First);
+            tokenDic.TryAdd("Siblings".ToLowerInvariant(), Token.Siblings);
+            tokenDic.TryAdd("Connect".ToLowerInvariant(), Token.Connect);
+            tokenDic.TryAdd("Start".ToLowerInvariant(), Token.Start);
+            tokenDic.TryAdd("Nocycle".ToLowerInvariant(), Token.Nocycle);
+            tokenDic.TryAdd("Prior".ToLowerInvariant(), Token.Prior);
         }
-
+        //oracle
+        if (dbType == DbType.Oracle || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
+        {
+            tokenDic.TryAdd("First".ToLowerInvariant(), Token.First);
+            tokenDic.TryAdd("Last".ToLowerInvariant(), Token.Last);
+            tokenDic.TryAdd("Nulls".ToLowerInvariant(), Token.Nulls);
+        }
         if (dbType == DbType.MySql || dbType == DbType.Pgsql)
         {
             tokenDic.TryAdd("Limit".ToLowerInvariant(), Token.Limit);
@@ -814,7 +834,11 @@ public class SqlLexer
             tokenDic.TryAdd("Next".ToLowerInvariant(), Token.Next);
         }
 
-        allDbTypeTokenDic.TryAdd(dbType, tokenDic);
+        //if (dbType == DbType.Pgsql)
+        //{
+        //    tokenDic.TryAdd("ColonColon".ToLowerInvariant(), Token.ColonColon);
+        //}
+        AllDbTypeTokenDic.TryAdd(dbType, tokenDic);
     }
     /// <summary>
     /// 初始化允许的数字集合

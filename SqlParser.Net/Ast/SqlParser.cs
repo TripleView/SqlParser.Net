@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Lexer;
@@ -26,6 +28,50 @@ public class SqlParser
     private List<Token> tokens = new List<Token>();
     private List<string> comments = new List<string>();
     private DbType dbType;
+    private static Dictionary<Token, bool> splitTokenDics = new Dictionary<Token, bool>();
+
+    static SqlParser()
+    {
+        //group order from limit offset when then end where and or union except intersect join left right full cross
+        var splitTokens = new List<Token>()
+        {
+            Token.Then,
+            Token.When,
+            Token.End,
+            Token.Where,
+            Token.Group,
+            Token.Order,
+            Token.Limit,
+            Token.Offset,
+            Token.And,
+            Token.Or,
+            Token.Xor,
+            Token.LeftParen,
+            Token.RightParen,
+            Token.From,
+            Token.Join,
+            Token.Union,
+            Token.Except,
+            Token.Intersect,
+            Token.Left,
+            Token.Right,
+            Token.Full,
+            Token.Cross,
+            Token.Comma,
+            Token.Dot,
+            Token.Plus,
+            Token.Sub,
+            Token.Star,
+            Token.Slash,
+            Token.LessThenOrEqualTo,
+            Token.GreaterThenOrEqualTo,
+            Token.NotEqualTo,
+            Token.LessThen,
+            Token.GreaterThen,
+            Token.EqualTo,
+        };
+        splitTokenDics = splitTokens.ToDictionary(it => it, it => true);
+    }
 
     private ParseType? parseType;
     /// <summary>
@@ -46,13 +92,18 @@ public class SqlParser
     /// </summary>
     private bool isOnlyRecursiveFourArithmeticOperations = false;
 
-
+   
 
     public SqlExpression Parse(List<Token> tokens, string sql, DbType dbType)
     {
         this.dbType = dbType;
+        if (tokens.Last().IsToken(Token.Semicolon))
+        {
+            tokens.RemoveAt(tokens.Count - 1);
+        }
         this.tokens = tokens;
         this.Sql = sql;
+   
         InitEscapeCharacter();
         MergeQualifiersAndRemoveAllComment();
         GetNextToken();
@@ -600,6 +651,10 @@ public class SqlParser
             query.Where = AcceptWhereExpression();
             query.GroupBy = AcceptGroupByExpression();
             query.OrderBy = AcceptOrderByExpression();
+            if (dbType == DbType.Oracle)
+            {
+                query.ConnectBy = AcceptConnectByExpression();
+            }
             query.Limit = AcceptLimitExpression();
         }
 
@@ -871,7 +926,7 @@ public class SqlParser
     /// <returns></returns>
     private SqlExpression AcceptLogicalExpression()
     {
-        var left = AcceptRelationalExpression();
+        var left = AcceptEquationOperationExpression();
 
         while (true)
         {
@@ -893,7 +948,7 @@ public class SqlParser
                 break;
             }
 
-            var right = AcceptRelationalExpression();
+            var right = AcceptEquationOperationExpression();
 
             left = new SqlBinaryExpression()
             {
@@ -906,18 +961,15 @@ public class SqlParser
 
         return left;
     }
-
     /// <summary>
-    /// Parse relational expressions, such as =,>=,<=,is null, etc.
-    /// 解析关系型表达式，比如=,>=,<=,is null等
+    /// 解析等式运算
     /// </summary>
     /// <returns></returns>
-    private SqlExpression AcceptRelationalExpression()
+    private SqlExpression AcceptEquationOperationExpression()
     {
-        var left = AcceptFourArithmeticOperationsAddOrSub();
+        var left = AcceptRelationalExpression();
         SqlExpression right = null;
         // not in,not like,not between
-        var isNot = false;
         while (true)
         {
             SqlBinaryOperator @operator = null;
@@ -933,7 +985,6 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.LessThen;
             }
-
             else if (Accept(Token.LessThenOrEqualTo))
             {
                 @operator = SqlBinaryOperator.LessThenOrEqualTo;
@@ -942,12 +993,47 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.GreaterThen;
             }
-
             else if (Accept(Token.GreaterThenOrEqualTo))
             {
                 @operator = SqlBinaryOperator.GreaterThenOrEqualTo;
             }
-            else if (Accept(Token.Is))
+            else
+            {
+                break;
+            }
+
+            if (right == null)
+            {
+                right = AcceptRelationalExpression();
+            }
+
+            left = new SqlBinaryExpression()
+            {
+                Left = left,
+                Right = right,
+                Operator = @operator
+            };
+            right = null;
+        }
+
+        return left;
+    }
+    /// <summary>
+    /// Parse relational expressions, such as ||,is null,Between,like,in etc.
+    /// 解析关系型表达式，比如||,is null,Between,like,in等
+    /// </summary>
+    /// <returns></returns>
+    private SqlExpression AcceptRelationalExpression()
+    {
+        var left = AcceptFourArithmeticOperationsAddOrSub();
+        SqlExpression right = null;
+        // not in,not like,not between
+        var isNot = false;
+        while (true)
+        {
+            SqlBinaryOperator @operator = null;
+            
+            if (Accept(Token.Is))
             {
 
                 if (Accept(Token.Not))
@@ -1015,19 +1101,6 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.Like;
             }
-            else if (Accept(Token.Bar))
-            {
-                @operator = SqlBinaryOperator.BitwiseOr;
-            }
-            else if (Accept(Token.BitwiseAnd))
-            {
-                @operator = SqlBinaryOperator.BitwiseAnd;
-            }
-            else if (Accept(Token.BitwiseXor))
-            {
-                @operator = SqlBinaryOperator.BitwiseXor;
-            }
-            
             else if (Accept(Token.BarBar))
             {
                 @operator = SqlBinaryOperator.Concat;
@@ -1135,7 +1208,7 @@ public class SqlParser
     /// <returns></returns>
     private SqlExpression AcceptFourArithmeticOperationsMultiplyOrDivide()
     {
-        var left = AcceptFourArithmeticOperationsBaseOperationUnit();
+        var left = AcceptBitwiseOperations();
         while (true)
         {
             SqlBinaryOperator @operator;
@@ -1146,6 +1219,45 @@ public class SqlParser
             else if (Accept(Token.Slash))
             {
                 @operator = SqlBinaryOperator.Divide;
+            }
+            else
+            {
+                break;
+            }
+
+            var right = AcceptBitwiseOperations();
+
+            left = new SqlBinaryExpression()
+            {
+                Left = left,
+                Right = right,
+                Operator = @operator
+            };
+        }
+
+        return left;
+    }
+    /// <summary>
+    /// 解析位运算，位运算优先级高于加减乘除
+    /// </summary>
+    /// <returns></returns>
+    private SqlExpression AcceptBitwiseOperations()
+    {
+        var left = AcceptFourArithmeticOperationsBaseOperationUnit();
+        while (true)
+        {
+            SqlBinaryOperator @operator;
+            if (Accept(Token.Bar))
+            {
+                @operator = SqlBinaryOperator.BitwiseOr;
+            }
+            else if (Accept(Token.BitwiseAnd))
+            {
+                @operator = SqlBinaryOperator.BitwiseAnd;
+            }
+            else if (Accept(Token.BitwiseXor))
+            {
+                @operator = SqlBinaryOperator.BitwiseXor;
             }
             else
             {
@@ -1165,13 +1277,13 @@ public class SqlParser
         return left;
     }
 
-
     private int savePoint = -1;
     private int savePoint2 = -1;
     private bool SavePoint()
     {
         if (pos == tokens.Count - 1)
         {
+            savePoint = -1;
             return false;
         }
         savePoint = pos;
@@ -1181,6 +1293,7 @@ public class SqlParser
     {
         if (pos == tokens.Count - 1)
         {
+            savePoint2 = -1;
             return false;
         }
         savePoint2 = pos;
@@ -1216,11 +1329,14 @@ public class SqlParser
     }
     private bool AcceptKeywordAsIdentifier()
     {
+        if (nextToken == null)
+        {
+            return false;
+        }
         var notAllowTokens = new List<Token>()
         {
             Token.Comma,
             Token.When,
-            Token.Comma,
             Token.Where,
             Token.Group,
             Token.Order,
@@ -1234,8 +1350,9 @@ public class SqlParser
             Token.From,
             Token.Join,
             Token.Dot,
-            Token.Union
-     
+            Token.Union, 
+            Token.Except,
+            Token.Intersect
         };
         //if (CheckNextTokenIsOperatorOrSymbol())
         //{
@@ -1289,6 +1406,62 @@ public class SqlParser
         return false;
     }
 
+    private SqlExpression AcceptPgsqlSpecialCaseAs(SqlExpression body)
+    {
+        if (dbType == DbType.Pgsql)
+        {
+            SqlExpression result;
+            while (true)
+            {
+                if (Accept(Token.ColonColon))
+                {
+                    var targetTypeNameStringBuilder = new StringBuilder();
+                    while (true)
+                    {
+                        if (CheckNextTokenIsSplitToken())
+                        {
+                            break;
+                        }
+
+                        if (CheckNextToken(Token.ColonColon))
+                        {
+                            break;
+                        } 
+                        AcceptAnyOne();
+                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        targetTypeNameStringBuilder.Append(" ");
+                    }
+
+                    var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
+                    body = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "cast"
+                        },
+                        Arguments = new List<SqlExpression>()
+                        {
+                            body
+                        },
+                        CaseAsTargetType = new SqlIdentifierExpression()
+                        {
+                            Value = targetTypeName
+                        }
+                    };
+                    if (CheckNextTokenIsSplitToken() )
+                    {
+                        break;
+                    }
+                   
+                }
+            }
+
+            return body;
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Analyze the basic units in the four arithmetic operations
     /// 解析四则运算中的基础单元
@@ -1340,6 +1513,7 @@ public class SqlParser
             {
                 Value = txt
             };
+            
         }
         else if (Accept(Token.Star))
         {
@@ -1540,6 +1714,12 @@ public class SqlParser
             throw new Exception($"An error occurred at position :{nextToken?.StartPositionIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
         }
 
+        if (dbType == DbType.Pgsql && CheckNextToken(Token.ColonColon))
+        {
+            var result = AcceptPgsqlSpecialCaseAs(body);
+            return result;
+        }
+
         return body;
 
     }
@@ -1605,6 +1785,30 @@ public class SqlParser
             Accept(Token.Comma);
             var argument = AcceptNestedComplexExpression();
             arguments.Add(argument);
+
+            //SELECT CAST('123' AS INTEGER);
+            if (Accept(Token.As))
+            {
+                var targetTypeNameStringBuilder = new StringBuilder();
+                while (true)
+                {
+                    if (CheckNextToken(Token.RightParen) || nextToken == null)
+                    {
+                        break;
+                    }
+
+                    AcceptAnyOne();
+                    targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                    targetTypeNameStringBuilder.Append(" ");
+                }
+
+                var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
+                result.CaseAsTargetType = new SqlIdentifierExpression()
+                {
+                    Value = targetTypeName
+                };
+                break;
+            }
         }
 
         if (arguments.Count == 0)
@@ -1616,15 +1820,18 @@ public class SqlParser
 
         AcceptOrThrowException(Token.RightParen);
 
-        result.WithinGroup = AcceptWithinGroup();
-
-        if (CheckNextToken(Token.Over))
+        if (result.CaseAsTargetType == null)
         {
-            var over = AcceptOver();
+            result.WithinGroup = AcceptWithinGroup();
 
-            result.Over = over;
+            if (CheckNextToken(Token.Over))
+            {
+                var over = AcceptOver();
+
+                result.Over = over;
+            }
         }
-
+        
         return result;
     }
 
@@ -1847,12 +2054,26 @@ public class SqlParser
 
     private SqlOrderByExpression AcceptOrderByExpression()
     {
-        if (Accept(Token.Order) && Accept(Token.By))
+        var isSiblings = false;
+        var isOrderBy = false;
+        if (Accept(Token.Order))
+        {
+            if (Accept(Token.Siblings))
+            {
+                isSiblings = true;
+            }
+            if (Accept(Token.By))
+            {
+                isOrderBy = true;
+            }
+        }
+        if (isOrderBy)
         {
             var items = new List<SqlOrderByItemExpression>();
             var result = new SqlOrderByExpression()
             {
-                Items = items
+                Items = items,
+                IsSiblings = isSiblings
             };
             var i = 0;
             var maxCount = 100000;
@@ -1886,10 +2107,30 @@ public class SqlParser
                         orderByType = SqlOrderByType.Desc;
                     }
 
+                    SqlOrderByNullsType? nullsType = null;
+                    if (dbType == DbType.Oracle || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
+                    {
+                        if (Accept(Token.Nulls))
+                        {
+                            if (Accept(Token.First))
+                            {
+                                nullsType = SqlOrderByNullsType.First;
+                            }else if (Accept(Token.Last))
+                            {
+                                nullsType = SqlOrderByNullsType.Last;
+                            }
+                            else
+                            {
+                                throw new Exception("Missing keywords");
+                            }
+                        }
+                    }
+
                     var orderByItem = new SqlOrderByItemExpression()
                     {
                         Body = item,
-                        OrderByType = orderByType
+                        OrderByType = orderByType,
+                        NullsType = nullsType
                     };
                     items.Add(orderByItem);
                 }
@@ -1942,6 +2183,36 @@ public class SqlParser
                 }
             }
 
+            return result;
+        }
+
+        return null;
+    }
+
+    private SqlConnectByExpression AcceptConnectByExpression()
+    {
+        SqlExpression startWith = null;
+        if (Accept(Token.Start) && Accept(Token.With))
+        {
+            startWith = AcceptNestedComplexExpression();
+        }
+        
+        if (Accept(Token.Connect) && Accept(Token.By))
+        {
+            var isNocycle = Accept(Token.Nocycle);
+            var isPrior = Accept(Token.Prior);
+            var body = AcceptNestedComplexExpression();
+            var orderBy = AcceptOrderByExpression();
+            var result = new SqlConnectByExpression()
+            {
+                StartWith = startWith,
+                OrderBy = orderBy,
+                IsNocycle = isNocycle,
+                IsPrior = isPrior,
+                Body = body
+            };
+            body.Parent = result;
+            
             return result;
         }
 
@@ -2066,7 +2337,7 @@ public class SqlParser
     }
     private bool AcceptKeyword()
     {
-        if (nextToken?.TokenType==TokenType.Keyword)
+        if (nextToken?.IsKeyWord==true)
         {
             GetNextToken();
             return true;
@@ -2083,9 +2354,9 @@ public class SqlParser
 
         return false;
     }
-    private bool CheckNextTokenIsOperatorOrSymbol()
+    private bool CheckNextTokenIsSplitToken()
     {
-        if (nextToken.HasValue && (nextToken.Value.TokenType==TokenType.Operator|| nextToken.Value.TokenType == TokenType.Symbol))
+        if (nextToken.HasValue && splitTokenDics.ContainsKey(nextToken.Value)|| nextToken == null)
         {
             return true;
         }

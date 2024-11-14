@@ -10,6 +10,8 @@ public class SqlExpression : IAcceptVisitor
     }
     public virtual SqlExpressionType Type { get; protected set; }
 
+    public SqlExpression Parent { get; set; }
+
     public SqlExpression()
     {
 

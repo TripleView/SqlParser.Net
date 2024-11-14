@@ -41,5 +41,6 @@ public enum SqlExpressionType
     PartitionBy,
     Not,
     WithinGroup,
-    Bool
+    Bool,
+    ConnectBy,
 }

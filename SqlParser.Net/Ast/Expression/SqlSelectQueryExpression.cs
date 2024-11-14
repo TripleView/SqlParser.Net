@@ -36,6 +36,12 @@ public class SqlSelectQueryExpression : SqlExpression
     public SqlExpression Where { get; set; }
 
     public SqlGroupByExpression GroupBy { get; set; }
+    /// <summary>
+    /// just for oracle,such as sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
+    /// 仅oracle中有用，例如sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
+    /// </summary>
+    public SqlConnectByExpression ConnectBy { get; set; }
+
 
     public SqlOrderByExpression OrderBy { get; set; }
 

@@ -299,6 +299,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine($"IsDistinct = true,");
             });
         }
+        if (sqlFunctionCallExpression.CaseAsTargetType!=null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("CaseAsTargetType = ");
+                sqlFunctionCallExpression.CaseAsTargetType?.Accept(this);
+            });
+        }
         AppendLine("},");
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
@@ -603,8 +611,73 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
+        if (sqlOrderByExpression.IsSiblings)
+        {
+
+            AdvanceNext(() =>
+            {
+                AppendLine($"IsSiblings = {sqlOrderByExpression.IsSiblings.ToString().ToLowerInvariant()},");
+
+            });
+        }
+
+
         AppendLine("},");
     }
+
+
+    public override void VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
+    {
+        AppendLine("new SqlConnectByExpression()");
+        AppendLine("{");
+
+        if (sqlConnectByExpression.StartWith != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("StartWith = ");
+                sqlConnectByExpression.StartWith?.Accept(this);
+            });
+        }
+        if (sqlConnectByExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlConnectByExpression.Body?.Accept(this);
+            });
+        }
+        if (sqlConnectByExpression.IsNocycle)
+        {
+
+            AdvanceNext(() =>
+            {
+                AppendLine($"IsNocycle = {sqlConnectByExpression.IsNocycle.ToString().ToLowerInvariant()},");
+
+            });
+        }
+        if (sqlConnectByExpression.IsPrior)
+        {
+
+            AdvanceNext(() =>
+            {
+                AppendLine($"IsPrior = {sqlConnectByExpression.IsPrior.ToString().ToLowerInvariant()},");
+
+            });
+        }
+
+        if (sqlConnectByExpression.OrderBy != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("OrderBy = ");
+                sqlConnectByExpression.OrderBy?.Accept(this);
+            });
+        }
+
+        AppendLine("},");
+    }
+
     public override void VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
     {
         AppendLine("new SqlOrderByItemExpression()");
@@ -622,10 +695,20 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
             AdvanceNext(() =>
             {
-                AppendLine($"OrderByType = SqlOrderByType.{sqlOrderByItemExpression.OrderByType?.ToString()}");
+                AppendLine($"OrderByType = SqlOrderByType.{sqlOrderByItemExpression.OrderByType?.ToString()},");
 
             });
         }
+        if (sqlOrderByItemExpression.NullsType != null)
+        {
+
+            AdvanceNext(() =>
+            {
+                AppendLine($"NullsType = SqlOrderByNullsType.{sqlOrderByItemExpression.NullsType?.ToString()},");
+
+            });
+        }
+      
         AppendLine("},");
     }
     public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
@@ -928,6 +1011,15 @@ public class UnitTestAstVisitor : BaseAstVisitor
             {
                 AppendAndNotRequiredNextSpace("Limit = ");
                 sqlSelectQueryExpression.Limit.Accept(this);
+            });
+        }
+
+        if (sqlSelectQueryExpression.ConnectBy != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("ConnectBy = ");
+                sqlSelectQueryExpression.ConnectBy.Accept(this);
             });
         }
         AppendLine("},");

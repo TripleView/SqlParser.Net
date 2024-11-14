@@ -72,23 +72,36 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
     {
-        WithBrackets(() =>
+        void action()
         {
             if (sqlBinaryExpression.Left != null)
             {
                 sqlBinaryExpression.Left?.Accept(this);
             }
+
             if (sqlBinaryExpression.Operator != null)
             {
                 Append(sqlBinaryExpression.Operator.Value.ToString().ToLowerInvariant());
             }
+
             if (sqlBinaryExpression.Right != null)
             {
                 sqlBinaryExpression.Right?.Accept(this);
             }
+        }
 
-        });
+        if (sqlBinaryExpression.Parent is SqlConnectByExpression)
+        {
+            action();
+        }
+        else
+        {
+            WithBrackets(() =>
+            {
+                action();
 
+            });
+        }
     }
     public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
@@ -188,6 +201,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     }
                     var argument = sqlFunctionCallExpression.Arguments[i];
                     argument.Accept(this);
+
+                    if (sqlFunctionCallExpression.CaseAsTargetType != null)
+                    {
+                        Append($"as {sqlFunctionCallExpression.CaseAsTargetType.Value}");
+                    }
+
                     if (i < sqlFunctionCallExpression.Arguments.Count - 1)
                     {
                         AppendWithoutSpaces(",");
@@ -385,12 +404,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         switch (dbType)
         {
             case DbType.Oracle:
-                Append("FETCH FIRST");
+                Append("fetch first");
                 if (sqlLimitExpression.RowCount != null)
                 {
                     sqlLimitExpression.RowCount.Accept(this);
                 }
-                Append("rows ONLY");
+                Append("rows only");
                 break;
             case DbType.MySql:
                 Append("limit");
@@ -466,7 +485,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
-        Append("order by");
+        if (sqlOrderByExpression.IsSiblings)
+        {
+            Append("order siblings by");
+        }
+        else
+        {
+            Append("order by");
+        }
+      
         if (sqlOrderByExpression.Items != null)
         {
             for (var i = 0; i < sqlOrderByExpression.Items.Count; i++)
@@ -481,6 +508,33 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         }
     }
+
+    public override void VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
+    {
+        if (sqlConnectByExpression.StartWith != null)
+        {
+            Append("start with");
+            sqlConnectByExpression.StartWith.Accept(this);
+        }
+
+        Append("connect by");
+        if (sqlConnectByExpression.IsNocycle)
+        {
+            Append("nocycle");
+        }
+        if (sqlConnectByExpression.IsPrior)
+        {
+            Append("prior");
+        }
+
+        sqlConnectByExpression.Body.Accept(this);
+
+        if (sqlConnectByExpression.OrderBy != null)
+        {
+            sqlConnectByExpression.OrderBy.Accept(this);
+        }
+    }
+
     public override void VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
     {
         if (sqlOrderByItemExpression.Body != null)
@@ -490,6 +544,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         if (sqlOrderByItemExpression.OrderByType.HasValue)
         {
             Append(sqlOrderByItemExpression.OrderByType == SqlOrderByType.Asc ? "asc" : "desc");
+        }
+        if (sqlOrderByItemExpression.NullsType.HasValue)
+        {
+            Append(sqlOrderByItemExpression.NullsType == SqlOrderByNullsType.First ? "nulls first" : "nulls last");
         }
     }
     public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
@@ -707,18 +765,27 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             Append("where");
             sqlSelectQueryExpression.Where.Accept(this);
         }
-        if (sqlSelectQueryExpression.OrderBy != null)
-        {
-            sqlSelectQueryExpression.OrderBy.Accept(this);
-        }
+
         if (sqlSelectQueryExpression.GroupBy != null)
         {
             sqlSelectQueryExpression.GroupBy.Accept(this);
         }
+
+        if (sqlSelectQueryExpression.OrderBy != null)
+        {
+            sqlSelectQueryExpression.OrderBy.Accept(this);
+        }
+        
+        if (dbType==DbType.Oracle&&sqlSelectQueryExpression.ConnectBy != null)
+        {
+            sqlSelectQueryExpression.ConnectBy.Accept(this);
+        }
+
         if (sqlSelectQueryExpression.Limit != null)
         {
             sqlSelectQueryExpression.Limit.Accept(this);
         }
+        
     }
 
     private void Append(string str)

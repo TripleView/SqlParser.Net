@@ -1,4 +1,6 @@
-﻿namespace SqlParser.Net.Lexer;
+﻿using System.Runtime.CompilerServices;
+
+namespace SqlParser.Net.Lexer;
 
 public enum TokenType
 {
@@ -22,7 +24,13 @@ public struct Token
     /// Used to determine whether the token is a keyword
     /// 用来判断token是否为关键字
     /// </summary>
-    public bool IsKeyWord { get; }
+    public bool IsKeyWord => this.TokenType == TokenType.Keyword;
+
+
+    public bool IsOperator=> this.TokenType == TokenType.Operator;
+
+    public bool IsSymbol => this.TokenType == TokenType.Symbol;
+
     /// <summary>
     /// Used to indicate that the token is removed during the parsing process and does not participate in the parsing
     /// 用来表示token在解析过程中被移除，不参与解析
@@ -53,11 +61,10 @@ public struct Token
     /// 右限定符
     /// </summary>
     public string RightQualifiers { get; set; }
-    public Token(string name, object value, int compareIndex, bool isKeyWord = true)
+    public Token(string name, object value, int compareIndex)
     {
         Name = name;
         Value = value;
-        IsKeyWord = isKeyWord;
         CompareIndex = compareIndex;
     }
 
@@ -68,7 +75,7 @@ public struct Token
 
     public override string ToString()
     {
-        return $"{(IsKeyWord ? "Keyword-" + Name : Name),-20} | {Value,-5}";
+        return $"{(IsKeyWord ? "Keyword-" + Name : Name).PadRight(30,' ')} :{Value}";
     }
 
 
@@ -186,17 +193,17 @@ public struct Token
     /// Identifier
     /// 标识符
     /// </summary>
-    public static readonly Token IdentifierString = new Token("IdentifierString", "IdentifierString", 96, false);
+    public static readonly Token IdentifierString = new Token("IdentifierString", "IdentifierString", 96);
     /// <summary>
     /// Number Constant
     /// 数字常量
     /// </summary>
-    public static readonly Token NumberConstant = new Token("NumberConstant", 0, 97, false) { TokenType = TokenType.Constant };
+    public static readonly Token NumberConstant = new Token("NumberConstant", 0, 97) { TokenType = TokenType.Constant };
     /// <summary>
     /// String Constant
     /// 字符串常量
     /// </summary>
-    public static readonly Token StringConstant = new Token("StringConstant", "StringConstant", 98, false) { TokenType = TokenType.Constant };
+    public static readonly Token StringConstant = new Token("StringConstant", "StringConstant", 98) { TokenType = TokenType.Constant };
     /// <summary>
     /// Backtick
     /// 单反引号
@@ -222,8 +229,14 @@ public struct Token
 
     public static readonly Token BitwiseAnd = new Token("BitwiseAnd", "&", 105) { TokenType = TokenType.Operator };
     public static readonly Token BitwiseXor = new Token("BitwiseXor", "^", 106) { TokenType = TokenType.Operator };
+    public static readonly Token Nulls = new Token("Nulls", "Nulls", 107) { TokenType = TokenType.Keyword };
+    public static readonly Token Last = new Token("Last", "Last", 108) { TokenType = TokenType.Keyword };
+    public static readonly Token Siblings = new Token("Siblings", "Siblings", 109) { TokenType = TokenType.Keyword };
+    public static readonly Token Connect = new Token("Connect", "Connect", 110) { TokenType = TokenType.Keyword };
+    public static readonly Token Start = new Token("Start", "Start", 111) { TokenType = TokenType.Keyword };
 
+    public static readonly Token Nocycle = new Token("Nocycle", "Nocycle", 112) { TokenType = TokenType.Keyword };
+    public static readonly Token Prior = new Token("Prior", "Prior", 113) { TokenType = TokenType.Keyword };
 
-
-
+    public static readonly Token ColonColon = new Token("ColonColon", "::", 114) { TokenType = TokenType.Symbol };
 }

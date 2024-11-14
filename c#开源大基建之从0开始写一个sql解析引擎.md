@@ -27,7 +27,7 @@ c#中所有数字都可以用decimal表示
 想写一个根据sql自动分析表与表之间是如何关联的工具
 想着给sql动态添加条件，那就需要解析sql
 写一个sql格式化工具
-
+sql翻译工具
 
 例如oracle中
  SELECT id from ADDRESS join;
@@ -40,11 +40,18 @@ c#中所有数字都可以用decimal表示
       join和left作为别名也行。partition本来是关键字，作为表别名和列别名也行
         SELECT id from ADDRESS ORDER BY 1+2    
         order by后面跟表达式也行
+
+pgsql解析器有点问题
+select  'a' is not null =true
+select true= 'a' is not null 
+
+        druid 
+        不支持SELECT '1'::bit varying::varchar from test
 待处理
-   select * from TEST5 t order by t.NAME  desc nulls last
-   
-      select * from TEST5 t order by t.NAME  desc nulls first
-SELECT LEVEL l FROM DUAL CONNECT BY LEVEL<=100
+while循环要有退出机制
+SELECT '123'::INTEGER;
+
+
 行转列的SQL操作通常称为“透视”。不同的数据库有不同的实现方式
 在 Oracle 中，(+) 是用于表示外连接（Outer Join）的旧式语法符号。它是特有于 Oracle 的非标准 SQL 语法。以下是它的用法：
 用法

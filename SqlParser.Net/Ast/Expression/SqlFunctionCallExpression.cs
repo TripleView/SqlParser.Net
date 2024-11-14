@@ -17,6 +17,11 @@ public class SqlFunctionCallExpression : SqlExpression
     public List<SqlExpression> Arguments { get; set; }
 
     public SqlIdentifierExpression Name { get; set; }
+    /// <summary>
+    /// Only for case as functions,such as sql:SELECT CAST('123' AS INT)
+    /// 只为case as函数,比如sql：SELECT CAST('123' AS INT)
+    /// </summary>
+    public SqlIdentifierExpression CaseAsTargetType { get; set; }
 
     /// <summary>
     /// 是否不重复
@@ -68,7 +73,22 @@ public class SqlFunctionCallExpression : SqlExpression
         }
         else if (Over != null && other.Over != null)
         {
-            result &= Over.Equals(other.Over);
+            if (!Over.Equals(other.Over))
+            {
+                return false;
+            }
+        }
+
+        if (CaseAsTargetType == null ^ other.CaseAsTargetType == null)
+        {
+            return false;
+        }
+        else if (CaseAsTargetType != null && other.CaseAsTargetType != null)
+        {
+            if (!CaseAsTargetType.Equals(other.CaseAsTargetType))
+            {
+                return false;
+            }
         }
 
         if (!result)
