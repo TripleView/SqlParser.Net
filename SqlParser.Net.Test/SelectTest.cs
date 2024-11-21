@@ -6888,6 +6888,54 @@ ORDER BY
             generationSql);
     }
 
+    [Fact]
+    public void TestDatabaseScheme3()
+    {
+        var sql = "select * from \"ATLAdUsers\"@login";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "ATLAdUsers",
+                        LeftQualifiers = "\"",
+                        RightQualifiers = "\"",
+                    },
+                    DbLink = new SqlIdentifierExpression()
+                    {
+                        Value = "login",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select * from \"ATLAdUsers\"@login",
+            generationSql);
+    }
 
     [Fact]
     public void TestComplexSelectItem()

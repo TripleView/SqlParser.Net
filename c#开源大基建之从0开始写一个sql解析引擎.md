@@ -28,6 +28,7 @@ c#中所有数字都可以用decimal表示
 想着给sql动态添加条件，那就需要解析sql
 写一个sql格式化工具
 sql翻译工具
+分库分表
 
 例如oracle中
  SELECT id from ADDRESS join;
