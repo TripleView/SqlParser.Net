@@ -266,9 +266,9 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
     {
-        if (sqlInExpression.Field != null)
+        if (sqlInExpression.Body != null)
         {
-            sqlInExpression.Field.Accept(this);
+            sqlInExpression.Body.Accept(this);
         }
 
         if (sqlInExpression.IsNot)

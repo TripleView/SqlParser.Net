@@ -363,12 +363,12 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine("IsNot = true,");
             });
         }
-        if (sqlInExpression.Field != null)
+        if (sqlInExpression.Body != null)
         {
             AdvanceNext(() =>
             {
-                AppendAndNotRequiredNextSpace("Field = ");
-                sqlInExpression.Field.Accept(this);
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlInExpression.Body.Accept(this);
             });
         }
 
@@ -388,6 +388,15 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
                 }
                 AppendLine("},");
+            });
+        }
+
+        if (sqlInExpression.SubQuery != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("SubQuery = ");
+                sqlInExpression.SubQuery.Accept(this);
             });
         }
         AppendLine("},");

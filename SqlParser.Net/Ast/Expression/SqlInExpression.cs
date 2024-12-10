@@ -20,7 +20,7 @@ public class SqlInExpression : SqlExpression
     /// </summary>
     public bool IsNot { get; set; }
 
-    public SqlExpression Field { get; set; }
+    public SqlExpression Body { get; set; }
 
     public List<SqlExpression> TargetList { get; set; }
 
@@ -31,7 +31,7 @@ public class SqlInExpression : SqlExpression
         {
             return false;
         }
-        if (!Field.Equals(other.Field))
+        if (!Body.Equals(other.Body))
         {
             return false;
         }
@@ -84,7 +84,7 @@ public class SqlInExpression : SqlExpression
     {
         unchecked
         {
-            return (Field.GetHashCode() * 397) ^ TargetList.GetHashCode();
+            return (Body.GetHashCode() * 397) ^ TargetList.GetHashCode();
         }
     }
 }

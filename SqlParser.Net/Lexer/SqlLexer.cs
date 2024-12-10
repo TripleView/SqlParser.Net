@@ -21,6 +21,11 @@ public class SqlLexer
     private char? nextNextChar;
     private List<char> chars;
     /// <summary>
+    /// while maximum number of loops, used to avoid infinite loops
+    /// while最大循环次数，用来避免死循环
+    /// </summary>
+    private int whileMaximumNumberOfLoops = 100000;
+    /// <summary>
     /// 标识符首字母列表
     /// </summary>
     private Dictionary<char, bool> charDic = new Dictionary<char, bool>();
@@ -32,8 +37,17 @@ public class SqlLexer
     /// </summary>
     public static ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>> AllDbTypeTokenDic = new ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>>();
     private List<Token> tokens = new List<Token>();
-    private DbType dbType
-        ;
+    private DbType dbType;
+    /// <summary>
+    /// right Qualifiers char
+    /// 右限定符
+    /// </summary>
+    private char leftQualifierChar;
+    /// <summary>
+    /// left Qualifiers char
+    /// 左限定符
+    /// </summary>
+    private char rightQualifierChar;
     //static SqlLexer()
     //{
     //    InitTokenDic();
@@ -42,6 +56,7 @@ public class SqlLexer
     {
         this.dbType = dbType;
         //tokens.Clear();
+        InitQualifierChar();
         InitTokenDic();
         //Only recognize line breaks \n
         //仅识别换行符\n
@@ -53,14 +68,12 @@ public class SqlLexer
 
         GetNextChar();
 
-        //最大循环次数，避免死循环
-        var maxCount = 100000;
         var i = 0;
         while (true)
         {
-            if (i >= maxCount)
+            if (i >= whileMaximumNumberOfLoops)
             {
-                throw new Exception($"The number of SQL parsing times exceeds {maxCount}");
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
             }
 
             i++;
@@ -71,6 +84,11 @@ public class SqlLexer
             }
 
             var isHit = false;
+            isHit = AcceptQualifiersIdentifier();
+            if (isHit)
+            {
+                continue;
+            }
             isHit = AcceptComments();
             if (isHit)
             {
@@ -111,6 +129,75 @@ public class SqlLexer
         return tokens;
     }
 
+
+
+    /// <summary>
+    /// Initialize the Qualifiers character, such as [System] in sql:select * from RouteData rd where rd.[System] ='a';
+    /// 初始化限定字符，比如sql:select * from RouteData rd where rd.[System] ='a'中的[System]
+    /// </summary>
+    private void InitQualifierChar()
+    {
+        switch (this.dbType)
+        {
+            case DbType.MySql:
+            case DbType.Sqlite:
+                leftQualifierChar = '`';
+                rightQualifierChar = '`';
+                break;
+            case DbType.SqlServer:
+                leftQualifierChar = '[';
+                rightQualifierChar = ']';
+                break;
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                leftQualifierChar = '"';
+                rightQualifierChar = '"';
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 获取限定标识符，比如select * from [System]中的[System]，又比如SELECT "first name" FROM "user data"中的first name和user data
+    /// </summary>
+    /// <returns></returns>
+    private bool AcceptQualifiersIdentifier()
+    {
+        if (Accept(leftQualifierChar))
+        {
+            var startIndex = pos - 1;
+            var sb = new StringBuilder();
+            var i = 0;
+            while (true)
+            {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
+                if (Accept(rightQualifierChar))
+                {
+                    var txt = sb.ToString();
+                    var token = Token.IdentifierString;
+                    token.Value = txt;
+                    var endIndex = pos - 1;
+                    token.StartPositionIndex = startIndex;
+                    token.EndPositionIndex = endIndex;
+                    token.LeftQualifiers = leftQualifierChar.ToString();
+                    token.RightQualifiers = rightQualifierChar.ToString();
+                    tokens.Add(token);
+                    return true;
+                }
+
+                AcceptAnyOneChar();
+                var ch = GetCurrentCharValue();
+                sb.Append(ch);
+            }
+        }
+
+        return false;
+    }
+
     private bool AcceptComments()
     {
         var comments = new List<char>();
@@ -126,8 +213,15 @@ public class SqlLexer
             var startIndex = pos;
             Accept('/');
             Accept('*');
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 AcceptAnyOneChar();
                 if (currentChar.HasValue)
                 {
@@ -170,8 +264,15 @@ public class SqlLexer
             var startIndex = pos;
             Accept('-');
             Accept('-');
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 var isHit = false;
                 if (CheckNextChar('\n'))
                 {
@@ -257,9 +358,15 @@ public class SqlLexer
             var sb = new StringBuilder();
             var ch = GetCurrentCharValue();
             sb.Append(ch);
-
+            var i = 0;
             while (Accept('.') || AcceptDigits())
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 //if (currentChar == '.' && txt.IndexOf(".", StringComparison.InvariantCulture) != -1)
                 //{
                 //    throw new Exception("数字里不允许出现多个.");
@@ -305,8 +412,15 @@ public class SqlLexer
             var sb = new StringBuilder();
             var ch = GetCurrentCharValue();
             sb.Append(ch);
+            var i = 0;
             while (AcceptLetters() || Accept('_') || AcceptDigits())
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 ch = GetCurrentCharValue();
                 sb.Append(ch);
             }
@@ -584,8 +698,15 @@ public class SqlLexer
     {
         var startIndex = pos - 1;
         var buffer = new List<char>();
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             if (Accept('\''))
             {
                 //在sql中，''表示单个'

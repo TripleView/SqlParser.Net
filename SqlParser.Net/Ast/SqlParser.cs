@@ -29,7 +29,11 @@ public class SqlParser
     private List<string> comments = new List<string>();
     private DbType dbType;
     private static Dictionary<Token, bool> splitTokenDics = new Dictionary<Token, bool>();
-
+    /// <summary>
+    /// while maximum number of loops, used to avoid infinite loops
+    /// while最大循环次数，用来避免死循环
+    /// </summary>
+    private int whileMaximumNumberOfLoops = 100000;
     static SqlParser()
     {
         //group order from limit offset when then end where and or union except intersect join left right full cross
@@ -74,16 +78,6 @@ public class SqlParser
     }
 
     private ParseType? parseType;
-    /// <summary>
-    /// Left Qualifiers token
-    /// 左限定符token
-    /// </summary>
-    private Token leftQualifiers { get; set; }
-    /// <summary>
-    /// right Qualifiers token
-    /// 右限定符token
-    /// </summary>
-    private Token rightQualifiers { get; set; }
 
     public string Sql { get; set; }
     /// <summary>
@@ -92,7 +86,7 @@ public class SqlParser
     /// </summary>
     private bool isOnlyRecursiveFourArithmeticOperations = false;
 
-   
+
 
     public SqlExpression Parse(List<Token> tokens, string sql, DbType dbType)
     {
@@ -103,9 +97,8 @@ public class SqlParser
         }
         this.tokens = tokens;
         this.Sql = sql;
-   
-        InitEscapeCharacter();
-        MergeQualifiersAndRemoveAllComment();
+
+        RemoveAllComment();
         GetNextToken();
         //var t2 = TimeUtils.TestMicrosecond((() =>
         //{
@@ -155,38 +148,14 @@ public class SqlParser
 
         throw new Exception("不识别该种解析类型");
     }
-    /// <summary>
-    /// Initialize the escape character, such as [System] in sql:select * from RouteData rd where rd.[System] ='a';
-    /// 初始化转义字符，比如sql:select * from RouteData rd where rd.[System] ='a'中的[System]
-    /// </summary>
-    private void InitEscapeCharacter()
-    {
-        switch (this.dbType)
-        {
-            case DbType.MySql:
-            case DbType.Sqlite:
-                leftQualifiers = Token.Backtick;
-                rightQualifiers = Token.Backtick;
-                break;
-            case DbType.SqlServer:
-                leftQualifiers = Token.LeftSquareBracket;
-                rightQualifiers = Token.RightSquareBracket;
-                break;
-            case DbType.Pgsql:
-            case DbType.Oracle:
-                leftQualifiers = Token.DoubleQuotes;
-                rightQualifiers = Token.DoubleQuotes;
-                break;
-        }
-    }
+
 
     /// <summary>
-    /// Merge qualifiers and fields, then remove any comments
-    /// 合并限定符和字段，然后移除所有注释
+    /// remove any comments
+    /// 移除所有注释
     /// </summary>
-    private void MergeQualifiersAndRemoveAllComment()
+    private void RemoveAllComment()
     {
-        var hasLeft = false;
         for (var i = 0; i < this.tokens.Count; i++)
         {
             var currentToken = this.tokens[i];
@@ -195,11 +164,6 @@ public class SqlParser
                 continue;
             }
 
-            if (currentToken.IsToken(leftQualifiers))
-            {
-                hasLeft = true;
-                continue;
-            }
             if (currentToken.IsToken(Token.LineComment) || currentToken.IsToken(Token.MultiLineComment))
             {
                 comments.Add(currentToken.Value?.ToString() ?? "");
@@ -207,44 +171,7 @@ public class SqlParser
                 this.tokens[i] = currentToken;
                 continue;
             }
-            if (!hasLeft)
-            {
-                continue;
-            }
 
-            if (i >= 1 && i <= this.tokens.Count - 2)
-            {
-                var previewToken = this.tokens[i - 1];
-
-                var nextToken = this.tokens[i + 1];
-                if (previewToken.IsToken(leftQualifiers) && (currentToken.IsToken(Token.IdentifierString) || currentToken.IsToken(Token.NumberConstant) ) &&
-                    nextToken.IsToken(rightQualifiers))
-                {
-                    previewToken.IsRemove = true;
-                    this.tokens[i - 1] = previewToken;
-                    nextToken.IsRemove = true;
-                    this.tokens[i + 1] = nextToken;
-                    currentToken.LeftQualifiers = leftQualifiers.Value.ToString();
-                    currentToken.RightQualifiers = rightQualifiers.Value.ToString();
-                    this.tokens[i] = currentToken;
-                    hasLeft = false;
-                }
-                if (previewToken.IsToken(leftQualifiers) && ( currentToken.TokenType == TokenType.Keyword) &&
-                    nextToken.IsToken(rightQualifiers))
-                {
-                    previewToken.IsRemove = true;
-                    this.tokens[i - 1] = previewToken;
-                    nextToken.IsRemove = true;
-                    this.tokens[i + 1] = nextToken;
-                    var newToken = Token.IdentifierString;
-                    newToken.LeftQualifiers = leftQualifiers.Value.ToString();
-                    newToken.RightQualifiers = rightQualifiers.Value.ToString();
-                    newToken.Value = currentToken.RawValue;
-                    newToken.RawValue = currentToken.RawValue;
-                    this.tokens[i] = newToken;
-                    hasLeft = false;
-                }
-            }
         }
 
         this.tokens.RemoveAll(it => it.IsRemove);
@@ -307,13 +234,27 @@ public class SqlParser
             var items = new List<SqlExpression>();
             //INSERT INTO table_name [ ( column1, column2, ... ) ] VALUES ( value1, value2, ... ),( value1, value2, ... )
             Accept(Token.Comma);
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 Accept(Token.Comma);
                 if (Accept(Token.LeftParen))
                 {
+                    var j = 0;
                     while (true)
                     {
+                        if (j >= whileMaximumNumberOfLoops)
+                        {
+                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        }
+
+                        j++;
                         Accept(Token.Comma);
                         var item = AcceptNestedComplexExpression();
                         items.Add(item);
@@ -344,8 +285,15 @@ public class SqlParser
         //INSERT INTO table_name [ ( column1, column2, ... ) ] VALUES ( value1, value2, ... ),( value1, value2, ... )
         if (Accept(Token.LeftParen))
         {
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 Accept(Token.Comma);
                 var item = AcceptNestedComplexExpression();
                 items.Add(item);
@@ -429,8 +377,15 @@ public class SqlParser
         }
         else
         {
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 var isOracleDbLink = dbType == DbType.Oracle && Accept(Token.At);
                 if (Accept(Token.Dot))
                 {
@@ -520,9 +475,15 @@ public class SqlParser
         AcceptOrThrowException(Token.Set);
 
         var items = new List<SqlExpression>();
-
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             Accept(Token.Comma);
             var item = AcceptNestedComplexExpression();
             items.Add(item);
@@ -539,8 +500,15 @@ public class SqlParser
     {
         var left = AcceptSelectExpression2();
         SqlExpression total = left;
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             if (nextToken == null)
             {
                 break;
@@ -816,9 +784,15 @@ public class SqlParser
         if (Accept(Token.With))
         {
             var subQueryExpressions = new List<SqlWithSubQueryExpression>();
-
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 var subQueryExpression = new SqlWithSubQueryExpression()
                 {
                 };
@@ -832,8 +806,15 @@ public class SqlParser
                 if (Accept(Token.LeftParen))
                 {
                     subQueryExpression.Columns = new List<SqlIdentifierExpression>();
+                    var j = 0;
                     while (true)
                     {
+                        if (j >= whileMaximumNumberOfLoops)
+                        {
+                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        }
+
+                        j++;
                         Accept(Token.Comma);
                         AcceptOrThrowException(Token.IdentifierString);
                         var columnName = GetCurrentTokenValue();
@@ -874,9 +855,15 @@ public class SqlParser
         var item = new SqlSelectItemExpression()
         {
         };
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
 
+            i++;
             if (CheckNextToken(Token.From)
                 || (dbType == DbType.SqlServer && CheckNextToken(Token.Into))
                 || nextToken == null)
@@ -927,9 +914,15 @@ public class SqlParser
     private SqlExpression AcceptLogicalExpression()
     {
         var left = AcceptEquationOperationExpression();
-
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlBinaryOperator @operator;
             if (Accept(Token.Or))
             {
@@ -970,8 +963,15 @@ public class SqlParser
         var left = AcceptRelationalExpression();
         SqlExpression right = null;
         // not in,not like,not between
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlBinaryOperator @operator = null;
             if (Accept(Token.EqualTo))
             {
@@ -1029,10 +1029,17 @@ public class SqlParser
         SqlExpression right = null;
         // not in,not like,not between
         var isNot = false;
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlBinaryOperator @operator = null;
-            
+
             if (Accept(Token.Is))
             {
 
@@ -1068,7 +1075,7 @@ public class SqlParser
             {
                 var result = new SqlInExpression()
                 {
-                    Field = left,
+                    Body = left,
                     IsNot = isNot
                 };
                 AcceptOrThrowException(Token.LeftParen);
@@ -1081,8 +1088,15 @@ public class SqlParser
                 {
                     var targetList = new List<SqlExpression>();
                     this.isOnlyRecursiveFourArithmeticOperations = true;
+                    var j = 0;
                     while (true)
                     {
+                        if (j >= whileMaximumNumberOfLoops)
+                        {
+                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        }
+
+                        j++;
                         Accept(Token.Comma);
                         var item = AcceptFourArithmeticOperationsAddOrSub();
                         targetList.Add(item);
@@ -1171,9 +1185,15 @@ public class SqlParser
     private SqlExpression AcceptFourArithmeticOperationsAddOrSub()
     {
         var left = AcceptFourArithmeticOperationsMultiplyOrDivide();
-
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlBinaryOperator @operator;
             if (Accept(Token.Plus))
             {
@@ -1209,8 +1229,15 @@ public class SqlParser
     private SqlExpression AcceptFourArithmeticOperationsMultiplyOrDivide()
     {
         var left = AcceptBitwiseOperations();
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlBinaryOperator @operator;
             if (Accept(Token.Star))
             {
@@ -1244,8 +1271,15 @@ public class SqlParser
     private SqlExpression AcceptBitwiseOperations()
     {
         var left = AcceptFourArithmeticOperationsBaseOperationUnit();
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlBinaryOperator @operator;
             if (Accept(Token.Bar))
             {
@@ -1311,7 +1345,7 @@ public class SqlParser
             nextToken = tokens[pos];
             savePoint = -1;
         }
-      
+
     }
     private void RestoreSavePoint2()
     {
@@ -1350,7 +1384,7 @@ public class SqlParser
             Token.From,
             Token.Join,
             Token.Dot,
-            Token.Union, 
+            Token.Union,
             Token.Except,
             Token.Intersect
         };
@@ -1369,14 +1403,14 @@ public class SqlParser
             SavePoint2();
             if (AcceptAnyOne())
             {
-                
-                if (currentToken?.IsToken(Token.Join)==true&&(name.ToLowerInvariant()=="left"|| name.ToLowerInvariant() == "right")|| name.ToLowerInvariant() == "full"|| name.ToLowerInvariant() == "cross"|| name.ToLowerInvariant() == "inner")
+
+                if (currentToken?.IsToken(Token.Join) == true && (name.ToLowerInvariant() == "left" || name.ToLowerInvariant() == "right") || name.ToLowerInvariant() == "full" || name.ToLowerInvariant() == "cross" || name.ToLowerInvariant() == "inner")
                 {
                     RestoreSavePoint();
                     return false;
                 }
-              
-                if (notAllowTokens.Any(it=> currentToken?.IsToken(it)==true) || currentToken?.TokenType == TokenType.Symbol || currentToken?.TokenType == TokenType.Operator)
+
+                if (notAllowTokens.Any(it => currentToken?.IsToken(it) == true) || currentToken?.TokenType == TokenType.Symbol || currentToken?.TokenType == TokenType.Operator)
                 {
                     RestoreSavePoint2();
                     return true;
@@ -1411,13 +1445,27 @@ public class SqlParser
         if (dbType == DbType.Pgsql)
         {
             SqlExpression result;
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 if (Accept(Token.ColonColon))
                 {
                     var targetTypeNameStringBuilder = new StringBuilder();
+                    var j = 0;
                     while (true)
                     {
+                        if (j >= whileMaximumNumberOfLoops)
+                        {
+                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        }
+
+                        j++;
                         if (CheckNextTokenIsSplitToken())
                         {
                             break;
@@ -1426,7 +1474,7 @@ public class SqlParser
                         if (CheckNextToken(Token.ColonColon))
                         {
                             break;
-                        } 
+                        }
                         AcceptAnyOne();
                         targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
                         targetTypeNameStringBuilder.Append(" ");
@@ -1448,11 +1496,11 @@ public class SqlParser
                             Value = targetTypeName
                         }
                     };
-                    if (CheckNextTokenIsSplitToken() )
+                    if (CheckNextTokenIsSplitToken())
                     {
                         break;
                     }
-                   
+
                 }
             }
 
@@ -1491,7 +1539,7 @@ public class SqlParser
 
         SqlExpression body = new SqlExpression();
 
-        if (CheckNextToken(Token.NumberConstant)|| CheckNextToken(Token.Sub))
+        if (CheckNextToken(Token.NumberConstant) || CheckNextToken(Token.Sub))
         {
             var isNegative = Accept(Token.Sub);
             if (Accept(Token.NumberConstant))
@@ -1501,10 +1549,10 @@ public class SqlParser
                 {
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                    Value = (isNegative?-1:1)* number
+                    Value = (isNegative ? -1 : 1) * number
                 };
             }
-         
+
         }
         else if (Accept(Token.StringConstant))
         {
@@ -1513,7 +1561,7 @@ public class SqlParser
             {
                 Value = txt
             };
-            
+
         }
         else if (Accept(Token.Star))
         {
@@ -1573,8 +1621,16 @@ public class SqlParser
                 var value = AcceptLogicalExpression();
                 result.Value = value;
             }
+
+            var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
                 if (nextToken == null || CheckNextToken(Token.Else) || CheckNextToken(Token.End))
                 {
                     break;
@@ -1626,22 +1682,29 @@ public class SqlParser
                 if (Accept(Token.IdentifierString) || Accept(Token.Star))
                 {
                     var propertyName = GetCurrentTokenValue();
-                    var sqlPropertyExpression = new SqlPropertyExpression();
-                    var sqlIdentifierExpression = new SqlIdentifierExpression()
+                    if (CheckNextToken(Token.LeftParen))
                     {
-                        LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
-                        RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                        Value = name
-                    };
-                    var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
+                        body = AcceptFunctionCall(name + "." + propertyName);
+                    }
+                    else
                     {
-                        LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
-                        RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                        Value = propertyName
-                    };
-                    sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
-                    sqlPropertyExpression.Table = sqlIdentifierExpression;
-                    body = sqlPropertyExpression;
+                        var sqlPropertyExpression = new SqlPropertyExpression();
+                        var sqlIdentifierExpression = new SqlIdentifierExpression()
+                        {
+                            LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                            RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
+                            Value = name
+                        };
+                        var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
+                        {
+                            LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                            RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
+                            Value = propertyName
+                        };
+                        sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
+                        sqlPropertyExpression.Table = sqlIdentifierExpression;
+                        body = sqlPropertyExpression;
+                    }
                 }
                 else
                 {
@@ -1775,8 +1838,15 @@ public class SqlParser
             result.IsDistinct = true;
         }
 
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             if (CheckNextToken(Token.RightParen) || nextToken == null)
             {
                 break;
@@ -1790,8 +1860,15 @@ public class SqlParser
             if (Accept(Token.As))
             {
                 var targetTypeNameStringBuilder = new StringBuilder();
+                var j = 0;
                 while (true)
                 {
+                    if (j >= whileMaximumNumberOfLoops)
+                    {
+                        throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                    }
+
+                    j++;
                     if (CheckNextToken(Token.RightParen) || nextToken == null)
                     {
                         break;
@@ -1831,7 +1908,7 @@ public class SqlParser
                 result.Over = over;
             }
         }
-        
+
         return result;
     }
 
@@ -1915,6 +1992,10 @@ public class SqlParser
             var i = 0;
             while (true)
             {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
                 i++;
                 if (nextToken == null || CheckNextToken(Token.RightParen) || !(i == 1 || Accept(Token.Comma)))
                 {
@@ -1979,9 +2060,15 @@ public class SqlParser
     private SqlExpression AcceptTableOrJoinTableSourceExpression()
     {
         SqlExpression left = AcceptTableExpression();
-
+        var i = 0;
         while (true)
         {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
             SqlJoinType joinType;
             //Determine whether the on condition is required 
             //判断on条件是否是必须的
@@ -2076,14 +2163,15 @@ public class SqlParser
                 IsSiblings = isSiblings
             };
             var i = 0;
-            var maxCount = 100000;
+
             while (true)
             {
-                i++;
-                if (i >= maxCount)
+                if (i >= whileMaximumNumberOfLoops)
                 {
-                    throw new Exception($"超过{maxCount}次无法找到order by信息");
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
                 }
+
+                i++;
                 if (nextToken == null
                     || (dbType == DbType.MySql && nextToken.HasValue && nextToken.Value.IsToken(Token.Limit))
                     || (dbType == DbType.SqlServer && nextToken.HasValue && nextToken.Value.IsToken(Token.Offset))
@@ -2115,7 +2203,8 @@ public class SqlParser
                             if (Accept(Token.First))
                             {
                                 nullsType = SqlOrderByNullsType.First;
-                            }else if (Accept(Token.Last))
+                            }
+                            else if (Accept(Token.Last))
                             {
                                 nullsType = SqlOrderByNullsType.Last;
                             }
@@ -2156,14 +2245,15 @@ public class SqlParser
                 Items = items
             };
             var i = 0;
-            var maxCount = 100000;
+
             while (true)
             {
-                i++;
-                if (i >= maxCount)
+                if (i >= whileMaximumNumberOfLoops)
                 {
-                    throw new Exception($"超过{maxCount}次无法找到partition by信息");
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
                 }
+
+                i++;
                 if (nextToken == null
                    || (nextToken.HasValue && (nextToken.Value.IsToken(Token.Order)))
                    || (nextToken.HasValue && (nextToken.Value.IsToken(Token.RightParen))))
@@ -2196,7 +2286,7 @@ public class SqlParser
         {
             startWith = AcceptNestedComplexExpression();
         }
-        
+
         if (Accept(Token.Connect) && Accept(Token.By))
         {
             var isNocycle = Accept(Token.Nocycle);
@@ -2212,7 +2302,7 @@ public class SqlParser
                 Body = body
             };
             body.Parent = result;
-            
+
             return result;
         }
 
@@ -2229,14 +2319,15 @@ public class SqlParser
                 Items = items
             };
             var i = 0;
-            var maxCount = 100000;
+
             while (true)
             {
-                i++;
-                if (i >= maxCount)
+                if (i >= whileMaximumNumberOfLoops)
                 {
-                    throw new Exception($"超过{maxCount}次无法找到group by信息");
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
                 }
+
+                i++;
 
                 if (i == 1 || Accept(Token.Comma))
                 {
@@ -2308,7 +2399,7 @@ public class SqlParser
             return true;
         }
 
-        if (parseType==ParseType.Select&&token.IsToken(Token.IdentifierString))
+        if (parseType == ParseType.Select && token.IsToken(Token.IdentifierString))
         {
             return AcceptKeywordAsIdentifier();
         }
@@ -2337,7 +2428,7 @@ public class SqlParser
     }
     private bool AcceptKeyword()
     {
-        if (nextToken?.IsKeyWord==true)
+        if (nextToken?.IsKeyWord == true)
         {
             GetNextToken();
             return true;
@@ -2356,7 +2447,7 @@ public class SqlParser
     }
     private bool CheckNextTokenIsSplitToken()
     {
-        if (nextToken.HasValue && splitTokenDics.ContainsKey(nextToken.Value)|| nextToken == null)
+        if (nextToken.HasValue && splitTokenDics.ContainsKey(nextToken.Value) || nextToken == null)
         {
             return true;
         }
