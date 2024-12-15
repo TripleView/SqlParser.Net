@@ -7,9 +7,9 @@ hi 大家好，我是三合，在过往的岁月中，我曾经想过要写以�
 3. 写一个sql格式化工具
 4. 写一个像mycat那样的分库分表中间件
 5. 写一个sql防火墙，防止出现where 1=1后没有其他条件导致查询全表
-6. 写一个数据库之间的sql翻译工具，比如把oracle的sql自动翻译为mysql的sql
+6. 写一个数据库之间的sql翻译工具，比如把sqlserver的sql自动翻译为oracle的sql
 
-要实现以上这些需求，都需要一个核心的库，即sql解析引擎，于是我上github寻找开源的类库，
+但是无一例外，都失败了，因为要实现以上这些需求，都需要一个核心的类库，即sql解析引擎，遗憾的是，我没有找到合适的，这是我当初寻找的轨迹
 1. 我发现了[tsql-parser](https://github.com/bruce-dunwiddie/tsql-parser),但他只支持sql server，所以只能pass。
 2. 然后我又发现了[SqlParser-cs](https://github.com/TylerBrinks/SqlParser-cs),
 他的语法树解析出来像这样，
@@ -31,7 +31,7 @@ JsonConvert.SerializeObject(statements.First(), Formatting.Indented)
                }
 	...
 ````
-额，怎么说呢，这语法树也太丑了点吧，非常难以理解，跟我想象中的完全不一样啊，于是也只能pass。
+额，怎么说呢，这语法树也太丑了点吧，同时非常难以理解，跟我想象中的完全不一样啊，于是也只能pass。
 
 3. 接下来我又发现了另外一些基于antlr来解析sql的类库，比如[SQLParser](https://github.com/JaCraig/SQLParser),因为代码是antlr自动生成的，比较难以进行手动优化，所以还是pass。
 
@@ -41,10 +41,17 @@ JsonConvert.SerializeObject(statements.First(), Formatting.Indented)
 1. 支持5大数据库，oracle，sqlserver，mysql，pgsql以及sqlite。
 2. 极致的速度，解析普通sql，时间基本在0.3毫秒以下，当然了,sql越长，解析需要的时间就越长。
 3. 文档完善，众所周知，我三合的开源项目，一向是文档齐全且简单易懂，做到看完就能上手，同时，我也会根据用户的反馈不断的补充以及完善文档。
-4. 代码简洁易懂，符合人类理解直觉，本库代码基于正向思维写成，所以理解起来比较简单。
+4. 代码简洁易懂
+
+
+
+# SqlParser.Net存在的意义
+使用本依赖包，用户可以简单快速高效的解析和处理sql。
+
+# Getting Started
 
 接下来，我将介绍[SqlParser.Net](https://github.com/TripleView/SqlParser.Net)的用法
-# Getting Started
+
 ## 通过Nuget安装
 你可以运行以下命令在你的项目中安装 SqlParser.Net 。
  
@@ -3037,7 +3044,7 @@ var expect = new SqlSelectExpression()
 ````csharp
 Assert.True(sqlAst.Equals(expect));
 ````
-至此，我写单元测试的工作量大大减轻，同时对于生成的sqlAst语法树也更加一目了然了。
+至此，我写单元测试的工作量大大减轻，同时对于生成的sqlAst语法树的结构也更加一目了然了。
 
 ### 6.2 SqlGenerationAstVisitor
 
@@ -3075,7 +3082,11 @@ var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
 sqlAst.Accept(sqlGenerationAstVisitor);
 var newSql = sqlGenerationAstVisitor.GetResult();
 ````
-我们获取到的newSql就是新的sql，他的值为select * from test where(test.name = 'a')，至此，我们的目的就达到了。
+我们获取到的newSql就是新的sql了，他的值为
+````sql
+select * from test where(test.name = 'a')
+````
+至此，我们的目的就达到了。
 
 
 ## 7. sql解析的理论基础
@@ -3085,65 +3096,16 @@ sql之所以能被我们解析出来，主要是因为sql是一种形式语言�
 1. 解决嵌套问题的唯一方案，就是用递归
 2. 对于基础项目，单元测试非常非常重要，因为开发的过程中可能会不断地重构，那以前跑过的测试案例就有可能失败，如果此时需要靠人手工去回归测试验证的话，那工作量是天量的，做不完，根本做不完，所以正确的解决方案是写单元测试，新添加一个功能后，为这个功能写1-N个单元测试，确保新功能对各种情况都有覆盖到，然后再跑一遍所有单元测试，确保没有影响到旧的功能。当然了，跑单元测试最让我崩溃的是，跑一遍所有单元测试，红了（即失败）几十个，天都塌了。
 
-就像我们数学刚入门的时候不能上来就学微积分一样，我们得先从简单的四则运算-加减乘除学起，打好基础，再由易入难。
 
-在ast树命名的部分，参考了阿里巴巴开源的druid
+# 开源地址，欢迎star
+本项目基于MIT协议开源，地址为
+[https://github.com/TripleView/SqlParser.Net](https://github.com/TripleView/SqlParser.Net)
 
-c#中所有数字都可以用decimal表示
+同时感谢以下项目
 
-为了帮助各位有兴趣的靓仔更快的融入本项目，解决思路比解决方法更重要，授人以渔
+1. [阿里巴巴开源的druid](https://github.com/alibaba/druid)
 
-字母构成单词，单词构成句子，句子构成文章，有个层层递进的过程。
-因为要解析各种各样的情况，所以对sql的了解就更加深入了
+# 写在最后
+如果各位靓仔觉得这个项目不错，欢迎一键三连（推荐，star，关注）,同时欢迎加入三合的开源交流群，QQ群号：799648362
 
-
-
-有一种和dba大佬交锋的感觉，每次感觉这次终于要搞完了，去实际环境已测试，就会暴露出新问题，解决新问题的过程中，可能要推翻之前的设计，进行重构，测试的时候就会发出这种感叹，还能这么玩？这么玩也行？这是要玩死我吧？
-每次重构完，跑一遍一百多个单元测试，失败几十个，天都塌了，然后开始一个一个排错
-
-
-例如oracle中
- SELECT id from ADDRESS join;
-  SELECT LEFT.id from ADDRESS left
-     select 1 AS PARTITION FROM dual  PARTITION 
-      select PARTITION.PARTITION from PARTITION
-       select PARTITION from PARTITION
-        select * from ADDRESS left left join dual  on 1=1
-            SELECT LEFT.id from ADDRESS LEFT right JOIN test ON 1=1
-      join和left作为别名也行。partition本来是关键字，作为表别名和列别名也行
-        SELECT id from ADDRESS ORDER BY 1+2    
-        order by后面跟表达式也行
-
-pgsql解析器有点问题
-
-select  'a' is not null =true
-select true= 'a' is not null 
-
-        druid 
-        不支持SELECT '1'::bit varying::varchar from test
-待处理
-
-
-
-行转列的SQL操作通常称为“透视”。不同的数据库有不同的实现方式
-在 Oracle 中，(+) 是用于表示外连接（Outer Join）的旧式语法符号。它是特有于 Oracle 的非标准 SQL 语法。以下是它的用法：
-用法
-在 Oracle 中，(+) 被放在需要右外连接的表的列旁边
-
-
-字符串比较比数字比较慢10倍以上
-发现ToLowerInvariant()耗时比ToLower()少非常多，初步估计是内部初始化文化需要很长时间
-txt.IndexOf(".") 与文化相关的都非常耗时
-double.tryparse 文化相关，存在预热问题
-
-手动写了100个单元测试以后，瑞了瑞了，所以赶紧写了一个自动生成单元测试的visitor压压惊，即UnitTestAstVisitor.cs
-
-
-如何加入本项目
-1.在token.cs中添加新的token，注意CompareIndex是token的唯一标识符，要逐渐递增，不能与原有的冲突，
-2.如果新的token是关键字，需要在SqlLexer.cs的InitTokenDic()方法中添加关键字字典
-3.如果是新的语法类型，可能需要定义新的sqlexpression，定义的新的sqlExpression里,需要参考已有其他sqlExpression重写Equals和Accept方法
-定义后需要在SqlParser.cs里添加处理逻辑
-4.在SqlParser.Net.Test项目里添加新的单元测试，使用TestHelper.cs自动生成IAcceptVisitor.cs和BaseAstVisitor.cs的代码，然后更新SqlParser.Net项目里的IAcceptVisitor.cs和BaseAstVisitor.cs
-
-Quote Symbol
+![QQ群799648362](https://img2024.cnblogs.com/blog/1323385/202412/1323385-20241216025914908-1726484063.jpg)
