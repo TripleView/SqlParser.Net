@@ -137,6 +137,10 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+    public virtual void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    {
+
+    }
     public virtual void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
 

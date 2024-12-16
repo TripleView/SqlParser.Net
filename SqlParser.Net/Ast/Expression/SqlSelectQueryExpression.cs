@@ -33,6 +33,11 @@ public class SqlSelectQueryExpression : SqlExpression
     public SqlExpression Into { get; set; }
     public SqlExpression From { get; set; }
 
+    /// <summary>
+    /// sqlserver 支持,比如sql:SELECT   TOP  100 * from test 
+    /// </summary>
+    public SqlTopExpression Top { get; set; }
+
     public SqlExpression Where { get; set; }
 
     public SqlGroupByExpression GroupBy { get; set; }
@@ -106,6 +111,20 @@ public class SqlSelectQueryExpression : SqlExpression
         {
             return false;
         }
+
+        if (Top == null ^ other.Top == null)
+        {
+            return false;
+        }
+        else if (Top != null && other.Top != null)
+        {
+            result &= Top.Equals(other.Top);
+        }
+        if (!result)
+        {
+            return false;
+        }
+
         if (From == null ^ other.From == null)
         {
             return false;

@@ -8,8 +8,8 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var sql = "select to_char(NAME) from TEST5";
-            var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+            var sql = "SELECT TOP 100 * FROM [sys].[objects] ORDER BY [object_id] DESC";
+            var sqlAst = DbUtils.Parse(sql, SqlParser.Net.DbType.SqlServer);
             var unitTestAstVisitor = new UnitTestAstVisitor();
             sqlAst.Accept(unitTestAstVisitor);
             var result = unitTestAstVisitor.GetResult();

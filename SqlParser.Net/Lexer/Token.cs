@@ -239,4 +239,6 @@ public struct Token
     public static readonly Token Prior = new Token("Prior", "Prior", 113) { TokenType = TokenType.Keyword };
 
     public static readonly Token ColonColon = new Token("ColonColon", "::", 114) { TokenType = TokenType.Symbol };
+
+    public static readonly Token Top = new Token("Top", "Top", 115) { TokenType = TokenType.Keyword };
 }

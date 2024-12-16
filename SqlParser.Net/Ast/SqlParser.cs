@@ -363,7 +363,9 @@ public class SqlParser
 
         var name = GetCurrentTokenValue();
         var mainToken = currentToken;
-        var nameList = new List<string>() { name };
+        //var nameList = new List<string>() { name };
+        var nameTokenList = new List<Token?>() { mainToken };
+
         var dbLinkName = "";
         //such as:SELECT * FROM TABLE(splitstr('a;b',';'))
         if (isFrom && CheckNextToken(Token.LeftParen))
@@ -393,7 +395,8 @@ public class SqlParser
                     {
                         var value = GetCurrentTokenValue();
                         mainToken = currentToken;
-                        nameList.Add(value);
+                        //nameList.Add(value);
+                        nameTokenList.Add(mainToken);
                     }
                     else
                     {
@@ -423,7 +426,7 @@ public class SqlParser
                 {
                     LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
                     RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                    Value = nameList.Last()
+                    Value = GetTokenValue(nameTokenList.Last())
                 }
             };
 
@@ -435,10 +438,11 @@ public class SqlParser
                 };
             }
 
-            if (nameList.Count > 1)
+            if (nameTokenList.Count > 1)
             {
-                nameList.RemoveAt(nameList.Count - 1);
-                var schema = string.Join(".", nameList);
+                nameTokenList.RemoveAt(nameTokenList.Count - 1);
+                var schema = string.Join(".", nameTokenList.Where(x => x != null)
+                    .Select(y => y.Value.LeftQualifiers + y.Value.Value + y.Value.RightQualifiers));
                 table.Schema = new SqlIdentifierExpression()
                 {
                     Value = schema
@@ -610,6 +614,8 @@ public class SqlParser
 
         query.ResultSetReturnOption = AcceptResultSetReturnOption();
 
+        query.Top = AcceptTopN();
+
         query.Columns = AcceptSelectItemsExpression();
 
         query.Into = AcceptSelectInto();
@@ -754,6 +760,28 @@ public class SqlParser
             {
                 var table = AcceptTableExpression();
                 return table;
+            }
+        }
+
+        return null;
+    }
+
+    private SqlTopExpression AcceptTopN()
+    {
+        if (dbType == DbType.SqlServer)
+        {
+            if (Accept(Token.Top))
+            {
+                AcceptOrThrowException(Token.NumberConstant);
+                var topCount = GetCurrentTokenNumberValue();
+                var result = new SqlTopExpression()
+                {
+                    Body = new SqlNumberExpression()
+                    {
+                        Value = topCount
+                    }
+                };
+                return result;
             }
         }
 
@@ -2377,6 +2405,20 @@ public class SqlParser
                 return currentToken.Value.RawValue;
             }
             return currentToken.Value.Value.ToString();
+        }
+
+        return "";
+    }
+
+    private string GetTokenValue(Token? token)
+    {
+        if (token.HasValue)
+        {
+            if (token.Value.TokenType == TokenType.Keyword)
+            {
+                return token.Value.RawValue;
+            }
+            return token.Value.Value.ToString();
         }
 
         return "";

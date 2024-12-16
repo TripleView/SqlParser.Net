@@ -982,6 +982,16 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlSelectQueryExpression.Into.Accept(this);
             });
         }
+
+        if (sqlSelectQueryExpression.Top != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Top = ");
+                sqlSelectQueryExpression.Top.Accept(this);
+            });
+        }
+
         if (sqlSelectQueryExpression.From != null)
         {
             AdvanceNext(() =>
@@ -1305,4 +1315,22 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
         AppendLine("},");
     }
+
+    public override void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    {
+        AppendLine("new SqlTopExpression()");
+        AppendLine("{");
+
+        if (sqlTopExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlTopExpression.Body.Accept(this);
+            });
+        }
+
+        AppendLine("},");
+    }
+
 }

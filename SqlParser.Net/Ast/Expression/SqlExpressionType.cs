@@ -43,4 +43,5 @@ public enum SqlExpressionType
     WithinGroup,
     Bool,
     ConnectBy,
+    Top
 }

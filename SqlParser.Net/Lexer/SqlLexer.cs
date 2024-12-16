@@ -953,6 +953,7 @@ public class SqlLexer
         if (dbType == DbType.SqlServer)
         {
             tokenDic.TryAdd("Next".ToLowerInvariant(), Token.Next);
+            tokenDic.TryAdd("Top".ToLowerInvariant(), Token.Top);
         }
 
         //if (dbType == DbType.Pgsql)

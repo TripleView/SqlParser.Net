@@ -737,6 +737,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             Append(resultSetReturnOption);
         }
 
+        if (sqlSelectQueryExpression.Top != null)
+        {
+            sqlSelectQueryExpression.Top.Accept(this);
+        }
+
         if (sqlSelectQueryExpression.Columns != null)
         {
             for (var i = 0; i < sqlSelectQueryExpression.Columns.Count; i++)
@@ -974,6 +979,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 sqlWithSubQueryExpression.FromSelect.Accept(this);
             });
+        }
+    }
+
+    public override void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    {
+        Append("top");
+        if (sqlTopExpression.Body != null)
+        {
+            sqlTopExpression.Body.Accept(this);
         }
     }
 }

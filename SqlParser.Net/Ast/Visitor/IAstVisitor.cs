@@ -38,6 +38,7 @@ public interface IAstVisitor
     void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression);
     void VisitSqlStringExpression(SqlStringExpression sqlStringExpression);
     void VisitSqlTableExpression(SqlTableExpression sqlTableExpression);
+    void VisitSqlTopExpression(SqlTopExpression sqlTopExpression);
     void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression);
     void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression);
     void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression);
