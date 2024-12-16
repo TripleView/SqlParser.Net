@@ -46,7 +46,7 @@ JsonConvert.SerializeObject(statements.First(), Formatting.Indented)
 
 
 # SqlParser.Net存在的意义
-使用本依赖包，用户可以简单快速高效的解析和处理sql。
+SqlParser.Net是一个免费，功能全面且高性能的sql解析引擎类库，它可以帮助你简单快速高效的解析和处理sql。
 
 # Getting Started
 

@@ -3,6 +3,29 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
 	  <LangVersion>latest</LangVersion>
+	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	  <Title>SqlParser.Net</Title>
+	  <Version>1.0.0</Version>
+	  <PackageProjectUrl>https://github.com/TripleView/SqlParser.Net</PackageProjectUrl>
+	  <Authors>TripleView</Authors>
+	  <RepositoryUrl>https://github.com/TripleView/SqlParser.Net.git</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <Copyright>MIT</Copyright>
+	  <IsPackable>true</IsPackable>
+	  <OutputType>Library</OutputType>
+	  <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+	  <PackageTags>sql parser;sql parse;sql parse engine;sql解析;sql解析引擎</PackageTags>
+	  <Description>SqlParser.Net is a free, comprehensive and high-performance SQL parsing engine library that can help you parse and process SQL simply, quickly and efficiently.
+SqlParser.Net是一个免费，功能全面且高性能的sql解析引擎类库，它可以帮助你简单快速高效的解析和处理sql。</Description>
+	  <PackageReleaseNotes>SqlParser.Net is a free, comprehensive and high-performance SQL parsing engine library that can help you parse and process SQL simply, quickly and efficiently.
+SqlParser.Net是一个免费，功能全面且高性能的sql解析引擎类库，它可以帮助你简单快速高效的解析和处理sql。</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\ReadMe.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
