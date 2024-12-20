@@ -18,6 +18,7 @@ public interface IAstVisitor
     void VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression);
     void VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression);
     void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression);
+    void VisitSqlHintExpression(SqlHintExpression sqlHintExpression);
     void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression);
     void VisitSqlInExpression(SqlInExpression sqlInExpression);
     void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression);

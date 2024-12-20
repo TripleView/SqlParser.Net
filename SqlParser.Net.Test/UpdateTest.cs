@@ -77,4 +77,15 @@ public class UpdateTest
 
     }
 
+    [Fact]
+    public void TestUpdateCheckIfParsingIsComplete()
+    {
+        var sql = "update test set name =4 wher name =1";
+        var sqlAst = new SqlExpression();
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+        });
+    }
+
 }

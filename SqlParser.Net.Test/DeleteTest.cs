@@ -1,6 +1,7 @@
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Ast.Visitor;
 using System.Xml.Linq;
+using Xunit.Sdk;
 
 namespace SqlParser.Net.Test;
 
@@ -41,6 +42,15 @@ public class DeleteTest
 
         Assert.True(sqlAst.Equals(expect));
     }
-
+    [Fact]
+    public void TestDeleteCheckIfParsingIsComplete()
+    {
+        var sql = "delete from RouteData wher code='abc'";
+        var sqlAst = new SqlExpression();
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        });
+    }
 
 }

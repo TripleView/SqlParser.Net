@@ -57,6 +57,10 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+    public virtual void VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    {
+
+    }
     public virtual void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
     {
 

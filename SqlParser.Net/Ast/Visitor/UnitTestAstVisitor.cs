@@ -1143,6 +1143,20 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlTableExpression.Alias?.Accept(this);
             });
         }
+
+        if (sqlTableExpression.Hints != null&& sqlTableExpression.Hints.Any())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("Hints = new List<SqlHintExpression>()");
+                AppendLine("{");
+                foreach (var hint in sqlTableExpression.Hints)
+                {
+                    hint.Accept(this);
+                }
+                AppendLine("},");
+            });
+        }
         AppendLine("},");
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
@@ -1333,4 +1347,20 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("},");
     }
 
+    public override void VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    {
+        AppendLine("new SqlHintExpression()");
+        AppendLine("{");
+
+        if (sqlHintExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlHintExpression.Body.Accept(this);
+            });
+        }
+
+        AppendLine("},");
+    }
 }

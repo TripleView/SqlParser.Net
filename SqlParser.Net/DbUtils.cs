@@ -9,6 +9,7 @@ public class DbUtils
 {
     public static SqlExpression Parse(string sql, DbType dbType, Action<long, string> logger = null)
     {
+        sql = sql.TrimEnd(';');
         var sw = new Stopwatch();
         sw.Start();
         var sqlLexer = new SqlLexer()

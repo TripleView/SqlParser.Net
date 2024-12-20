@@ -105,30 +105,21 @@ public class SqlParser
 
         //}));
 
-        //var t12 = TimeUtils.TestMicrosecond((() =>
-        //{
-        //    MergeEscapeCharacterCharAndRemoveAllComment();
-        //}));
-
         if (CheckNextToken(Token.Select) || CheckNextToken(Token.With) || CheckNextToken(Token.LeftParen))
         {
             parseType = ParseType.Select;
             var result = new SqlSelectExpression();
             result = AcceptSelectExpression();
             result.Comments = comments;
-            //var t = TimeUtils.TestMicrosecond((() =>
-            //{
-
-
-            //}));
+            CheckIfParsingIsComplete();
             return result;
-            //return result;
         }
         else if (CheckNextToken(Token.Update))
         {
             parseType = ParseType.Update;
             var result = AcceptUpdateExpression();
             result.Comments = comments;
+            CheckIfParsingIsComplete();
             return result;
         }
         else if (CheckNextToken(Token.Delete))
@@ -136,6 +127,7 @@ public class SqlParser
             parseType = ParseType.Delete;
             var result = AcceptDeleteExpression();
             result.Comments = comments;
+            CheckIfParsingIsComplete();
             return result;
         }
         else if (CheckNextToken(Token.Insert))
@@ -143,13 +135,25 @@ public class SqlParser
             parseType = ParseType.Insert;
             var result = AcceptInsertExpression();
             result.Comments = comments;
+            CheckIfParsingIsComplete();
             return result;
         }
 
         throw new Exception("不识别该种解析类型");
     }
-
-
+    /// <summary>
+    /// Check whether the SQL is parsed
+    /// 检查sql是否解析完毕
+    /// </summary>
+    private void CheckIfParsingIsComplete()
+    {
+        if (pos != tokens.Count - 1)
+        {
+            var startIndex = tokens[pos].StartPositionIndex;
+            var endIndex = tokens[tokens.Count - 1].EndPositionIndex;
+            throw new SqlParsingErrorException($"An error occurred at position :{startIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
+        }
+    }
     /// <summary>
     /// remove any comments
     /// 移除所有注释
@@ -469,9 +473,36 @@ public class SqlParser
                     Value = alias
                 };
             }
+
+            table.Hints = AcceptHints();
+
             return table;
         }
 
+    }
+
+    private List<SqlHintExpression> AcceptHints()
+    {
+        if (dbType == DbType.SqlServer)
+        {
+            if (Accept(Token.With))
+            {
+                AcceptOrThrowException(Token.LeftParen);
+                var body = AcceptNestedComplexExpression();
+                AcceptOrThrowException(Token.RightParen);
+                var sqlHint = new SqlHintExpression()
+                {
+                    Body = body
+                };
+                var result = new List<SqlHintExpression>()
+                {
+                    sqlHint
+                };
+                return result;
+            }
+        }
+
+        return null;
     }
 
     private List<SqlExpression> AcceptUpdateItemsExpression()
@@ -488,12 +519,24 @@ public class SqlParser
             }
 
             i++;
-            Accept(Token.Comma);
-            var item = AcceptNestedComplexExpression();
-            items.Add(item);
+
             if (CheckNextToken(Token.Where) || nextToken == null)
             {
                 break;
+            }
+
+            Accept(Token.Comma);
+            var tempSavePoint = pos;
+            var item = AcceptNestedComplexExpression();
+            if (item is not SqlBinaryExpression)
+            {
+                pos = tempSavePoint;
+                CheckIfParsingIsComplete(); pos = tempSavePoint;
+                CheckIfParsingIsComplete();
+            }
+            else
+            {
+                items.Add(item);
             }
         }
 
@@ -1414,7 +1457,8 @@ public class SqlParser
             Token.Dot,
             Token.Union,
             Token.Except,
-            Token.Intersect
+            Token.Intersect,
+            Token.With
         };
         //if (CheckNextTokenIsOperatorOrSymbol())
         //{

@@ -8,7 +8,8 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var sql = "SELECT TOP 100 * FROM [sys].[objects] ORDER BY [object_id] DESC";
+            var c = "a;;;;".TrimEnd(';');
+            var sql = "select * from RouteData with(nolock) where code='abc'";
             var sqlAst = DbUtils.Parse(sql, SqlParser.Net.DbType.SqlServer);
             var unitTestAstVisitor = new UnitTestAstVisitor();
             sqlAst.Accept(unitTestAstVisitor);

@@ -353,4 +353,15 @@ public class InsertTest
 
         Assert.True(sqlAst.Equals(expect));
     }
+
+    [Fact]
+    public void TestInsertCheckIfParsingIsComplete()
+    {
+        var sql = "insert into test11(name,id) values('a1','a2') a";
+        var sqlAst = new SqlExpression();
+        Assert.Throws<Exception>(() =>
+        {
+            var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        });
+    }
 }

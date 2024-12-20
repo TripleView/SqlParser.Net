@@ -10260,4 +10260,85 @@ ORDER BY
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal("select top 100 * from [sys].[objects] order by [object_id] desc", generationSql);
     }
+
+    [Fact]
+    public void TestSelectCheckIfParsingIsComplete()
+    {
+        var sql = "select * from RouteData wher code='abc'";
+        var sqlAst = new SqlExpression();
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+            testOutputHelper.WriteLine("time:" + t);
+        });
+    }
+
+    [Fact]
+    public void TestWithLockForSqlServer()
+    {
+        var sql = "select * from RouteData with(nolock) where code='abc'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                Top = new SqlTopExpression()
+                {
+                    Body = new SqlNumberExpression()
+                    {
+                        Value = 100M,
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "objects",
+                        LeftQualifiers = "[",
+                        RightQualifiers = "]",
+                    },
+                    Schema = new SqlIdentifierExpression()
+                    {
+                        Value = "[sys]",
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+                    {
+                        new SqlOrderByItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "object_id",
+                                LeftQualifiers = "[",
+                                RightQualifiers = "]",
+                            },
+                            OrderByType = SqlOrderByType.Desc,
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select top 100 * from [sys].[objects] order by [object_id] desc", generationSql);
+    }
 }
