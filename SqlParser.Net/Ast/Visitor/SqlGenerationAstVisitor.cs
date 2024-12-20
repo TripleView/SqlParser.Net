@@ -850,6 +850,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlTableExpression.Alias?.Accept(this);
         }
 
+        if (sqlTableExpression.Hints != null && sqlTableExpression.Hints.Any())
+        {
+            foreach (var tableExpressionHint in sqlTableExpression.Hints)
+            {
+                
+            }
+
+            sqlTableExpression.Alias?.Accept(this);
+        }
+
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
