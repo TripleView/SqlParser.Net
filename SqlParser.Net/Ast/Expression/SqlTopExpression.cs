@@ -14,7 +14,12 @@ public class SqlTopExpression : SqlExpression
 
     protected bool Equals(SqlTopExpression other)
     {
-        return Body.Equals(other.Body);
+        if (!CompareTwoSqlExpression(Body, other.Body))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public override bool Equals(object? obj)

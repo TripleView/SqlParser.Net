@@ -1041,6 +1041,25 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlSelectQueryExpression.ConnectBy.Accept(this);
             });
         }
+
+        if (sqlSelectQueryExpression.Hints != null && sqlSelectQueryExpression.Hints.Any())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("Hints = new List<SqlHintExpression>()");
+                AppendLine("{");
+                foreach (var hint in sqlSelectQueryExpression.Hints)
+                {
+                    AdvanceNext(() =>
+                    {
+                        hint.Accept(this);
+                    });
+
+                }
+                AppendLine("},");
+            });
+        }
+
         AppendLine("},");
 
     }
@@ -1152,7 +1171,11 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine("{");
                 foreach (var hint in sqlTableExpression.Hints)
                 {
-                    hint.Accept(this);
+                    AdvanceNext(() =>
+                    {
+                        hint.Accept(this);
+                    });
+                  
                 }
                 AppendLine("},");
             });
@@ -1362,5 +1385,6 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+
     }
 }

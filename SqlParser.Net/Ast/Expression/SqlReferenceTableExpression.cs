@@ -17,6 +17,10 @@ public class SqlReferenceTableExpression : SqlExpression
 
     protected bool Equals(SqlReferenceTableExpression other)
     {
+        if (!CompareTwoSqlExpression(FunctionCall, other.FunctionCall))
+        {
+            return false;
+        }
         return true;
     }
 

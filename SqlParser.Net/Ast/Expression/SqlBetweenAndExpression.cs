@@ -28,41 +28,22 @@ public class SqlBetweenAndExpression : SqlExpression
         {
             return false;
         }
-        if (Body is null ^ other.Body is null)
+
+        if (!CompareTwoSqlExpression(Body,other.Body))
         {
             return false;
-        }
-        else if (Body != null && other.Body != null)
-        {
-            if (!Body.Equals(other.Body))
-            {
-                return false;
-            }
         }
 
-        if (Begin is null ^ other.Begin is null)
+        if (!CompareTwoSqlExpression(Begin, other.Begin))
         {
             return false;
-        }
-        else if (Begin != null && other.Begin != null)
-        {
-            if (!Begin.Equals(other.Begin))
-            {
-                return false;
-            }
         }
 
-        if (End is null ^ other.End is null)
+        if (!CompareTwoSqlExpression(End, other.End))
         {
             return false;
         }
-        else if (End != null && other.End != null)
-        {
-            if (!End.Equals(other.End))
-            {
-                return false;
-            }
-        }
+       
         return true;
     }
 

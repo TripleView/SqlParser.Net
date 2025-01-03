@@ -23,42 +23,18 @@ public class SqlCaseExpression : SqlExpression
 
     protected bool Equals(SqlCaseExpression other)
     {
-        if (Items.Count != other.Items.Count)
+        if (!CompareTwoSqlExpressionList(Items, other.Items))
         {
             return false;
         }
-        for (var i = 0; i < Items.Count; i++)
+        if (!CompareTwoSqlExpression(Else, other.Else))
         {
-            var item = Items[i];
-            var item2 = other.Items[i];
-            if (!item.Equals(item2))
-            {
-                return false;
-            }
+            return false;
         }
 
-        if (Else is null ^ other.Else is null)
+        if (!CompareTwoSqlExpression(Value, other.Value))
         {
             return false;
-        }
-        else if (Else != null && other.Else != null)
-        {
-            if (!Else.Equals(other.Else))
-            {
-                return false;
-            }
-        }
-
-        if (Value is null ^ other.Value is null)
-        {
-            return false;
-        }
-        else if (Value != null && other.Value != null)
-        {
-            if (!Value.Equals(other.Value))
-            {
-                return false;
-            }
         }
 
         return true;

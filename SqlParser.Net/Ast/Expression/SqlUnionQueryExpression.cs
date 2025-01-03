@@ -19,14 +19,16 @@ public class SqlUnionQueryExpression : SqlExpression
 
     protected bool Equals(SqlUnionQueryExpression other)
     {
-        if (!Left.Equals(other.Left))
+        if (!CompareTwoSqlExpression(Left, other.Left))
         {
             return false;
         }
-        if (!Right.Equals(other.Right))
+
+        if (!CompareTwoSqlExpression(Right, other.Right))
         {
             return false;
         }
+        
         if (!UnionType.Equals(other.UnionType))
         {
             return false;

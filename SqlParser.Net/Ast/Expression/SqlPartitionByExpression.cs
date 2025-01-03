@@ -18,20 +18,10 @@ public class SqlPartitionByExpression : SqlExpression
 
     protected bool Equals(SqlPartitionByExpression other)
     {
-        if (Items.Count != other.Items.Count)
+        if (!CompareTwoSqlExpressionList(Items, other.Items))
         {
             return false;
         }
-        for (var i = 0; i < Items.Count; i++)
-        {
-            var item = Items[i];
-            var item2 = other.Items[i];
-            if (!item.Equals(item2))
-            {
-                return false;
-            }
-        }
-
         return true;
     }
 

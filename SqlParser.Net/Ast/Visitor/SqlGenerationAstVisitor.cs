@@ -790,7 +790,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlSelectQueryExpression.Limit.Accept(this);
         }
-        
+        if (sqlSelectQueryExpression.Hints != null && sqlSelectQueryExpression.Hints.Any())
+        {
+            foreach (var tableExpressionHint in sqlSelectQueryExpression.Hints)
+            {
+                tableExpressionHint.Body?.Accept(this);
+            }
+        }
     }
 
     private void Append(string str)
@@ -854,10 +860,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             foreach (var tableExpressionHint in sqlTableExpression.Hints)
             {
-                
+                tableExpressionHint.Body?.Accept(this);
             }
-
-            sqlTableExpression.Alias?.Accept(this);
         }
 
     }
@@ -998,6 +1002,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         if (sqlTopExpression.Body != null)
         {
             sqlTopExpression.Body.Accept(this);
+        }
+    }
+
+    public override void VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    {
+        if (sqlHintExpression.Body != null)
+        {
+            sqlHintExpression.Body.Accept(this);
         }
     }
 }

@@ -21,7 +21,7 @@ public class SqlOrderByItemExpression : SqlExpression
 
     protected bool Equals(SqlOrderByItemExpression other)
     {
-        if (!Body.Equals(other.Body))
+        if (!CompareTwoSqlExpression(Body, other.Body))
         {
             return false;
         }

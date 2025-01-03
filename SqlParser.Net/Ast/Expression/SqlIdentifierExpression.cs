@@ -30,6 +30,7 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression
         {
             return false;
         }
+
         return Value == other.Value;
     }
 

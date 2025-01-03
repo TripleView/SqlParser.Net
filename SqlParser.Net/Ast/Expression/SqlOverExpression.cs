@@ -19,26 +19,16 @@ public class SqlOverExpression : SqlExpression
 
     protected bool Equals(SqlOverExpression other)
     {
-        var result = true;
-        if (OrderBy == null ^ other.OrderBy == null)
+        if (!CompareTwoSqlExpression(OrderBy, other.OrderBy))
         {
             return false;
         }
-        else if (OrderBy != null && other.OrderBy != null)
-        {
-            result &= OrderBy.Equals(other.OrderBy);
-        }
 
-        if (PartitionBy == null ^ other.PartitionBy == null)
+        if (!CompareTwoSqlExpression(PartitionBy, other.PartitionBy))
         {
             return false;
         }
-        else if (PartitionBy != null && other.PartitionBy != null)
-        {
-            result &= PartitionBy.Equals(other.PartitionBy);
-        }
-
-        return result;
+        return true;
     }
 
     public override bool Equals(object? obj)

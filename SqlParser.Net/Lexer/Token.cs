@@ -8,7 +8,8 @@ public enum TokenType
     Keyword,
     Symbol,
     Operator,
-    Constant
+    Constant,
+    Hints
 }
 
 public struct Token
@@ -25,7 +26,7 @@ public struct Token
     /// 用来判断token是否为关键字
     /// </summary>
     public bool IsKeyWord => this.TokenType == TokenType.Keyword;
-
+    public bool IsHints => this.TokenType == TokenType.Hints;
 
     public bool IsOperator=> this.TokenType == TokenType.Operator;
 
@@ -241,4 +242,8 @@ public struct Token
     public static readonly Token ColonColon = new Token("ColonColon", "::", 114) { TokenType = TokenType.Symbol };
 
     public static readonly Token Top = new Token("Top", "Top", 115) { TokenType = TokenType.Keyword };
+
+    public static readonly Token Option = new Token("Option", "Option", 116) { TokenType = TokenType.Keyword };
+
+    public static readonly Token HintsConstant = new Token("HintsConstant", "HintsConstant", 117) { TokenType = TokenType.Hints };
 }

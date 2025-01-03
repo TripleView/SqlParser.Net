@@ -24,32 +24,18 @@ public class SqlUpdateExpression : SqlExpression
 
     protected bool Equals(SqlUpdateExpression other)
     {
-        if (Items.Count != other.Items.Count)
+        if (!CompareTwoSqlExpressionList(Items, other.Items))
         {
             return false;
         }
-        for (var i = 0; i < Items.Count; i++)
+        if (!CompareTwoSqlExpression(Where, other.Where))
         {
-            var item = Items[i];
-            var item2 = other.Items[i];
-            if (!item.Equals(item2))
-            {
-                return false;
-            }
+            return false;
         }
 
-
-        if (!Table.Equals(other.Table))
+        if (!CompareTwoSqlExpression(Table, other.Table))
         {
             return false;
-        }
-        if (Where == null ^ other.Where == null)
-        {
-            return false;
-        }
-        else if (Where != null && other.Where != null)
-        {
-            return Where.Equals(other.Where);
         }
 
         return true;

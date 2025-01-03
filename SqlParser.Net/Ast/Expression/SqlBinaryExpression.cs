@@ -23,41 +23,22 @@ public class SqlBinaryExpression : SqlExpression
 
     protected bool Equals(SqlBinaryExpression other)
     {
-        if (Left is null ^ other.Left is null)
+
+        if (!CompareTwoSqlExpression(Left, other.Left))
         {
             return false;
-        }
-        else if (Left != null && other.Left != null)
-        {
-            if (!Left.Equals(other.Left))
-            {
-                return false;
-            }
         }
 
-        if (Right is null ^ other.Right is null)
+        if (!CompareTwoSqlExpression(Right, other.Right))
         {
             return false;
-        }
-        else if (Right != null && other.Right != null)
-        {
-            if (!Right.Equals(other.Right))
-            {
-                return false;
-            }
         }
 
-        if (Operator is null ^ other.Operator is null)
+        if (!CompareTwoSqlExpression(Operator, other.Operator))
         {
             return false;
         }
-        else if (Operator != null && other.Operator != null)
-        {
-            if (!Operator.Equals(other.Operator))
-            {
-                return false;
-            }
-        }
+       
         return true;
     }
 

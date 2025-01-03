@@ -37,6 +37,7 @@ public class DbUtils
             logger(t2, "parser");
         }
         sw.Restart();
+        result.DbType = dbType;
         return result;
     }
 }

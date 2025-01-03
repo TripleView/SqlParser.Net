@@ -22,19 +22,17 @@ public class SqlPropertyExpression : SqlExpression
 
     protected bool Equals(SqlPropertyExpression other)
     {
-        if (Name is null ^ other.Name is null)
+        if (!CompareTwoSqlExpression(Name, other.Name))
         {
             return false;
         }
-        else if (Name != null && other.Name != null)
+
+        if (!CompareTwoSqlExpression(Table, other.Table))
         {
-            if (!Name.Equals(other.Name))
-            {
-                return false;
-            }
+            return false;
         }
 
-        return Table.Equals(other.Table);
+        return true;
     }
 
     public override bool Equals(object? obj)

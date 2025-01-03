@@ -22,27 +22,26 @@ public class SqlJoinTableExpression : SqlExpression
 
     protected bool Equals(SqlJoinTableExpression other)
     {
-        if (!Left.Equals(other.Left))
-        {
-            return false;
-        }
-        if (!Right.Equals(other.Right))
-        {
-            return false;
-        }
         if (JoinType != other.JoinType)
         {
             return false;
         }
 
-        if (Conditions == null ^ other.Conditions == null)
+        if (!CompareTwoSqlExpression(Left, other.Left))
         {
             return false;
         }
-        else if (Conditions != null && other.Conditions != null)
+
+        if (!CompareTwoSqlExpression(Right, other.Right))
         {
-            return Conditions.Equals(other.Conditions);
+            return false;
         }
+        
+        if (!CompareTwoSqlExpression(Conditions, other.Conditions))
+        {
+            return false;
+        }
+        
         return true;
     }
 

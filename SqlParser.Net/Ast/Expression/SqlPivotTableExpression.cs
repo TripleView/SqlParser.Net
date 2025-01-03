@@ -26,75 +26,31 @@ public class SqlPivotTableExpression : SqlExpression
 
     protected bool Equals(SqlPivotTableExpression other)
     {
-        if (Alias == null ^ other.Alias == null)
+        if (!CompareTwoSqlExpression(Alias, other.Alias))
         {
             return false;
         }
-        else if (Alias != null && other.Alias != null)
-        {
-            if (!Alias.Equals(other.Alias))
-            {
-                return false;
-            }
-        }
 
-        if (SubQuery == null ^ other.SubQuery == null)
+        if (!CompareTwoSqlExpression(SubQuery, other.SubQuery))
         {
             return false;
         }
-        else if (SubQuery != null && other.SubQuery != null)
-        {
-            if (!SubQuery.Equals(other.SubQuery))
-            {
-                return false;
-            }
-        }
 
-        if (FunctionCall == null ^ other.FunctionCall == null)
+
+        if (!CompareTwoSqlExpression(FunctionCall, other.FunctionCall))
         {
             return false;
         }
-        else if (FunctionCall != null && other.FunctionCall != null)
-        {
-            if (!FunctionCall.Equals(other.FunctionCall))
-            {
-                return false;
-            }
-        }
 
-        if (For == null ^ other.For == null)
+        if (!CompareTwoSqlExpression(For, other.For))
         {
             return false;
         }
-        else if (For != null && other.For != null)
-        {
-            if (!For.Equals(other.For))
-            {
-                return false;
-            }
-        }
-
-        if (In == null ^ other.In == null)
+        if (!CompareTwoSqlExpressionList(In, other.In))
         {
             return false;
         }
-        else if (In != null && other.In != null)
-        {
-
-            if (In.Count != other.In.Count)
-            {
-                return false;
-            }
-            for (var i = 0; i < In.Count; i++)
-            {
-                var item = In[i];
-                var item2 = other.In[i];
-                if (!item.Equals(item2))
-                {
-                    return false;
-                }
-            }
-        }
+        
         return true;
     }
 

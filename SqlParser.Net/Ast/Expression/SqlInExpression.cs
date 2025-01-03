@@ -31,44 +31,22 @@ public class SqlInExpression : SqlExpression
         {
             return false;
         }
-        if (!Body.Equals(other.Body))
+
+        if (!CompareTwoSqlExpressionList(TargetList, other.TargetList))
+        {
+            return false;
+        }
+        
+        if (!CompareTwoSqlExpression(Body, other.Body))
         {
             return false;
         }
 
-        if (TargetList == null ^ other.TargetList == null)
+        if (!CompareTwoSqlExpression(SubQuery, other.SubQuery))
         {
             return false;
         }
-        else if (TargetList != null && other.TargetList != null)
-        {
-            if (TargetList.Count != other.TargetList.Count)
-            {
-                return false;
-            }
-            for (var i = 0; i < TargetList.Count; i++)
-            {
-                var item = TargetList[i];
-                var item2 = other.TargetList[i];
-                if (!item.Equals(item2))
-                {
-                    return false;
-                }
-            }
-        }
-
-        if (SubQuery == null ^ other.SubQuery == null)
-        {
-            return false;
-        }
-        else if (SubQuery != null && other.SubQuery != null)
-        {
-            if (!SubQuery.Equals(other.SubQuery))
-            {
-                return false;
-            }
-        }
-
+        
         return true;
     }
 

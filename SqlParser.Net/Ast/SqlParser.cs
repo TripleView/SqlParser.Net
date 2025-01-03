@@ -139,7 +139,7 @@ public class SqlParser
             return result;
         }
 
-        throw new Exception("不识别该种解析类型");
+        throw new Exception("Unrecognized parsing type.不识别该种解析类型");
     }
     /// <summary>
     /// Check whether the SQL is parsed
@@ -485,18 +485,18 @@ public class SqlParser
     {
         if (dbType == DbType.SqlServer)
         {
-            if (Accept(Token.With))
+            if (Accept(Token.HintsConstant))
             {
-                AcceptOrThrowException(Token.LeftParen);
-                var body = AcceptNestedComplexExpression();
-                AcceptOrThrowException(Token.RightParen);
-                var sqlHint = new SqlHintExpression()
+                var sqlHints = new SqlHintExpression()
                 {
-                    Body = body
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = GetCurrentTokenValue()
+                    }
                 };
                 var result = new List<SqlHintExpression>()
                 {
-                    sqlHint
+                    sqlHints
                 };
                 return result;
             }
@@ -673,6 +673,8 @@ public class SqlParser
                 query.ConnectBy = AcceptConnectByExpression();
             }
             query.Limit = AcceptLimitExpression();
+
+            query.Hints = AcceptHints();
         }
 
         var result = new SqlSelectExpression()
@@ -2444,7 +2446,7 @@ public class SqlParser
     {
         if (currentToken.HasValue)
         {
-            if (currentToken.Value.TokenType == TokenType.Keyword)
+            if (currentToken.Value.IsKeyWord || currentToken.Value.IsHints)
             {
                 return currentToken.Value.RawValue;
             }

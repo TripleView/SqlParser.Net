@@ -19,28 +19,17 @@ public class SqlCaseItemExpression : SqlExpression
 
     protected bool Equals(SqlCaseItemExpression other)
     {
-        if (Condition is null ^ other.Condition is null)
+
+        if (!CompareTwoSqlExpression(Condition, other.Condition))
         {
             return false;
         }
-        else if (Condition != null && other.Condition != null)
-        {
-            if (!Condition.Equals(other.Condition))
-            {
-                return false;
-            }
-        }
-        if (Value is null ^ other.Value is null)
+
+        if (!CompareTwoSqlExpression(Value, other.Value))
         {
             return false;
         }
-        else if (Value != null && other.Value != null)
-        {
-            if (!Value.Equals(other.Value))
-            {
-                return false;
-            }
-        }
+
         return true;
     }
 

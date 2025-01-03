@@ -21,21 +21,14 @@ public class SqlDeleteExpression : SqlExpression
 
     protected bool Equals(SqlDeleteExpression other)
     {
-        if (!Table.Equals(other.Table))
+        if (!CompareTwoSqlExpression(Table, other.Table))
         {
             return false;
         }
 
-        if (Where is null ^ other.Where is null)
+        if (!CompareTwoSqlExpression(Where, other.Where))
         {
             return false;
-        }
-        else if (Where != null && other.Where != null)
-        {
-            if (!Where.Equals(other.Where))
-            {
-                return false;
-            }
         }
 
         return true;

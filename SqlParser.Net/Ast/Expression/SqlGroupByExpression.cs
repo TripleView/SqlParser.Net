@@ -20,27 +20,13 @@ public class SqlGroupByExpression : SqlExpression
 
     protected bool Equals(SqlGroupByExpression other)
     {
-        if (Items.Count != other.Items.Count)
+        if (!CompareTwoSqlExpressionList(Items, other.Items))
         {
             return false;
         }
-        for (var i = 0; i < Items.Count; i++)
-        {
-            var item = Items[i];
-            var item2 = other.Items[i];
-            if (!item.Equals(item2))
-            {
-                return false;
-            }
-        }
-
-        if (Having == null ^ other.Having == null)
+        if (!CompareTwoSqlExpression(Having, other.Having))
         {
             return false;
-        }
-        else if (Having != null && other.Having != null)
-        {
-            return Having.Equals(other.Having);
         }
         return true;
     }

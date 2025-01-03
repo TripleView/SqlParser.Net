@@ -39,72 +39,32 @@ public class SqlFunctionCallExpression : SqlExpression
             return false;
         }
 
-        if (!Name.Equals(other.Name))
+        if (!CompareTwoSqlExpressionList(Arguments, other.Arguments))
+        {
+            return false;
+        }
+        
+
+        if (!CompareTwoSqlExpression(Name, other.Name))
+        {
+            return false;
+        }
+        if (!CompareTwoSqlExpression(Over, other.Over))
+        {
+            return false;
+        }
+        if (!CompareTwoSqlExpression(CaseAsTargetType, other.CaseAsTargetType))
         {
             return false;
         }
 
-        if (Arguments == null ^ other.Arguments == null)
+
+        if (!CompareTwoSqlExpression(WithinGroup, other.WithinGroup))
         {
             return false;
         }
-        else if (Arguments != null && other.Arguments != null)
-        {
-            if (Arguments.Count != other.Arguments.Count)
-            {
-                return false;
-            }
 
-            for (var i = 0; i < Arguments.Count; i++)
-            {
-                var argument = Arguments[i];
-                var argument2 = other.Arguments[i];
-                if (!argument.Equals(argument2))
-                {
-                    return false;
-                }
-            }
-        }
-
-        var result = true;
-        if (Over == null ^ other.Over == null)
-        {
-            return false;
-        }
-        else if (Over != null && other.Over != null)
-        {
-            if (!Over.Equals(other.Over))
-            {
-                return false;
-            }
-        }
-
-        if (CaseAsTargetType == null ^ other.CaseAsTargetType == null)
-        {
-            return false;
-        }
-        else if (CaseAsTargetType != null && other.CaseAsTargetType != null)
-        {
-            if (!CaseAsTargetType.Equals(other.CaseAsTargetType))
-            {
-                return false;
-            }
-        }
-
-        if (!result)
-        {
-            return result;
-        }
-
-        if (WithinGroup == null ^ other.WithinGroup == null)
-        {
-            return false;
-        }
-        else if (WithinGroup != null && other.WithinGroup != null)
-        {
-            result &= WithinGroup.Equals(other.WithinGroup);
-        }
-        return result;
+        return true;
     }
 
     public override bool Equals(object? obj)

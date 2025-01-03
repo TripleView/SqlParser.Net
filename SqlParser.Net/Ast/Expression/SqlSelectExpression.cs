@@ -22,18 +22,17 @@ public class SqlSelectExpression : SqlExpression
 
     protected bool Equals(SqlSelectExpression other)
     {
-        var result = true;
-        if (Alias == null ^ other.Alias == null)
+        if (!CompareTwoSqlExpression(Alias, other.Alias))
         {
             return false;
         }
-        else if (Alias != null && other.Alias != null)
+
+        if (!CompareTwoSqlExpression(Query, other.Query))
         {
-            result &= Alias.Equals(other.Alias);
+            return false;
         }
 
-        result &= Query.Equals(other.Query);
-        return result;
+        return true;
     }
 
     public override bool Equals(object? obj)

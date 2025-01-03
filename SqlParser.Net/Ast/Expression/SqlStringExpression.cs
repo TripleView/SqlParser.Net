@@ -19,7 +19,7 @@ public class SqlStringExpression : SqlExpression
 
     protected bool Equals(SqlStringExpression other)
     {
-        return Value == other.Value;
+        return IsUniCode == other.IsUniCode && Value == other.Value;
     }
 
     public override bool Equals(object? obj)

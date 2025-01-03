@@ -25,41 +25,31 @@ public class SqlConnectByExpression : SqlExpression
     public SqlOrderByExpression OrderBy { get; set; }
     protected bool Equals(SqlConnectByExpression other)
     {
-        if (StartWith == null ^ other.StartWith == null)
+        if (IsNocycle != other.IsNocycle)
         {
             return false;
-        }
-        else if (StartWith != null && other.StartWith != null)
-        {
-            if(!StartWith.Equals(other.StartWith))
-            {
-                return false;
-            }
         }
 
-        if (Body == null ^ other.Body == null)
+        if (IsPrior != other.IsPrior)
         {
             return false;
-        }
-        else if (Body != null && other.Body != null)
-        {
-            if (!Body.Equals(other.Body))
-            {
-                return false;
-            }
         }
 
-        if (OrderBy == null ^ other.OrderBy == null)
+        if (!CompareTwoSqlExpression(StartWith, other.StartWith))
         {
             return false;
         }
-        else if (OrderBy != null && other.OrderBy != null)
+
+        if (!CompareTwoSqlExpression(Body, other.Body))
         {
-            if (!OrderBy.Equals(other.OrderBy))
-            {
-                return false;
-            }
+            return false;
         }
+
+        if (!CompareTwoSqlExpression(OrderBy, other.OrderBy))
+        {
+            return false;
+        }
+        
         return true;
     }
 

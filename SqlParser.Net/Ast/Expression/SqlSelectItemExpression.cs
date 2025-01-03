@@ -19,18 +19,16 @@ public class SqlSelectItemExpression : SqlExpression
 
     protected bool Equals(SqlSelectItemExpression other)
     {
-        var result = true;
-        if (Alias == null ^ other.Alias == null)
+        if (!CompareTwoSqlExpression(Body, other.Body))
         {
             return false;
         }
-        else if (Alias != null && other.Alias != null)
-        {
-            result &= Alias.Equals(other.Alias);
-        }
 
-        result &= Body.Equals(other.Body);
-        return result;
+        if (!CompareTwoSqlExpression(Alias, other.Alias))
+        {
+            return false;
+        }
+        return true;
     }
 
     public override bool Equals(object? obj)

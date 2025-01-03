@@ -34,27 +34,22 @@ public class SqlInsertExpression : SqlExpression
 
     protected bool Equals(SqlInsertExpression other)
     {
-        if (Columns is null ^ other.Columns is null)
+
+        if (!CompareTwoSqlExpressionList(Columns, other.Columns))
         {
             return false;
         }
-        else if (Columns != null && other.Columns != null)
+        if (!CompareTwoSqlExpression(Table, other.Table))
         {
-            if (Columns.Count != other.Columns.Count)
-            {
-                return false;
-            }
-
-            for (var i = 0; i < Columns.Count; i++)
-            {
-                var item = Columns[i];
-                var item2 = other.Columns[i];
-                if (!item.Equals(item2))
-                {
-                    return false;
-                }
-            }
+            return false;
         }
+
+        if (!CompareTwoSqlExpression(FromSelect, other.FromSelect))
+        {
+            return false;
+        }
+
+      
         if (ValuesList is null ^ other.ValuesList is null)
         {
             return false;
@@ -88,20 +83,6 @@ public class SqlInsertExpression : SqlExpression
                     }
                 }
             }
-        }
-
-        if (!Table.Equals(other.Table))
-        {
-            return false;
-        }
-
-        if (FromSelect == null ^ other.FromSelect == null)
-        {
-            return false;
-        }
-        else if (FromSelect != null && other.FromSelect != null)
-        {
-            return FromSelect.Equals(other.FromSelect);
         }
 
         return true;

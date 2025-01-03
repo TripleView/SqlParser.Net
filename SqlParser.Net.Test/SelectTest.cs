@@ -10274,9 +10274,9 @@ ORDER BY
     }
 
     [Fact]
-    public void TestWithLockForSqlServer()
+    public void TestHintsForSqlServer()
     {
-        var sql = "select * from RouteData with(nolock) where code='abc'";
+        var sql = "select * from test with   (nolock) ";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -10295,39 +10295,20 @@ ORDER BY
                         Body = new SqlAllColumnExpression()
                     },
                 },
-                Top = new SqlTopExpression()
-                {
-                    Body = new SqlNumberExpression()
-                    {
-                        Value = 100M,
-                    },
-                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
                     {
-                        Value = "objects",
-                        LeftQualifiers = "[",
-                        RightQualifiers = "]",
+                        Value = "test",
                     },
-                    Schema = new SqlIdentifierExpression()
+                    Hints = new List<SqlHintExpression>()
                     {
-                        Value = "[sys]",
-                    },
-                },
-                OrderBy = new SqlOrderByExpression()
-                {
-                    Items = new List<SqlOrderByItemExpression>()
-                    {
-                        new SqlOrderByItemExpression()
+                        new SqlHintExpression()
                         {
                             Body = new SqlIdentifierExpression()
                             {
-                                Value = "object_id",
-                                LeftQualifiers = "[",
-                                RightQualifiers = "]",
+                                Value = "with   (nolock)",
                             },
-                            OrderByType = SqlOrderByType.Desc,
                         },
                     },
                 },
@@ -10339,6 +10320,197 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select top 100 * from [sys].[objects] order by [object_id] desc", generationSql);
+        Assert.Equal("select * from test with   (nolock)", generationSql);
+    }
+
+    [Fact]
+    public void TestHintsForSqlServer2()
+    {
+        var sql = "select * from FlowStartUpSetting a with  (TABLOCK ,  FORCESEEK) join FlowStartUpReadyEmployee b on a.Id = b.FlowStartUpSettingId";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "FlowStartUpSetting",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Hints = new List<SqlHintExpression>()
+                {
+                    new SqlHintExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "with  (TABLOCK ,  FORCESEEK)",
+                        },
+                    },
+                },
+                    },
+                    JoinType = SqlJoinType.InnerJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "FlowStartUpReadyEmployee",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "FlowStartUpSettingId",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "b",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select * from FlowStartUpSetting as a with  (TABLOCK ,  FORCESEEK) inner join FlowStartUpReadyEmployee as b on(a.Id = b.FlowStartUpSettingId)", generationSql);
+    }
+
+    [Fact]
+    public void TestHintsForSqlServer3()
+    {
+        var sql = "SELECT * FROM FlowStartUpSetting WHERE active = @active OPTION (OPTIMIZE FOR (@active =0));";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "FlowStartUpSetting",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlIdentifierExpression()
+                    {
+                        Value = "active",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlVariableExpression()
+                    {
+                        Name = "active",
+                        Prefix = "@",
+                    },
+                },
+                Hints = new List<SqlHintExpression>()
+                {
+                    new SqlHintExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "OPTION (OPTIMIZE FOR (@active =0))",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select * from FlowStartUpSetting where(active =@active) OPTION (OPTIMIZE FOR (@active =0))", generationSql);
+    }
+
+    [Fact]
+    public void TestToSqlAndToFormat()
+    {
+        var sql = "select * from RouteData";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("select * from RouteData", newSql);
+        var formatResult = sqlAst.ToFormat();
+        Assert.Equal(@"var expect = new SqlSelectExpression()
+{
+    Query = new SqlSelectQueryExpression()
+    {
+        Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+        From = new SqlTableExpression()
+        {
+            Name = new SqlIdentifierExpression()
+            {
+                Value = ""RouteData"",
+            },
+        },
+    },
+};
+", formatResult);
     }
 }

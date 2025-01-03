@@ -52,6 +52,8 @@ public class SqlSelectQueryExpression : SqlExpression
 
     public SqlLimitExpression Limit { get; set; }
 
+    public List<SqlHintExpression> Hints { get; set; }
+
     protected bool Equals(SqlSelectQueryExpression other)
     {
         var result = true;
@@ -59,133 +61,63 @@ public class SqlSelectQueryExpression : SqlExpression
         {
             return false;
         }
-        if (Columns.Count != other.Columns.Count)
+
+        if (!CompareTwoSqlExpressionList(Columns, other.Columns))
         {
             return false;
         }
-        for (var i = 0; i < Columns.Count; i++)
-        {
-            var item = Columns[i];
-            var item2 = other.Columns[i];
-            if (!item.Equals(item2))
-            {
-                return false;
-            }
-        }
-
-        if (WithSubQuerys == null ^ other.WithSubQuerys == null)
-        {
-            return false;
-        }
-        else if (WithSubQuerys != null && other.WithSubQuerys != null)
-        {
-            if (WithSubQuerys.Count != other.WithSubQuerys.Count)
-            {
-                return false;
-            }
-            for (var i = 0; i < WithSubQuerys.Count; i++)
-            {
-                var item = WithSubQuerys[i];
-                var item2 = other.WithSubQuerys[i];
-                if (!item.Equals(item2))
-                {
-                    return false;
-                }
-            }
-        }
-
-        if (!result)
+        if (!CompareTwoSqlExpressionList(WithSubQuerys, other.WithSubQuerys))
         {
             return false;
         }
 
-        if (Into == null ^ other.Into == null)
-        {
-            return false;
-        }
-        else if (Into != null && other.Into != null)
-        {
-            result &= Into.Equals(other.Into);
-        }
-        if (!result)
+        if (!CompareTwoSqlExpression(Into, other.Into))
         {
             return false;
         }
 
-        if (Top == null ^ other.Top == null)
-        {
-            return false;
-        }
-        else if (Top != null && other.Top != null)
-        {
-            result &= Top.Equals(other.Top);
-        }
-        if (!result)
+        //--
+        if (!CompareTwoSqlExpression(Top, other.Top))
         {
             return false;
         }
 
-        if (From == null ^ other.From == null)
-        {
-            return false;
-        }
-        else if (From != null && other.From != null)
-        {
-            result &= From.Equals(other.From);
-        }
-        if (!result)
+        if (!CompareTwoSqlExpression(From, other.From))
         {
             return false;
         }
 
-        if (Where == null ^ other.Where == null)
-        {
-            return false;
-        }
-        else if (Where != null && other.Where != null)
-        {
-            result &= Where.Equals(other.Where);
-        }
-        if (!result)
+        if (!CompareTwoSqlExpression(Where, other.Where))
         {
             return false;
         }
 
-        if (GroupBy == null ^ other.GroupBy == null)
-        {
-            return false;
-        }
-        else if (GroupBy != null && other.GroupBy != null)
-        {
-            result &= GroupBy.Equals(other.GroupBy);
-        }
-        if (!result)
+        if (!CompareTwoSqlExpression(GroupBy, other.GroupBy))
         {
             return false;
         }
 
-        if (OrderBy == null ^ other.OrderBy == null)
-        {
-            return false;
-        }
-        else if (OrderBy != null && other.OrderBy != null)
-        {
-            result &= OrderBy.Equals(other.OrderBy);
-        }
-        if (!result)
+        if (!CompareTwoSqlExpression(OrderBy, other.OrderBy))
         {
             return false;
         }
 
-        if (Limit == null ^ other.Limit == null)
+        if (!CompareTwoSqlExpression(Limit, other.Limit))
         {
             return false;
         }
-        else if (Limit != null && other.Limit != null)
+
+        if (!CompareTwoSqlExpression(ConnectBy, other.ConnectBy))
         {
-            result &= Limit.Equals(other.Limit);
+            return false;
         }
-        return result;
+
+        if (!CompareTwoSqlExpressionList(Hints, other.Hints))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public override bool Equals(object? obj)

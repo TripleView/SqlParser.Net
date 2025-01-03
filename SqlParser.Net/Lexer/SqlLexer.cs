@@ -103,6 +103,7 @@ public class SqlLexer
             isHit = AcceptIdentifierOrKeyword();
             if (isHit)
             {
+                AcceptHints();
                 continue;
             }
             isHit = AcceptNumber();
@@ -192,6 +193,78 @@ public class SqlLexer
                 AcceptAnyOneChar();
                 var ch = GetCurrentCharValue();
                 sb.Append(ch);
+            }
+        }
+
+        return false;
+    }
+
+
+    private bool AcceptHints()
+    {
+        if (dbType == DbType.SqlServer)
+        {
+            var lastToken = tokens.Last();
+            var startPositionIndex = lastToken.StartPositionIndex;
+            if ((lastToken.IsToken(Token.With) || lastToken.IsToken(Token.Option)))
+            {
+                var sb = new StringBuilder();
+                var start = lastToken.RawValue;
+                sb.Append(start);
+                while (AcceptEmptyChar())
+                {
+                    var value = GetCurrentCharValue();
+                    sb.Append(value);
+                }
+
+                if (Accept('('))
+                {
+                    var ch = GetCurrentCharValue();
+                    sb.Append(ch);
+                    var i = 0;
+                    var leftParenCount = 1;
+              
+                    while (leftParenCount!=0)
+                    {
+                        if (i >= whileMaximumNumberOfLoops)
+                        {
+                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        }
+
+                        i++;
+                        if (nextChar == null)
+                        {
+                            break;
+                        }
+
+                        if (Accept('('))
+                        {
+                            leftParenCount++;
+                        }
+                        else if (Accept(')'))
+                        {
+                            leftParenCount--;
+                        }
+                        else
+                        {
+                            AcceptAnyOneChar();
+                        }
+                        var value = GetCurrentCharValue();
+                        sb.Append(value);
+                    }
+                  
+                    var token = Token.HintsConstant;
+                    //token.Value = sb.ToString();
+                    token.RawValue = sb.ToString();
+                    token.StartPositionIndex = startPositionIndex;
+                    token.EndPositionIndex= pos - 1;
+                    tokens.Remove(lastToken);
+                    tokens.Add(token);
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
@@ -502,7 +575,7 @@ public class SqlLexer
             return true;
         }
 
-        if (Accept('(')||(dbType==DbType.Oracle&&Accept('（')))
+        if (Accept('(') || (dbType == DbType.Oracle && Accept('（')))
         {
             var token = Token.LeftParen;
             UpdateTokenPosition(ref token);
@@ -954,6 +1027,8 @@ public class SqlLexer
         {
             tokenDic.TryAdd("Next".ToLowerInvariant(), Token.Next);
             tokenDic.TryAdd("Top".ToLowerInvariant(), Token.Top);
+            tokenDic.TryAdd("Option".ToLowerInvariant(), Token.Option);
+
         }
 
         //if (dbType == DbType.Pgsql)
@@ -1042,7 +1117,7 @@ public class SqlLexer
 
     private bool AcceptNextEmptyChar()
     {
-        if (nextChar != null &&char.IsWhiteSpace(nextChar.Value))
+        if (nextChar != null && char.IsWhiteSpace(nextChar.Value))
         {
             GetNextChar();
             return true;

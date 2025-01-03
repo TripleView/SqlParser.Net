@@ -37,63 +37,27 @@ public class SqlTableExpression : SqlExpression
     protected bool Equals(SqlTableExpression other)
     {
         var result = true;
-        if (DbLink == null ^ other.DbLink == null)
+
+        if (!CompareTwoSqlExpressionList(Hints, other.Hints))
         {
             return false;
         }
-        else if (DbLink != null && other.DbLink != null)
-        {
-            if (!DbLink.Equals(other.DbLink))
-            {
-                return false;
-            }
-        }
-
-        if (Hints == null ^ other.Hints == null)
+        if (!CompareTwoSqlExpression(DbLink, other.DbLink))
         {
             return false;
         }
 
-        if (Hints.Count != other.Hints.Count)
+        if (!CompareTwoSqlExpression(Schema, other.Schema))
         {
             return false;
         }
-        for (var i = 0; i < Hints.Count; i++)
-        {
-            var item = Hints[i];
-            var item2 = other.Hints[i];
-            if (!item.Equals(item2))
-            {
-                return false;
-            }
-        }
 
-        if (Schema == null ^ other.Schema == null)
+        if (!CompareTwoSqlExpression(Alias, other.Alias))
         {
             return false;
         }
-        else if (Schema != null && other.Schema != null)
-        {
-            if (!Schema.Equals(other.Schema))
-            {
-                return false;
-            }
-        }
 
-        if (Alias == null ^ other.Alias == null)
-        {
-            return false;
-        }
-        else if (Alias != null && other.Alias != null)
-        {
-            if (!Alias.Equals(other.Alias))
-            {
-                return false;
-            }
-        }
-
-        result &= Name.Equals(other.Name);
-        return result;
+        return true;
     }
 
     public override bool Equals(object? obj)

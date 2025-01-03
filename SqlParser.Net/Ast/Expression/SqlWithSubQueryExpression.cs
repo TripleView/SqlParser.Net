@@ -23,48 +23,20 @@ public class SqlWithSubQueryExpression : SqlExpression
 
     protected bool Equals(SqlWithSubQueryExpression other)
     {
-        if (Alias is null ^ other.Alias is null)
+        if (!CompareTwoSqlExpressionList(Columns, other.Columns))
         {
             return false;
         }
-        else if (Alias != null && other.Alias != null)
-        {
-            if (!Alias.Equals(other.Alias))
-            {
-                return false;
-            }
-        }
-
-        if (Columns is null ^ other.Columns is null)
+        if (!CompareTwoSqlExpression(FromSelect, other.FromSelect))
         {
             return false;
         }
-        else if (Columns != null && other.Columns != null)
-        {
-            if (Columns.Count != other.Columns.Count)
-            {
-                return false;
-            }
-            for (var i = 0; i < Columns.Count; i++)
-            {
-                var item = Columns[i];
-                var item2 = other.Columns[i];
-                if (!item.Equals(item2))
-                {
-                    return false;
-                }
-            }
-        }
 
-        if (FromSelect == null ^ other.FromSelect == null)
+        if (!CompareTwoSqlExpression(Alias, other.Alias))
         {
             return false;
         }
-        else if (FromSelect != null && other.FromSelect != null)
-        {
-            return FromSelect.Equals(other.FromSelect);
-        }
-
+        
         return true;
 
     }

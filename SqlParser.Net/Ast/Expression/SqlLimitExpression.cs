@@ -18,26 +18,17 @@ public class SqlLimitExpression : SqlExpression
 
     protected bool Equals(SqlLimitExpression other)
     {
-        var result = true;
-        if (Offset == null ^ other.Offset == null)
+        if (!CompareTwoSqlExpression(Offset, other.Offset))
         {
             return false;
         }
-        else if (Offset != null && other.Offset != null)
-        {
-            result &= Offset.Equals(other.Offset);
-        }
 
-        if (RowCount == null ^ other.RowCount == null)
+        if (!CompareTwoSqlExpression(RowCount, other.RowCount))
         {
             return false;
         }
-        else if (RowCount != null && other.RowCount != null)
-        {
-            result &= RowCount.Equals(other.RowCount);
-        }
 
-        return result;
+        return true;
     }
 
     public override bool Equals(object? obj)

@@ -18,7 +18,11 @@ public class SqlWithinGroupExpression : SqlExpression
 
     protected bool Equals(SqlWithinGroupExpression other)
     {
-        return OrderBy.Equals(other.OrderBy);
+        if (!CompareTwoSqlExpression(OrderBy, other.OrderBy))
+        {
+            return false;
+        }
+        return true;
     }
 
     public override bool Equals(object? obj)
