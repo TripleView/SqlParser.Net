@@ -3048,7 +3048,8 @@ Assert.True(sqlAst.Equals(expect));
 ````
 至此，我写单元测试的工作量大大减轻，同时对于生成的sqlAst语法树的结构也更加一目了然了。
 
-### 6.2 SqlGenerationAstVisitor
+
+### 6.3 SqlGenerationAstVisitor
 
 我们通过解析sql生成了抽象语法树之后，如果我们想要给这颗抽象语法树添加一个where条件,比如添加test.name ='a'
 ````csharp
@@ -3090,6 +3091,9 @@ select * from test where(test.name = 'a')
 ````
 至此，我们的目的就达到了。
 
+### 6.4 打印抽象语法树信息和生成sql
+
+基于UnitTestAstVisitor，抽象语法树包装了sqlAst.ToFormat()方法用来打印抽象语法树的信息，基于SqlGenerationAstVisitor，抽象语法树包装了sqlAst.ToSql()方法用来打印生成的sql。
 
 ## 7. sql解析的理论基础
 sql之所以能被我们解析出来，主要是因为sql是一种形式语言，自然语言和形式语言的一个重要区别是，自然语言的一个语句，可能有多重含义，而形式语言的一个语句，只能有一个语义;形式语言的语法是人为规定的，有了一定的语法规则，语法解析器就能根据语法规则，解析出一个语句的唯一含义。
