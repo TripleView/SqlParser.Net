@@ -1,4 +1,5 @@
 ﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -12,6 +13,8 @@ public class SqlAnyExpression : SqlExpression
     {
         this.Type = SqlExpressionType.Any;
     }
+
+    public SqlAnyExpressionTokenContext TokenContext { get; set; }  
 
     public SqlSelectExpression Body { get; set; }
 
@@ -32,4 +35,9 @@ public class SqlAnyExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
+}
+
+public class SqlAnyExpressionTokenContext
+{
+    public Token? Any { get; set; }
 }

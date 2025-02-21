@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -146,4 +147,12 @@ public class SqlSelectQueryExpression : SqlExpression
 
     }
 
+}
+
+public class SqlSelectQueryExpressionTokenContext
+{
+    public Token? Select { get; set; }
+    public Token? Top { get; set; }
+
+    public Token? From { get; set; }
 }

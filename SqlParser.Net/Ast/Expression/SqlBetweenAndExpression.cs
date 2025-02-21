@@ -1,4 +1,5 @@
 ﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -12,6 +13,8 @@ public class SqlBetweenAndExpression : SqlExpression
     {
         this.Type = SqlExpressionType.BetweenAnd;
     }
+
+    public SqlBetweenAndExpressionTokenContext TokenContext { get; set; }
 
     /// <summary>
     /// not in
@@ -65,5 +68,12 @@ public class SqlBetweenAndExpression : SqlExpression
             return hashCode;
         }
     }
+}
+
+public class SqlBetweenAndExpressionTokenContext
+{
+    public Token? Between { get; set; }
+    public Token? And { get; set; }
+    public Token? Not { get; set; }
 }
 

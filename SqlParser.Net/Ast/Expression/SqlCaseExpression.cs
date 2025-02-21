@@ -1,6 +1,7 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -14,6 +15,8 @@ public class SqlCaseExpression : SqlExpression
     {
         this.Type = SqlExpressionType.Case;
     }
+
+    public SqlCaseExpressionTokenContext TokenContext { get; set; }
 
     public List<SqlCaseItemExpression> Items { get; set; }
 
@@ -55,4 +58,11 @@ public class SqlCaseExpression : SqlExpression
             return (Items.GetHashCode() * 397) ^ Else.GetHashCode();
         }
     }
+}
+
+public class SqlCaseExpressionTokenContext
+{
+    public Token? Case { get; set; }
+    public Token? Else { get; set; }
+    public Token? End { get; set; }
 }

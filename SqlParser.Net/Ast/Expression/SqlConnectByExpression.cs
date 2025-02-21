@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -61,5 +62,10 @@ public class SqlConnectByExpression : SqlExpression
         return Equals((SqlConnectByExpression)obj);
     }
 
+}
+
+public class SqlConnectByExpressionTokenContext
+{
+    public Token? Token { get; set; }
 }
 

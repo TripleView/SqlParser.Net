@@ -1,4 +1,5 @@
 ﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -12,6 +13,8 @@ public class SqlBoolExpression : SqlExpression
     {
         this.Type = SqlExpressionType.Bool;
     }
+
+    public SqlBoolExpressionTokenContext TokenContext { get; set; } 
 
     public bool Value { get; set; }
 
@@ -34,4 +37,9 @@ public class SqlBoolExpression : SqlExpression
     }
 
 
+}
+
+public class SqlBoolExpressionTokenContext
+{
+    public Token? Bool { get; set; }
 }

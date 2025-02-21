@@ -1102,6 +1102,7 @@ public class SqlParser
         SqlExpression right = null;
         // not in,not like,not between
         var isNot = false;
+        Token? not = null;
         var i = 0;
         while (true)
         {
@@ -1130,9 +1131,11 @@ public class SqlParser
             }
             else if (Accept(Token.Between))
             {
+                var between = currentToken;
                 this.isOnlyRecursiveFourArithmeticOperations = true;
                 var begin = AcceptFourArithmeticOperationsAddOrSub();
                 AcceptOrThrowException(Token.And);
+                var and = currentToken;
                 var end = AcceptFourArithmeticOperationsAddOrSub();
                 this.isOnlyRecursiveFourArithmeticOperations = false;
                 var result = new SqlBetweenAndExpression()
@@ -1140,7 +1143,13 @@ public class SqlParser
                     IsNot = isNot,
                     Begin = begin,
                     End = end,
-                    Body = left
+                    Body = left,
+                    TokenContext = new SqlBetweenAndExpressionTokenContext()
+                    {
+                        Between = between,
+                        And = and,
+                        Not = isNot ? not : null
+                    }
                 };
                 return result;
             }
@@ -1194,6 +1203,7 @@ public class SqlParser
             }
             else if (Accept(Token.Not))
             {
+                not = currentToken;
                 if (Accept(Token.Like))
                 {
                     @operator = SqlBinaryOperator.NotLike;
@@ -1234,6 +1244,10 @@ public class SqlParser
                 else if (left is SqlBetweenAndExpression sqlBetweenAndExpression)
                 {
                     sqlBetweenAndExpression.IsNot = true;
+                    if (sqlBetweenAndExpression.TokenContext != null)
+                    {
+                        sqlBetweenAndExpression.TokenContext.Not = not;
+                    }
                 }
                 else
                 {
@@ -1665,29 +1679,45 @@ public class SqlParser
         }
         else if (Accept(Token.Any))
         {
+            var any = currentToken;
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlAnyExpression()
             {
-                Body = AcceptSelectExpression()
+                Body = AcceptSelectExpression(),
+                TokenContext = new SqlAnyExpressionTokenContext()
+                {
+                    Any = any
+                }
             };
             AcceptOrThrowException(Token.RightParen);
             return result;
         }
         else if (Accept(Token.All))
         {
+            var all = currentToken;
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlAllExpression()
             {
-                Body = AcceptSelectExpression()
+                Body = AcceptSelectExpression(),
+                TokenContext = new SqlAllExpressionTokenContext()
+                {
+                    All = all
+                }
             };
             AcceptOrThrowException(Token.RightParen);
             return result;
         }
         else if (Accept(Token.Case))
         {
+            var caseToken = currentToken;
+            var tokenContext = new SqlCaseExpressionTokenContext()
+            {
+                Case =caseToken
+            };
             var result = new SqlCaseExpression()
             {
-                Items = new List<SqlCaseItemExpression>()
+                Items = new List<SqlCaseItemExpression>(),
+                TokenContext = tokenContext
             };
 
             if (!CheckNextToken(Token.When))
@@ -1712,17 +1742,28 @@ public class SqlParser
 
                 var item = new SqlCaseItemExpression();
                 AcceptOrThrowException(Token.When);
+                var whenToken = currentToken;
                 item.Condition = AcceptNestedComplexExpression();
                 AcceptOrThrowException(Token.Then);
+                var thenToken = currentToken;
                 item.Value = AcceptNestedComplexExpression();
+                item.TokenContext = new SqlCaseItemExpressionTokenContext()
+                {
+                    When = whenToken,
+                    Then = thenToken
+                };
                 result.Items.Add(item);
             }
             if (Accept(Token.Else))
             {
+                var elseToken = currentToken;
+                tokenContext.Else = elseToken;
                 result.Else = AcceptNestedComplexExpression();
             }
 
             AcceptOrThrowException(Token.End);
+            var endToken = currentToken;
+            tokenContext.End = endToken;
             return result;
         }
         else if (Accept(Token.Null))
@@ -1731,16 +1772,26 @@ public class SqlParser
         }
         else if (Accept(Token.True))
         {
+            var trueToken = currentToken;
             return new SqlBoolExpression()
             {
-                Value = true
+                Value = true,
+                TokenContext = new SqlBoolExpressionTokenContext()
+                {
+                    Bool = trueToken
+                }
             };
         }
         else if (Accept(Token.False))
         {
+            var falseToken = currentToken;
             return new SqlBoolExpression()
             {
-                Value = false
+                Value = false,
+                TokenContext = new SqlBoolExpressionTokenContext()
+                {
+                    Bool = falseToken
+                }
             };
         }
         else if (nextToken == null)
@@ -1865,6 +1916,7 @@ public class SqlParser
     {
         if (Accept(Token.Not))
         {
+            var not = currentToken;
             var expression = AcceptLogicalExpression();
             if (expression is SqlExistsExpression sqlExistsExpression)
             {
@@ -1879,6 +1931,10 @@ public class SqlParser
             else if (expression is SqlBetweenAndExpression sqlBetweenAndExpression)
             {
                 sqlBetweenAndExpression.IsNot = true;
+                if (sqlBetweenAndExpression.TokenContext != null)
+                {
+                    sqlBetweenAndExpression.TokenContext.Not = not;
+                }
                 return sqlBetweenAndExpression;
             }
             else

@@ -1,4 +1,5 @@
 ﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -11,6 +12,8 @@ public class SqlAllExpression : SqlExpression
     }
 
     public SqlSelectExpression Body { get; set; }
+
+    public SqlAllExpressionTokenContext TokenContext { get; set; }
 
     protected bool Equals(SqlAllExpression other)
     {
@@ -33,4 +36,9 @@ public class SqlAllExpression : SqlExpression
     {
         visitor.VisitSqlAllExpression(this);
     }
+}
+
+public class SqlAllExpressionTokenContext
+{
+    public Token? All { get; set; }
 }
