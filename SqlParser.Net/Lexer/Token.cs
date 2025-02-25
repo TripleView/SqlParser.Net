@@ -246,4 +246,5 @@ public struct Token
     public static readonly Token Option = new Token("Option", "Option", 116) { TokenType = TokenType.Keyword };
 
     public static readonly Token HintsConstant = new Token("HintsConstant", "HintsConstant", 117) { TokenType = TokenType.Hints };
+    public static readonly Token Modulus = new Token("Modulus", "%", 118) { TokenType = TokenType.Operator };
 }

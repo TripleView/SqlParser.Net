@@ -544,6 +544,13 @@ public class SqlLexer
             tokens.Add(token);
             return true;
         }
+        if (Accept('%'))
+        {
+            var token = Token.Modulus;
+            UpdateTokenPosition(ref token);
+            tokens.Add(token);
+            return true;
+        }
         return false;
     }
 

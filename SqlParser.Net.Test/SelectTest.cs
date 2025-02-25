@@ -10513,4 +10513,83 @@ ORDER BY
 };
 ", formatResult);
     }
+
+    /// <summary>
+    /// ≤‚ ‘»°”‡
+    /// test Modulus
+    /// </summary>
+    [Fact]
+    public void TestModulus()
+    {
+        var sql =
+            "select * from customer c where c.Id % 3=1";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "customer",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "c",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.Mod,
+                        Right = new SqlNumberExpression()
+                        {
+                            Value = 3M,
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlNumberExpression()
+                    {
+                        Value = 1M,
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal(
+            "select * from customer as c where((c.Id % 3) = 1)",
+            generationSql);
+    }
 }

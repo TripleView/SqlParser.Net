@@ -1334,6 +1334,10 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.Divide;
             }
+            else if (Accept(Token.Modulus))
+            {
+                @operator = SqlBinaryOperator.Mod;
+            }
             else
             {
                 break;
