@@ -944,11 +944,18 @@ public class SqlParser
                 break;
             }
 
+            var hasComma = false;
             if (Accept(Token.Comma))
             {
+                hasComma = true;
                 item = new SqlSelectItemExpression()
                 {
                 };
+            }
+
+            if (!hasComma && i != 1)
+            {
+                throw new Exception("Missing symbol ',' between select options");
             }
 
             item.Body = AcceptNestedComplexExpression();
@@ -1716,7 +1723,7 @@ public class SqlParser
             var caseToken = currentToken;
             var tokenContext = new SqlCaseExpressionTokenContext()
             {
-                Case =caseToken
+                Case = caseToken
             };
             var result = new SqlCaseExpression()
             {
@@ -2095,6 +2102,17 @@ public class SqlParser
         else if (Accept(Token.IdentifierString))
         {
             asStr = GetCurrentTokenValue();
+        }
+
+        //sql server兼容单引号包裹列别名，例如select city 'b' from Address 
+        if (dbType == DbType.SqlServer && Accept(Token.StringConstant))
+        {
+            asStr = GetCurrentTokenValue();
+            currentToken = new Token()
+            {
+                LeftQualifiers = "'",
+                RightQualifiers = "'",
+            };
         }
 
         return asStr;

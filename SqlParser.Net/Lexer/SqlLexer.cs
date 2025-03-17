@@ -25,10 +25,6 @@ public class SqlLexer
     /// while最大循环次数，用来避免死循环
     /// </summary>
     private int whileMaximumNumberOfLoops = 100000;
-    /// <summary>
-    /// 标识符首字母列表
-    /// </summary>
-    private Dictionary<char, bool> charDic = new Dictionary<char, bool>();
     private Dictionary<char, bool> digitDic = new Dictionary<char, bool>();
     private ConcurrentDictionary<string, Token> tokenDic = new ConcurrentDictionary<string, Token>();
     /// <summary>
@@ -63,7 +59,6 @@ public class SqlLexer
         sql = sql.Replace("\r\n", "\n");
         chars = sql.Select(it => it).ToList();
 
-        InitCharDic();
         InitDigitDic();
 
         GetNextChar();
@@ -223,8 +218,8 @@ public class SqlLexer
                     sb.Append(ch);
                     var i = 0;
                     var leftParenCount = 1;
-              
-                    while (leftParenCount!=0)
+
+                    while (leftParenCount != 0)
                     {
                         if (i >= whileMaximumNumberOfLoops)
                         {
@@ -252,12 +247,12 @@ public class SqlLexer
                         var value = GetCurrentCharValue();
                         sb.Append(value);
                     }
-                  
+
                     var token = Token.HintsConstant;
                     //token.Value = sb.ToString();
                     token.RawValue = sb.ToString();
                     token.StartPositionIndex = startPositionIndex;
-                    token.EndPositionIndex= pos - 1;
+                    token.EndPositionIndex = pos - 1;
                     tokens.Remove(lastToken);
                     tokens.Add(token);
                 }
@@ -886,21 +881,6 @@ public class SqlLexer
     //}
 
     /// <summary>
-    /// 初始化允许的字符集合
-    /// </summary>
-    private void InitCharDic()
-    {
-        for (char i = 'a'; i <= 'z'; i++)
-        {
-            charDic[i] = true;
-        }
-        for (char i = 'A'; i <= 'Z'; i++)
-        {
-            charDic[i] = true;
-        }
-    }
-
-    /// <summary>
     /// 初始化token字典集合
     /// </summary>
     private void InitTokenDic()
@@ -1077,7 +1057,7 @@ public class SqlLexer
     /// <returns></returns>
     private bool AcceptLetters()
     {
-        if (nextChar.HasValue && charDic.ContainsKey(nextChar.Value))
+        if (nextChar.HasValue && char.IsLetter(nextChar.Value))
         {
             GetNextChar();
             return true;

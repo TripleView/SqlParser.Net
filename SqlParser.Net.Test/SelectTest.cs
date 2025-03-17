@@ -10592,4 +10592,118 @@ ORDER BY
             "select * from customer as c where((c.Id % 3) = 1)",
             generationSql);
     }
+
+    /// <summary>
+    /// 测试sqlserver中单引号包裹数据库列别名
+    /// Test the single quotes in sqlserver to wrap the database column alias
+    /// </summary>
+    [Fact]
+    public void TestWrapDatabaseColumnAliasesInSingleQuotesForSqlServer()
+    {
+        var sql =
+            "select city 'b' from Address";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "city",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                            LeftQualifiers = "'",
+                            RightQualifiers = "'",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Address",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal(
+            "select city as 'b' from Address",
+            generationSql);
+    }
+
+    /// <summary>
+    /// 测试sqlserver中汉字作为表别名或者列别名
+    /// Test Chinese characters as table aliases or column aliases in SQL Server
+    /// </summary>
+    [Fact]
+    public void TestChineseCharactersAsTableAliasesOrColumnAliasesInSQLServer()
+    {
+        var sql =
+            "select city 表1 from Address 表";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "city",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "表1",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Address",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "表",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal(
+            "select city as 表1 from Address as 表",
+            generationSql);
+    }
 }
