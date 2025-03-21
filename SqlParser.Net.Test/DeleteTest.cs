@@ -52,5 +52,38 @@ public class DeleteTest
             var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         });
     }
+    [Fact]
+    public void TestDeleteWithoutFromKeywordInSqlServer()
+    {
+        var sql = "delete address where id=1";
+        var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
 
+        var expect = new SqlDeleteExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "address",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlIdentifierExpression()
+                {
+                    Value = "id",
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlNumberExpression()
+                {
+                    Value = 1M,
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+    }
 }

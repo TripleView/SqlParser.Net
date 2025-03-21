@@ -317,7 +317,15 @@ public class SqlParser
     {
         AcceptOrThrowException(Token.Delete);
         var result = new SqlDeleteExpression();
-        AcceptOrThrowException(Token.From);
+        if (dbType == DbType.SqlServer)
+        {
+            Accept(Token.From);
+        }
+        else
+        {
+            AcceptOrThrowException(Token.From);
+        }
+       
         result.Table = AcceptTableExpression();
         result.Where = AcceptWhereExpression();
         return result;
