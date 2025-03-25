@@ -108,9 +108,10 @@ public class SqlParser
         if (CheckNextToken(Token.Select) || CheckNextToken(Token.With) || CheckNextToken(Token.LeftParen))
         {
             parseType = ParseType.Select;
-            var result = new SqlSelectExpression();
+            var result = new SqlSelectExpression() { DbType = dbType, };
             result = AcceptSelectExpression();
             result.Comments = comments;
+            result.DbType = dbType;
             CheckIfParsingIsComplete();
             return result;
         }
@@ -217,7 +218,7 @@ public class SqlParser
     private SqlInsertExpression AcceptInsertExpression()
     {
         AcceptOrThrowException(Token.Insert);
-        var result = new SqlInsertExpression();
+        var result = new SqlInsertExpression() { DbType = dbType };
         AcceptOrThrowException(Token.Into);
         result.Table = AcceptTableExpression();
         result.Columns = AcceptInsertColumnsExpression();
@@ -316,7 +317,7 @@ public class SqlParser
     private SqlDeleteExpression AcceptDeleteExpression()
     {
         AcceptOrThrowException(Token.Delete);
-        var result = new SqlDeleteExpression();
+        var result = new SqlDeleteExpression() { DbType = dbType };
         if (dbType == DbType.SqlServer)
         {
             Accept(Token.From);
@@ -325,7 +326,7 @@ public class SqlParser
         {
             AcceptOrThrowException(Token.From);
         }
-       
+
         result.Table = AcceptTableExpression();
         result.Where = AcceptWhereExpression();
         return result;
@@ -334,7 +335,7 @@ public class SqlParser
     private SqlUpdateExpression AcceptUpdateExpression()
     {
         AcceptOrThrowException(Token.Update);
-        var result = new SqlUpdateExpression();
+        var result = new SqlUpdateExpression() { DbType = dbType };
 
         result.Table = AcceptTableExpression();
 
@@ -364,7 +365,8 @@ public class SqlParser
                 {
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                    Value = subQueryAlias
+                    Value = subQueryAlias,
+                    DbType = dbType
                 };
             }
             return subQuery;
@@ -385,7 +387,8 @@ public class SqlParser
             var functionCall = AcceptFunctionCall(name);
             var table = new SqlReferenceTableExpression()
             {
-                FunctionCall = functionCall
+                FunctionCall = functionCall,
+                DbType = dbType
             };
             return table;
         }
@@ -438,7 +441,8 @@ public class SqlParser
                 {
                     LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
                     RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                    Value = GetTokenValue(nameTokenList.Last())
+                    Value = GetTokenValue(nameTokenList.Last()),
+                    DbType = dbType
                 }
             };
 
@@ -446,7 +450,8 @@ public class SqlParser
             {
                 table.DbLink = new SqlIdentifierExpression()
                 {
-                    Value = dbLinkName
+                    Value = dbLinkName,
+                    DbType = dbType
                 };
             }
 
@@ -457,7 +462,8 @@ public class SqlParser
                     .Select(y => y.Value.LeftQualifiers + y.Value.Value + y.Value.RightQualifiers));
                 table.Schema = new SqlIdentifierExpression()
                 {
-                    Value = schema
+                    Value = schema,
+                    DbType = dbType
                 };
             }
 
@@ -478,7 +484,8 @@ public class SqlParser
                 {
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                    Value = alias
+                    Value = alias,
+                    DbType = dbType
                 };
             }
 
@@ -497,9 +504,11 @@ public class SqlParser
             {
                 var sqlHints = new SqlHintExpression()
                 {
+                    DbType = dbType,
                     Body = new SqlIdentifierExpression()
                     {
-                        Value = GetCurrentTokenValue()
+                        Value = GetCurrentTokenValue(),
+                        DbType = dbType
                     }
                 };
                 var result = new List<SqlHintExpression>()
@@ -617,6 +626,7 @@ public class SqlParser
                 var right = AcceptSelectExpression2();
                 total = new SqlUnionQueryExpression()
                 {
+                    DbType = dbType,
                     Left = total,
                     Right = right,
                     UnionType = unionType.Value
@@ -634,6 +644,7 @@ public class SqlParser
         }
         var sqlSelectExpression = new SqlSelectExpression()
         {
+            DbType = dbType,
             Query = total
         };
         return sqlSelectExpression;
@@ -658,7 +669,7 @@ public class SqlParser
         {
             return null;
         }
-        var query = new SqlSelectQueryExpression();
+        var query = new SqlSelectQueryExpression() { DbType = dbType };
         query.WithSubQuerys = AcceptWithSubQueryExpression();
 
         AcceptOrThrowException(Token.Select);
@@ -687,6 +698,7 @@ public class SqlParser
 
         var result = new SqlSelectExpression()
         {
+            DbType = dbType,
             Query = query
         };
         return result;
@@ -717,7 +729,7 @@ public class SqlParser
     {
         if (Accept(Token.Offset))
         {
-            var result = new SqlLimitExpression();
+            var result = new SqlLimitExpression() { DbType = dbType };
             var first = AcceptNestedComplexExpression();
             AcceptOrThrowException(Token.Rows);
             AcceptOrThrowException(Token.Fetch);
@@ -738,7 +750,7 @@ public class SqlParser
     {
         if (Accept(Token.Fetch))
         {
-            var result = new SqlLimitExpression();
+            var result = new SqlLimitExpression() { DbType = dbType };
             AcceptOrThrowException(Token.First);
             var rowCount = AcceptNestedComplexExpression();
             AcceptOrThrowException(Token.Rows);
@@ -752,7 +764,7 @@ public class SqlParser
 
     private SqlLimitExpression AcceptPgsqlLimitExpression()
     {
-        var result = new SqlLimitExpression();
+        var result = new SqlLimitExpression() { DbType = dbType };
         if (Accept(Token.Limit))
         {
 
@@ -785,7 +797,7 @@ public class SqlParser
     {
         if (Accept(Token.Limit))
         {
-            var result = new SqlLimitExpression();
+            var result = new SqlLimitExpression() { DbType = dbType };
             var first = AcceptNestedComplexExpression();
 
             if (Accept(Token.Comma))
@@ -829,8 +841,10 @@ public class SqlParser
                 var topCount = GetCurrentTokenNumberValue();
                 var result = new SqlTopExpression()
                 {
+                    DbType = dbType,
                     Body = new SqlNumberExpression()
                     {
+                        DbType = dbType,
                         Value = topCount
                     }
                 };
@@ -876,12 +890,14 @@ public class SqlParser
                 i++;
                 var subQueryExpression = new SqlWithSubQueryExpression()
                 {
+                    DbType = dbType,
                 };
                 Accept(Token.Comma);
                 AcceptOrThrowException(Token.IdentifierString);
                 var alias = GetCurrentTokenValue();
                 subQueryExpression.Alias = new SqlIdentifierExpression()
                 {
+                    DbType = dbType,
                     Value = alias
                 };
                 if (Accept(Token.LeftParen))
@@ -901,6 +917,7 @@ public class SqlParser
                         var columnName = GetCurrentTokenValue();
                         var columnExpression = new SqlIdentifierExpression()
                         {
+                            DbType = dbType,
                             Value = columnName
                         };
                         subQueryExpression.Columns.Add(columnExpression);
@@ -935,6 +952,7 @@ public class SqlParser
         var result = new List<SqlSelectItemExpression>();
         var item = new SqlSelectItemExpression()
         {
+            DbType = dbType,
         };
         var i = 0;
         while (true)
@@ -958,6 +976,7 @@ public class SqlParser
                 hasComma = true;
                 item = new SqlSelectItemExpression()
                 {
+                    DbType = dbType,
                 };
             }
 
@@ -972,6 +991,7 @@ public class SqlParser
             {
                 item.Alias = new SqlIdentifierExpression()
                 {
+                    DbType = dbType,
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = asStr
@@ -1033,6 +1053,7 @@ public class SqlParser
 
             left = new SqlBinaryExpression()
             {
+                DbType = dbType,
                 Left = left,
                 Right = right,
                 Operator = @operator
@@ -1097,6 +1118,7 @@ public class SqlParser
 
             left = new SqlBinaryExpression()
             {
+                DbType = dbType,
                 Left = left,
                 Right = right,
                 Operator = @operator
@@ -1142,7 +1164,7 @@ public class SqlParser
                 }
 
                 AcceptOrThrowException(Token.Null);
-                right = new SqlNullExpression();
+                right = new SqlNullExpression() { DbType = dbType };
             }
             else if (Accept(Token.Between))
             {
@@ -1155,6 +1177,7 @@ public class SqlParser
                 this.isOnlyRecursiveFourArithmeticOperations = false;
                 var result = new SqlBetweenAndExpression()
                 {
+                    DbType = dbType,
                     IsNot = isNot,
                     Begin = begin,
                     End = end,
@@ -1172,6 +1195,7 @@ public class SqlParser
             {
                 var result = new SqlInExpression()
                 {
+                    DbType = dbType,
                     Body = left,
                     IsNot = isNot
                 };
@@ -1241,6 +1265,7 @@ public class SqlParser
 
             left = new SqlBinaryExpression()
             {
+                DbType = dbType,
                 Left = left,
                 Right = right,
                 Operator = @operator
@@ -1268,6 +1293,7 @@ public class SqlParser
                 {
                     var notResult = new SqlNotExpression()
                     {
+                        DbType = dbType,
                         Body = left
                     };
                     return notResult;
@@ -1314,6 +1340,7 @@ public class SqlParser
 
             left = new SqlBinaryExpression()
             {
+                DbType = dbType,
                 Left = left,
                 Right = right,
                 Operator = @operator
@@ -1362,6 +1389,7 @@ public class SqlParser
 
             left = new SqlBinaryExpression()
             {
+                DbType = dbType,
                 Left = left,
                 Right = right,
                 Operator = @operator
@@ -1408,6 +1436,7 @@ public class SqlParser
 
             left = new SqlBinaryExpression()
             {
+                DbType = dbType,
                 Left = left,
                 Right = right,
                 Operator = @operator
@@ -1590,8 +1619,10 @@ public class SqlParser
                     var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
                     body = new SqlFunctionCallExpression()
                     {
+                        DbType = dbType,
                         Name = new SqlIdentifierExpression()
                         {
+                            DbType = dbType,
                             Value = "cast"
                         },
                         Arguments = new List<SqlExpression>()
@@ -1600,6 +1631,7 @@ public class SqlParser
                         },
                         CaseAsTargetType = new SqlIdentifierExpression()
                         {
+                            DbType = dbType,
                             Value = targetTypeName
                         }
                     };
@@ -1654,6 +1686,7 @@ public class SqlParser
                 var number = GetCurrentTokenNumberValue();
                 body = new SqlNumberExpression()
                 {
+                    DbType = dbType,
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = (isNegative ? -1 : 1) * number
@@ -1666,13 +1699,14 @@ public class SqlParser
             var txt = GetCurrentTokenValue();
             body = new SqlStringExpression()
             {
+                DbType = dbType,
                 Value = txt
             };
 
         }
         else if (Accept(Token.Star))
         {
-            return new SqlAllColumnExpression();
+            return new SqlAllColumnExpression() { DbType = dbType, };
         }
         else if (Accept(Token.At) || Accept(Token.Colon))
         {
@@ -1681,6 +1715,7 @@ public class SqlParser
             var name = GetCurrentTokenValue();
             var result = new SqlVariableExpression()
             {
+                DbType = dbType,
                 Prefix = prefix,
                 Name = name
             };
@@ -1691,6 +1726,7 @@ public class SqlParser
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlExistsExpression()
             {
+                DbType = dbType,
                 Body = AcceptSelectExpression()
             };
             AcceptOrThrowException(Token.RightParen);
@@ -1702,6 +1738,7 @@ public class SqlParser
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlAnyExpression()
             {
+                DbType = dbType,
                 Body = AcceptSelectExpression(),
                 TokenContext = new SqlAnyExpressionTokenContext()
                 {
@@ -1717,6 +1754,7 @@ public class SqlParser
             AcceptOrThrowException(Token.LeftParen);
             var result = new SqlAllExpression()
             {
+                DbType = dbType,
                 Body = AcceptSelectExpression(),
                 TokenContext = new SqlAllExpressionTokenContext()
                 {
@@ -1735,6 +1773,7 @@ public class SqlParser
             };
             var result = new SqlCaseExpression()
             {
+                DbType = dbType,
                 Items = new List<SqlCaseItemExpression>(),
                 TokenContext = tokenContext
             };
@@ -1759,7 +1798,7 @@ public class SqlParser
                     break;
                 }
 
-                var item = new SqlCaseItemExpression();
+                var item = new SqlCaseItemExpression() { DbType = dbType, };
                 AcceptOrThrowException(Token.When);
                 var whenToken = currentToken;
                 item.Condition = AcceptNestedComplexExpression();
@@ -1787,13 +1826,14 @@ public class SqlParser
         }
         else if (Accept(Token.Null))
         {
-            return new SqlNullExpression();
+            return new SqlNullExpression() { DbType = dbType, };
         }
         else if (Accept(Token.True))
         {
             var trueToken = currentToken;
             return new SqlBoolExpression()
             {
+                DbType = dbType,
                 Value = true,
                 TokenContext = new SqlBoolExpressionTokenContext()
                 {
@@ -1806,6 +1846,7 @@ public class SqlParser
             var falseToken = currentToken;
             return new SqlBoolExpression()
             {
+                DbType = dbType,
                 Value = false,
                 TokenContext = new SqlBoolExpressionTokenContext()
                 {
@@ -1832,15 +1873,17 @@ public class SqlParser
                     }
                     else
                     {
-                        var sqlPropertyExpression = new SqlPropertyExpression();
+                        var sqlPropertyExpression = new SqlPropertyExpression() { DbType = dbType, };
                         var sqlIdentifierExpression = new SqlIdentifierExpression()
                         {
+                            DbType = dbType,
                             LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
                             RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
                             Value = name
                         };
                         var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
                         {
+                            DbType = dbType,
                             LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                             RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                             Value = propertyName
@@ -1875,6 +1918,7 @@ public class SqlParser
                 var txt = GetCurrentTokenValue();
                 body = new SqlStringExpression()
                 {
+                    DbType = dbType,
                     IsUniCode = true,
                     Value = txt
                 };
@@ -1883,6 +1927,7 @@ public class SqlParser
             {
                 var sqlIdentifierExpression = new SqlIdentifierExpression()
                 {
+                    DbType = dbType,
                     LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
                     RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
                     Value = name
@@ -1960,6 +2005,7 @@ public class SqlParser
             {
                 var result = new SqlNotExpression()
                 {
+                    DbType = dbType,
                     Body = expression
                 };
                 return result;
@@ -1976,8 +2022,10 @@ public class SqlParser
         var arguments = new List<SqlExpression>();
         var result = new SqlFunctionCallExpression()
         {
+            DbType = dbType,
             Name = new SqlIdentifierExpression()
             {
+                DbType = dbType,
                 Value = functionName
             }
         };
@@ -2031,6 +2079,7 @@ public class SqlParser
                 var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
                 result.CaseAsTargetType = new SqlIdentifierExpression()
                 {
+                    DbType = dbType,
                     Value = targetTypeName
                 };
                 break;
@@ -2072,6 +2121,7 @@ public class SqlParser
                 AcceptOrThrowException(Token.RightParen);
                 var result = new SqlWithinGroupExpression()
                 {
+                    DbType = dbType,
                     OrderBy = orderBy
                 };
                 return result;
@@ -2090,6 +2140,7 @@ public class SqlParser
             AcceptOrThrowException(Token.RightParen);
             var over = new SqlOverExpression()
             {
+                DbType = dbType,
                 PartitionBy = partitionBy,
                 OrderBy = orderBy
             };
@@ -2165,6 +2216,7 @@ public class SqlParser
                 var value = AcceptNestedComplexExpression();
                 var item = new SqlSelectItemExpression()
                 {
+                    DbType = dbType,
                     Body = value
                 };
                 if (dbType == DbType.Oracle && Accept(Token.As))
@@ -2173,6 +2225,7 @@ public class SqlParser
                     var alias = GetCurrentTokenValue();
                     item.Alias = new SqlIdentifierExpression()
                     {
+                        DbType = dbType,
                         LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                         RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                         Value = alias
@@ -2185,6 +2238,7 @@ public class SqlParser
             AcceptOrThrowException(Token.RightParen);
             var result = new SqlPivotTableExpression()
             {
+                DbType = dbType,
                 SubQuery = source,
                 FunctionCall = functionCall,
                 For = @for,
@@ -2197,6 +2251,7 @@ public class SqlParser
                 var alias = GetCurrentTokenValue();
                 result.Alias = new SqlIdentifierExpression()
                 {
+                    DbType = dbType,
                     LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
                     RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
                     Value = alias
@@ -2207,6 +2262,7 @@ public class SqlParser
                 var alias = GetCurrentTokenValue();
                 result.Alias = new SqlIdentifierExpression()
                 {
+                    DbType = dbType,
                     Value = alias
                 };
             }
@@ -2287,6 +2343,7 @@ public class SqlParser
 
                 left = new SqlJoinTableExpression()
                 {
+                    DbType = dbType,
                     Left = left,
                     Right = right,
                     JoinType = joinType,
@@ -2319,6 +2376,7 @@ public class SqlParser
             var items = new List<SqlOrderByItemExpression>();
             var result = new SqlOrderByExpression()
             {
+                DbType = dbType,
                 Items = items,
                 IsSiblings = isSiblings
             };
@@ -2377,6 +2435,7 @@ public class SqlParser
 
                     var orderByItem = new SqlOrderByItemExpression()
                     {
+                        DbType = dbType,
                         Body = item,
                         OrderByType = orderByType,
                         NullsType = nullsType
@@ -2402,6 +2461,7 @@ public class SqlParser
             var items = new List<SqlExpression>();
             var result = new SqlPartitionByExpression()
             {
+                DbType = dbType,
                 Items = items
             };
             var i = 0;
@@ -2455,6 +2515,7 @@ public class SqlParser
             var orderBy = AcceptOrderByExpression();
             var result = new SqlConnectByExpression()
             {
+                DbType = dbType,
                 StartWith = startWith,
                 OrderBy = orderBy,
                 IsNocycle = isNocycle,
@@ -2476,6 +2537,7 @@ public class SqlParser
             var items = new List<SqlExpression>();
             var result = new SqlGroupByExpression()
             {
+                DbType = dbType,
                 Items = items
             };
             var i = 0;

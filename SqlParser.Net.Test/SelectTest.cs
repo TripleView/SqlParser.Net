@@ -10706,4 +10706,24 @@ ORDER BY
             "select city as ±í1 from Address as ±í",
             generationSql);
     }
+
+    [Fact]
+    public void TestToSql()
+    {
+        var sql = "select ''' ''',3,true FROM test";
+        var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+        var allColumns = new List<string>();
+        if (sqlAst is SqlSelectExpression sqlSelectExpression &&
+            sqlSelectExpression.Query is SqlSelectQueryExpression sqlSelectQueryExpression)
+        {
+            foreach (var column in sqlSelectQueryExpression.Columns)
+            {
+                allColumns.Add(column.ToSql());
+            }
+        }
+        Assert.Equal(3,allColumns.Count);
+        Assert.Equal("''' '''", allColumns[0]);
+        Assert.Equal("3", allColumns[1]);
+        Assert.Equal("true", allColumns[2]);
+    }
 }
