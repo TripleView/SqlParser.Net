@@ -986,6 +986,7 @@ public class SqlParser
             }
 
             item.Body = AcceptNestedComplexExpression();
+
             var asStr = AcceptAsToken();
             if (!string.IsNullOrWhiteSpace(asStr))
             {
@@ -1011,6 +1012,39 @@ public class SqlParser
     private SqlExpression AcceptNestedComplexExpression()
     {
         var result = AcceptLogicalExpression();
+        if (dbType == DbType.Pgsql)
+        {
+            var isAtTimeZone = false;
+            var strList = new List<string>();
+            if (Accept(Token.AtValue))
+            {
+                var value = GetCurrentTokenValue();
+                strList.Add(value);
+                if (Accept(Token.Time))
+                {
+                     value = GetCurrentTokenValue();
+                     strList.Add(value);
+                    if (Accept(Token.Zone))
+                    {
+                        value = GetCurrentTokenValue();
+                        strList.Add(value);
+                        if (Accept(Token.StringConstant))
+                        {
+                            value = GetCurrentTokenValue();
+                            strList.Add("'" + value+ "'");
+                            isAtTimeZone = true;
+                        }
+                        
+                    }
+                }
+            }
+
+            if (isAtTimeZone)
+            {
+                var value = string.Join(" ", strList);
+                result.SuffixAddition = value;
+            }
+        }
         return result;
     }
 
@@ -2083,6 +2117,12 @@ public class SqlParser
                     Value = targetTypeName
                 };
                 break;
+            }
+            // such as pgsql,EXTRACT(YEAR FROM order_date)
+            if (dbType == DbType.Pgsql && Accept(Token.From))
+            {
+                var fromSource= AcceptNestedComplexExpression();
+                result.FromSource = fromSource;
             }
         }
 

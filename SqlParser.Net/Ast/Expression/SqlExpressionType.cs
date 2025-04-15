@@ -44,5 +44,6 @@ public enum SqlExpressionType
     Bool,
     ConnectBy,
     Top,
-    Hint
+    Hint,
+    AtTimeZone
 }

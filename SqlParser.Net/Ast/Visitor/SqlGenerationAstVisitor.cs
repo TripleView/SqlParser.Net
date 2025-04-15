@@ -207,6 +207,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                         Append($"as {sqlFunctionCallExpression.CaseAsTargetType.Value}");
                     }
 
+                    if (sqlFunctionCallExpression.FromSource != null)
+                    {
+                        Append($"from ");
+                        sqlFunctionCallExpression.FromSource.Accept(this);
+                    }
+
                     if (i < sqlFunctionCallExpression.Arguments.Count - 1)
                     {
                         AppendWithoutSpaces(",");

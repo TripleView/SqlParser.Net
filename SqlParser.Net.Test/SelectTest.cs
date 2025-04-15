@@ -1704,6 +1704,107 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
         Assert.Equal("select DBMS_LOB.GETLENGTH(NAME) from TEST5", generationSql);
     }
 
+
+    [Fact]
+    public void TestFunctionCall5()
+    {
+        var sql = @"    SELECT 
+   date_trunc('year',order_date),
+   extract(month from (date_trunc('minute',order_date))    ) AS order_year
+
+FROM 
+    orders";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "date_trunc",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlStringExpression()
+                        {
+                            Value = "year"
+                        },
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "order_date",
+                        },
+                    },
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "extract",
+                    },
+                    FromSource = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "date_trunc",
+                        },
+                        Arguments = new List<SqlExpression>()
+                        {
+                            new SqlStringExpression()
+                            {
+                                Value = "minute"
+                            },
+                            new SqlIdentifierExpression()
+                            {
+                                Value = "order_date",
+                            },
+                        },
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "month",
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "order_year",
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
+        sqlAst.Accept(sqlGenerationAstVisitor);
+        var generationSql = sqlGenerationAstVisitor.GetResult();
+        Assert.Equal("select date_trunc('year', order_date), extract(month from  date_trunc('minute', order_date)) as order_year from orders", generationSql);
+    }
+
     [Fact]
     public void TestComplexColumn()
     {
@@ -10721,9 +10822,10 @@ ORDER BY
                 allColumns.Add(column.ToSql());
             }
         }
-        Assert.Equal(3,allColumns.Count);
+        Assert.Equal(3, allColumns.Count);
         Assert.Equal("''' '''", allColumns[0]);
         Assert.Equal("3", allColumns[1]);
         Assert.Equal("true", allColumns[2]);
     }
+
 }

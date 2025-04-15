@@ -15,7 +15,7 @@ public class SqlExpression : IAcceptVisitor
     public SqlExpression Parent { get; set; }
 
     public DbType? DbType { set; get; }
-
+    
     public SqlExpression()
     {
 

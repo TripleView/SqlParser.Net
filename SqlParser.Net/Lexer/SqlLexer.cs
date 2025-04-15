@@ -1018,10 +1018,12 @@ public class SqlLexer
 
         }
 
-        //if (dbType == DbType.Pgsql)
-        //{
-        //    tokenDic.TryAdd("ColonColon".ToLowerInvariant(), Token.ColonColon);
-        //}
+        if (dbType == DbType.Pgsql)
+        {
+            tokenDic.TryAdd("At".ToLowerInvariant(), Token.AtValue);
+            tokenDic.TryAdd("Time".ToLowerInvariant(), Token.Time);
+            tokenDic.TryAdd("Zone".ToLowerInvariant(), Token.Zone);
+        }
         AllDbTypeTokenDic.TryAdd(dbType, tokenDic);
     }
     /// <summary>

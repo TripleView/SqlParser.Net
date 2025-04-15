@@ -247,4 +247,7 @@ public struct Token
 
     public static readonly Token HintsConstant = new Token("HintsConstant", "HintsConstant", 117) { TokenType = TokenType.Hints };
     public static readonly Token Modulus = new Token("Modulus", "%", 118) { TokenType = TokenType.Operator };
+    public static readonly Token Time = new Token("Time", "Time", 119) { TokenType = TokenType.Keyword };
+    public static readonly Token Zone = new Token("Zone", "Zone", 120) { TokenType = TokenType.Keyword };
+    public static readonly Token AtValue = new Token("AtValue", "At", 121) { TokenType = TokenType.Keyword };
 }

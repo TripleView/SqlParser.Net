@@ -22,6 +22,11 @@ public class SqlFunctionCallExpression : SqlExpression
     /// 只为case as函数,比如sql：SELECT CAST('123' AS INT)
     /// </summary>
     public SqlIdentifierExpression CaseAsTargetType { get; set; }
+    /// <summary>
+    /// Only for EXTRACT functions,such as sql:EXTRACT(YEAR FROM order_date)
+    /// 只为EXTRACT函数,比如sql：EXTRACT(YEAR FROM order_date)
+    /// </summary>
+    public SqlExpression FromSource { get; set; }
 
     /// <summary>
     /// 是否不重复
@@ -63,7 +68,10 @@ public class SqlFunctionCallExpression : SqlExpression
         {
             return false;
         }
-
+        if (!CompareTwoSqlExpression(FromSource, other.FromSource))
+        {
+            return false;
+        }
         return true;
     }
 

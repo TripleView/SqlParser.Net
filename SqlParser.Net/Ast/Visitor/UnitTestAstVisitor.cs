@@ -268,6 +268,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlFunctionCallExpression.WithinGroup?.Accept(this);
             });
         }
+        if (sqlFunctionCallExpression.FromSource != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("FromSource = ");
+                sqlFunctionCallExpression.FromSource?.Accept(this);
+            });
+        }
         if (sqlFunctionCallExpression.Over != null)
         {
             AdvanceNext(() =>

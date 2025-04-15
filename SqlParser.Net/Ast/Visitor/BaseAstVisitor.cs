@@ -165,4 +165,9 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+
+    public virtual void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    {
+
+    }
 }
