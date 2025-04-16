@@ -20,7 +20,7 @@ public struct Token
 
     public string RawValue { get; set; }
 
-    public TokenType TokenType { get;private set; }
+    public TokenType TokenType { get; private set; }
     /// <summary>
     /// Used to determine whether the token is a keyword
     /// 用来判断token是否为关键字
@@ -28,7 +28,7 @@ public struct Token
     public bool IsKeyWord => this.TokenType == TokenType.Keyword;
     public bool IsHints => this.TokenType == TokenType.Hints;
 
-    public bool IsOperator=> this.TokenType == TokenType.Operator;
+    public bool IsOperator => this.TokenType == TokenType.Operator;
 
     public bool IsSymbol => this.TokenType == TokenType.Symbol;
 
@@ -76,7 +76,7 @@ public struct Token
 
     public override string ToString()
     {
-        return $"{(IsKeyWord ? "Keyword-" + Name : Name).PadRight(30,' ')} :{Value}";
+        return $"{(IsKeyWord ? "Keyword-" + Name : Name).PadRight(30, ' ')} :{Value}";
     }
 
 
@@ -90,7 +90,7 @@ public struct Token
         return false;
     }
 
-    public static readonly Token Select = new Token("Select", "Select", 1){TokenType = TokenType.Keyword};
+    public static readonly Token Select = new Token("Select", "Select", 1) { TokenType = TokenType.Keyword };
     public static readonly Token Delete = new Token("Delete", "Delete", 2) { TokenType = TokenType.Keyword };
     public static readonly Token Insert = new Token("Insert", "Insert", 3) { TokenType = TokenType.Keyword };
     public static readonly Token Update = new Token("Update", "Update", 4) { TokenType = TokenType.Keyword };
@@ -250,4 +250,6 @@ public struct Token
     public static readonly Token Time = new Token("Time", "Time", 119) { TokenType = TokenType.Keyword };
     public static readonly Token Zone = new Token("Zone", "Zone", 120) { TokenType = TokenType.Keyword };
     public static readonly Token AtValue = new Token("AtValue", "At", 121) { TokenType = TokenType.Keyword };
+    public static readonly Token Interval = new Token("Interval", "Interval", 122) { TokenType = TokenType.Keyword };
+    public static readonly Token To = new Token("To", "To", 123) { TokenType = TokenType.Keyword };
 }

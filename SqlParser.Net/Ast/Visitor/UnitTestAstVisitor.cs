@@ -1395,4 +1395,72 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("},");
 
     }
+
+    public override void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    {
+        AppendLine("new SqlAtTimeZoneExpression()");
+        AppendLine("{");
+
+        if (sqlAtTimeZoneExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlAtTimeZoneExpression.Body.Accept(this);
+            });
+        }
+
+        if (sqlAtTimeZoneExpression.TimeZone != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("TimeZone = ");
+                sqlAtTimeZoneExpression.TimeZone.Accept(this);
+            });
+        }
+
+        AppendLine("},");
+    }
+
+    public override void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    {
+        AppendLine("new SqlIntervalExpression()");
+        AppendLine("{");
+
+        if (sqlIntervalExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlIntervalExpression.Body.Accept(this);
+            });
+        }
+
+        if (sqlIntervalExpression.Unit != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Unit = ");
+                sqlIntervalExpression.Unit.Accept(this);
+            });
+        }
+
+        AppendLine("},");
+    }
+
+    public override void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    {
+        AppendLine("new SqlTimeUnitExpression()");
+        AppendLine("{");
+
+        if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit) )
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine($"Unit = \"{sqlTimeUnitExpression.Unit}\"");
+            });
+        }
+
+        AppendLine("},");
+    }
 }

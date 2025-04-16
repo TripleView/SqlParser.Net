@@ -978,6 +978,7 @@ public class SqlLexer
             tokenDic.TryAdd("Start".ToLowerInvariant(), Token.Start);
             tokenDic.TryAdd("Nocycle".ToLowerInvariant(), Token.Nocycle);
             tokenDic.TryAdd("Prior".ToLowerInvariant(), Token.Prior);
+            tokenDic.TryAdd("To".ToLowerInvariant(), Token.To);
         }
         //oracle
         if (dbType == DbType.Oracle || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
@@ -1024,6 +1025,12 @@ public class SqlLexer
             tokenDic.TryAdd("Time".ToLowerInvariant(), Token.Time);
             tokenDic.TryAdd("Zone".ToLowerInvariant(), Token.Zone);
         }
+
+        if (dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql)
+        {
+            tokenDic.TryAdd("Interval".ToLowerInvariant(), Token.Interval);
+        }
+
         AllDbTypeTokenDic.TryAdd(dbType, tokenDic);
     }
     /// <summary>

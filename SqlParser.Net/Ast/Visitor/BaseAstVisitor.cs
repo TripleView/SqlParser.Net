@@ -170,4 +170,14 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+
+    public virtual void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    {
+
+    }
+
+    public virtual void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    {
+
+    }
 }

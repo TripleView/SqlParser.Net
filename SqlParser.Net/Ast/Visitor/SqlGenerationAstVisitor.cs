@@ -1018,4 +1018,35 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlHintExpression.Body.Accept(this);
         }
     }
+
+    public override void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    {
+        if (sqlAtTimeZoneExpression.Body != null)
+        {
+            sqlAtTimeZoneExpression.Body.Accept(this);
+        }
+        Append("at time zone");
+        sqlAtTimeZoneExpression.TimeZone.Accept(this);
+    }
+
+    public override void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    {
+        Append("interval");
+        if (sqlIntervalExpression.Body != null)
+        {
+            sqlIntervalExpression.Body.Accept(this);
+        }
+        if (sqlIntervalExpression.Unit != null)
+        {
+            sqlIntervalExpression.Unit.Accept(this);
+        }
+    }
+
+    public override void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    {
+        if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit))
+        {
+            Append(sqlTimeUnitExpression.Unit);
+        }
+    }
 }

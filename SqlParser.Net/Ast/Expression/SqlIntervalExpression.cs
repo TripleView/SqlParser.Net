@@ -2,30 +2,32 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAtTimeZoneExpression : SqlExpression
+public class SqlIntervalExpression : SqlExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlAtTimeZoneExpression(this);
+        visitor.VisitSqlIntervalExpression(this);
     }
-    public SqlAtTimeZoneExpression()
+    public SqlIntervalExpression()
     {
-        this.Type = SqlExpressionType.AtTimeZone;
+        this.Type = SqlExpressionType.Interval;
     }
+
     /// <summary>
-    /// Time Zone，such as 'Asia/ShangHai';时区，比如'Asia/ShangHai'
+    /// Time interval value;时间间隔数值
     /// </summary>
-    public SqlStringExpression TimeZone { get; set; }
-
     public SqlExpression Body { get; set; }
+    /// <summary>
+    /// Unit,such as hour,For PostgreSQL, this is null;单位,比如hour,对于PostgreSQL，这里为null
+    /// </summary>
+    public SqlTimeUnitExpression Unit { get; set; }
 
-    protected bool Equals(SqlAtTimeZoneExpression other)
+    protected bool Equals(SqlIntervalExpression other)
     {
-        if (!CompareTwoSqlExpression(TimeZone, other.TimeZone))
+        if (!CompareTwoSqlExpression(Unit, other.Unit))
         {
             return false;
         }
-
         return CompareTwoSqlExpression(Body,other.Body);
     }
 
@@ -34,7 +36,7 @@ public class SqlAtTimeZoneExpression : SqlExpression
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((SqlAtTimeZoneExpression)obj);
+        return Equals((SqlIntervalExpression)obj);
     }
 
     public override int GetHashCode()

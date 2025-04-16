@@ -30,6 +30,11 @@ public class SqlParser
     private DbType dbType;
     private static Dictionary<Token, bool> splitTokenDics = new Dictionary<Token, bool>();
     /// <summary>
+    /// List of time units;时间单位列表
+    /// </summary>
+    private static HashSet<string> timeUnitSet = new HashSet<string>()
+        { "year", "month", "day", "hour", "minute", "second" };
+    /// <summary>
     /// while maximum number of loops, used to avoid infinite loops
     /// while最大循环次数，用来避免死循环
     /// </summary>
@@ -150,10 +155,15 @@ public class SqlParser
     {
         if (pos != tokens.Count - 1)
         {
-            var startIndex = tokens[pos].StartPositionIndex;
-            var endIndex = tokens[tokens.Count - 1].EndPositionIndex;
-            throw new SqlParsingErrorException($"An error occurred at position :{startIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
+            ThrowSqlParsingErrorException();
         }
+    }
+
+    private void ThrowSqlParsingErrorException()
+    {
+        var startIndex = tokens[pos].StartPositionIndex;
+        var endIndex = tokens[tokens.Count - 1].EndPositionIndex;
+        throw new SqlParsingErrorException($"An error occurred at position :{startIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
     }
     /// <summary>
     /// remove any comments
@@ -1004,6 +1014,57 @@ public class SqlParser
         return result;
     }
 
+
+    /// <summary>
+    /// Parsing at time zone expressions
+    /// 解析at time zone表达式
+    /// </summary>
+    /// <param name="body"></param>
+    /// <returns></returns>
+    private SqlExpression AcceptAtTimeZoneExpression(SqlExpression body)
+    {
+        if (dbType == DbType.Pgsql)
+        {
+            if (Accept(Token.AtValue))
+            {
+                var value = GetCurrentTokenValue();
+
+                if (Accept(Token.Time))
+                {
+                    value = GetCurrentTokenValue();
+
+                    if (Accept(Token.Zone))
+                    {
+                        value = GetCurrentTokenValue();
+
+                        if (Accept(Token.StringConstant))
+                        {
+                            value = GetCurrentTokenValue();
+                            var result = new SqlAtTimeZoneExpression()
+                            {
+                                DbType = dbType,
+                                Body = body,
+                                TimeZone = new SqlStringExpression()
+                                {
+                                    DbType = dbType,
+                                    Value = value
+                                }
+                            };
+                            //Recursive call, such as SELECT order_date at TIME zone 'Asia/ShangHai' at TIME zone 'utc' as b FROM orders;
+                            //递归调用，例如SELECT order_date at TIME zone 'Asia/ShangHai' at TIME zone 'utc' as b FROM orders;
+                            var recursionResult = AcceptAtTimeZoneExpression(result);
+
+                            return recursionResult ?? result;
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Parsing nested complex expressions
     /// 解析嵌套的复杂表达式
@@ -1012,40 +1073,8 @@ public class SqlParser
     private SqlExpression AcceptNestedComplexExpression()
     {
         var result = AcceptLogicalExpression();
-        if (dbType == DbType.Pgsql)
-        {
-            var isAtTimeZone = false;
-            var strList = new List<string>();
-            if (Accept(Token.AtValue))
-            {
-                var value = GetCurrentTokenValue();
-                strList.Add(value);
-                if (Accept(Token.Time))
-                {
-                     value = GetCurrentTokenValue();
-                     strList.Add(value);
-                    if (Accept(Token.Zone))
-                    {
-                        value = GetCurrentTokenValue();
-                        strList.Add(value);
-                        if (Accept(Token.StringConstant))
-                        {
-                            value = GetCurrentTokenValue();
-                            strList.Add("'" + value+ "'");
-                            isAtTimeZone = true;
-                        }
-                        
-                    }
-                }
-            }
-
-            if (isAtTimeZone)
-            {
-                var value = string.Join(" ", strList);
-                result.SuffixAddition = value;
-            }
-        }
-        return result;
+        var atTimeZoneResult = AcceptAtTimeZoneExpression(result);
+        return atTimeZoneResult ?? result;
     }
 
     /// <summary>
@@ -1701,6 +1730,8 @@ public class SqlParser
             {
                 expr = isOnlyRecursiveFourArithmeticOperations ? AcceptFourArithmeticOperationsAddOrSub() : AcceptLogicalExpression();
             }
+
+            expr = AcceptAtTimeZoneExpression(expr) ?? expr;
             AcceptOrThrowException(Token.RightParen);
             return expr;
         }
@@ -1969,6 +2000,11 @@ public class SqlParser
                 body = sqlIdentifierExpression;
             }
         }
+        else if ((dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql) && CheckNextToken(Token.Interval))
+        {
+            var intervalExpression = AcceptIntervalExpression();
+            return intervalExpression;
+        }
         else
         {
             var startIndex = -1;
@@ -2008,6 +2044,132 @@ public class SqlParser
 
         return body;
 
+    }
+
+    private SqlIntervalExpression AcceptIntervalExpression()
+    {
+        if ((dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql))
+        {
+            AcceptOrThrowException(Token.Interval);
+            var result = new SqlIntervalExpression()
+            {
+                DbType = dbType
+            };
+            if (dbType == DbType.Pgsql)
+            {
+                AcceptOrThrowException(Token.StringConstant);
+                var value = GetCurrentTokenValue();
+                result.Body = new SqlStringExpression()
+                {
+                    DbType = dbType,
+                    Value = value
+                };
+                return result;
+            }
+            else if (dbType == DbType.Oracle)
+            {
+                AcceptOrThrowException(Token.StringConstant);
+                var body = GetCurrentTokenValue();
+                var sb = new StringBuilder();
+                if (AcceptTimeUnit())
+                {
+                    var value = GetCurrentTokenValue();
+                    if (Accept(Token.LeftParen))
+                    {
+                        value += "(";
+                        AcceptOrThrowException(Token.NumberConstant);
+                        var numberValue = GetCurrentTokenValue();
+                        value += numberValue;
+                        AcceptOrThrowException(Token.RightParen);
+                        value += ")";
+                    }
+
+                    sb.Append(value);
+
+                    if (Accept(Token.To))
+                    {
+                        var toValue = GetCurrentTokenValue();
+                        sb.Append(" " + toValue);
+                        if (AcceptTimeUnit())
+                        {
+                            var twoValue = GetCurrentTokenValue();
+                            if (Accept(Token.LeftParen))
+                            {
+                                twoValue += "(";
+                                AcceptOrThrowException(Token.NumberConstant);
+                                var numberValue = GetCurrentTokenValue();
+                                twoValue += numberValue;
+                                AcceptOrThrowException(Token.RightParen);
+                                twoValue += ")";
+                            }
+
+                            sb.Append(" " + twoValue);
+                        }
+                    }
+                }
+
+                result.Body = new SqlStringExpression()
+                {
+                    DbType = dbType,
+                    Value = body
+                };
+                result.Unit = new SqlTimeUnitExpression()
+                {
+                    DbType = dbType,
+                    Unit = sb.ToString()
+                };
+                return result;
+            }
+            else if (dbType == DbType.MySql)
+            {
+                AcceptOrThrowException(Token.NumberConstant);
+                var value = GetCurrentTokenNumberValue();
+                var unit = "";
+                if (AcceptTimeUnit())
+                {
+                    unit = GetCurrentTokenValue();
+                }
+                else
+                {
+                    ThrowSqlParsingErrorException();
+                }
+
+                result.Body = new SqlNumberExpression()
+                {
+                    DbType = dbType,
+                    Value = value
+                };
+
+                result.Unit = new SqlTimeUnitExpression()
+                {
+                    DbType = dbType,
+                    Unit = unit
+                };
+                return result;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Accepts time units；接受时间单位
+    /// </summary>
+    /// <returns></returns>
+    private bool AcceptTimeUnit()
+    {
+        return AcceptSpecifiedWord(timeUnitSet);
+    }
+
+    private bool AcceptSpecifiedWord(HashSet<string> set)
+    {
+        if (nextToken.HasValue && set.Contains(nextToken.Value.RawValue.ToLowerInvariant()))
+        {
+            GetNextToken();
+            return true;
+        }
+
+        return false;
     }
 
     private SqlExpression AcceptNot()
@@ -2119,9 +2281,9 @@ public class SqlParser
                 break;
             }
             // such as pgsql,EXTRACT(YEAR FROM order_date)
-            if (dbType == DbType.Pgsql && Accept(Token.From))
+            if ((dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql) && Accept(Token.From) && functionName.ToLowerInvariant() == "extract")
             {
-                var fromSource= AcceptNestedComplexExpression();
+                var fromSource = AcceptNestedComplexExpression();
                 result.FromSource = fromSource;
             }
         }

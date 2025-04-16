@@ -2621,6 +2621,120 @@ var expect = new SqlSelectExpression()
 
 into子句，在本例子中值为SqlTableExpression，即into到某张表里。
 
+### 1.8 At Time Zone子句
+
+````csharp
+var sql = "select order_date at time zone  'Asia/ShangHai' as b from orders";
+var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+````
+解析结果如下：
+````csharp
+var expect = new SqlSelectExpression()
+{
+    Query = new SqlSelectQueryExpression()
+    {
+        Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAtTimeZoneExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "order_date",
+                    },
+                    TimeZone = new SqlStringExpression()
+                    {
+                        Value = "Asia/ShangHai"
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "b",
+                },
+            },
+        },
+        From = new SqlTableExpression()
+        {
+            Name = new SqlIdentifierExpression()
+            {
+                Value = "orders",
+            },
+        },
+    },
+};
+
+
+````
+
+At Time Zone子句，在本例子中值为SqlAtTimeZoneExpression，代表这是一个At Time Zone表达式，SqlAtTimeZoneExpression它包含了
+1. 时区，即TimeZone字段，值为Asia/ShangHai
+2. 主体关联条件子句，即Body字段，值为order_date
+
+### 1.8 Interval子句
+
+````csharp
+var sql = "SELECT DATE_ADD(order_date, INTERVAL 3 HOUR) AS b FROM orders;";
+var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+````
+解析结果如下：
+````csharp
+var expect = new SqlSelectExpression()
+{
+    Query = new SqlSelectQueryExpression()
+    {
+        Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "DATE_ADD",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "order_date",
+                        },
+                        new SqlIntervalExpression()
+                        {
+                            Body = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Unit = new SqlTimeUnitExpression()
+                            {
+                                Unit = "HOUR"
+                            },
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "b",
+                },
+            },
+        },
+        From = new SqlTableExpression()
+        {
+            Name = new SqlIdentifierExpression()
+            {
+                Value = "orders",
+            },
+        },
+    },
+};
+
+
+````
+
+Interval子句，在本例子中值为SqlIntervalExpression，代表这是一个Interval表达式，SqlIntervalExpression它包含了
+1. 单位，即Unit字段，值为SqlTimeUnitExpression表达式，SqlTimeUnitExpression表达式代表了这是用来存储时间单位的表达式，在这里SqlTimeUnitExpression里的值为HOUR
+2. 时间间隔数值，即Body字段，值为3
+
 ## 2. Insert插入语句
 
 ### 2.1 插入单个值

@@ -45,5 +45,13 @@ public enum SqlExpressionType
     ConnectBy,
     Top,
     Hint,
-    AtTimeZone
+    AtTimeZone,
+    /// <summary>
+    /// Time interval；时间间隔
+    /// </summary>
+    Interval,
+    /// <summary>
+    /// Time Unit;时间单位
+    /// </summary>
+    TimeUnit
 }

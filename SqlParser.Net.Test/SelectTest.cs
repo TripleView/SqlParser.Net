@@ -1717,9 +1717,8 @@ FROM
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+
+        var result = sqlAst.ToFormat();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -1799,11 +1798,205 @@ FROM
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+        var generationSql = sqlAst.ToSql();
         Assert.Equal("select date_trunc('year', order_date), extract(month from  date_trunc('minute', order_date)) as order_year from orders", generationSql);
     }
+
+    [Fact]
+    public void TestFunctionCall6()
+    {
+        var sql = @"SELECT EXTRACT(MONTH FROM (SELECT order_date FROM orders)) AS current_month FROM dual;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "EXTRACT",
+                    },
+                    FromSource = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                            {
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlIdentifierExpression()
+                                    {
+                                        Value = "order_date",
+                                    },
+                                },
+                            },
+                            From = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "orders",
+                                },
+                            },
+                        },
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "MONTH",
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "current_month",
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select EXTRACT(MONTH from (select order_date from orders)) as current_month from dual", generationSql);
+    }
+
+    [Fact]
+    public void TestFunctionCall7()
+    {
+        var sql = @"SELECT EXTRACT(DAY FROM NOW());";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "EXTRACT",
+                            },
+                            FromSource = new SqlFunctionCallExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "NOW",
+                                },
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "DAY",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select EXTRACT(DAY from  NOW())", generationSql);
+    }
+
+    [Fact]
+    public void TestFunctionCall8()
+    {
+        var sql = @"SELECT EXTRACT(DAY FROM c.order_date) as b from orders c";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "EXTRACT",
+                            },
+                            FromSource = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "order_date",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "c",
+                                },
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "DAY",
+                                },
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "c",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select EXTRACT(DAY from  c.order_date) as b from orders as c", generationSql);
+    }
+
 
     [Fact]
     public void TestComplexColumn()
@@ -10828,4 +11021,818 @@ ORDER BY
         Assert.Equal("true", allColumns[2]);
     }
 
+    [Fact]
+    public void TestAtTimeZone1()
+    {
+        var sql =
+            "SELECT order_date at TIME zone 'Asia/ShangHai' as b FROM orders ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAtTimeZoneExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "order_date",
+                            },
+                            TimeZone = new SqlStringExpression()
+                            {
+                                Value = "Asia/ShangHai"
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select order_date at time zone 'Asia/ShangHai' as b from orders",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestAtTimeZone2()
+    {
+        var sql = @"SELECT order_date at TIME zone 'Asia/ShangHai' at TIME zone 'utc' as b FROM orders ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAtTimeZoneExpression()
+                        {
+                            Body = new SqlAtTimeZoneExpression()
+                            {
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "order_date",
+                                },
+                                TimeZone = new SqlStringExpression()
+                                {
+                                    Value = "Asia/ShangHai"
+                                },
+                            },
+                            TimeZone = new SqlStringExpression()
+                            {
+                                Value = "utc"
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select order_date at time zone 'Asia/ShangHai' at time zone 'utc' as b from orders",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestAtTimeZone3()
+    {
+        var sql = @"select (SELECT order_date as b FROM orders limit 1) at TIME zone 'Asia/ShangHai' from orders";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAtTimeZoneExpression()
+                {
+                    Body = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                            {
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlIdentifierExpression()
+                                    {
+                                        Value = "order_date",
+                                    },
+                                    Alias = new SqlIdentifierExpression()
+                                    {
+                                        Value = "b",
+                                    },
+                                },
+                            },
+                            From = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "orders",
+                                },
+                            },
+                            Limit = new SqlLimitExpression()
+                            {
+                                RowCount = new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                            },
+                        },
+                    },
+                    TimeZone = new SqlStringExpression()
+                    {
+                        Value = "Asia/ShangHai"
+                    },
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(select order_date as b from orders limit 1) at time zone 'Asia/ShangHai' from orders",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestAtTimeZone4()
+    {
+        var sql = @"SELECT order_date at TIME zone 'Asia/ShangHai' as b FROM orders where date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai'))= '2023-04-19 03:11'::timestamp";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAtTimeZoneExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "order_date",
+                    },
+                    TimeZone = new SqlStringExpression()
+                    {
+                        Value = "Asia/ShangHai"
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "b",
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "date_trunc",
+                        },
+                        Arguments = new List<SqlExpression>()
+                {
+                    new SqlStringExpression()
+                    {
+                        Value = "minute"
+                    },
+                    new SqlAtTimeZoneExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "order_date",
+                        },
+                        TimeZone = new SqlStringExpression()
+                        {
+                            Value = "Asia/ShangHai"
+                        },
+                    },
+                },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "cast",
+                        },
+                        Arguments = new List<SqlExpression>()
+                {
+                    new SqlStringExpression()
+                    {
+                        Value = "2023-04-19 03:11"
+                    },
+                },
+                        CaseAsTargetType = new SqlIdentifierExpression()
+                        {
+                            Value = "timestamp",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select order_date at time zone 'Asia/ShangHai' as b from orders where(date_trunc('minute', order_date at time zone 'Asia/ShangHai') = cast('2023-04-19 03:11' as timestamp))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestAtTimeZone5()
+    {
+        var sql = @"SELECT date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai')) at TIME zone 'Asia/ShangHai' as b FROM orders where date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai'))= '2023-04-19 03:11'::timestamp";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAtTimeZoneExpression()
+                {
+                    Body = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "date_trunc",
+                        },
+                        Arguments = new List<SqlExpression>()
+                        {
+                            new SqlStringExpression()
+                            {
+                                Value = "minute"
+                            },
+                            new SqlAtTimeZoneExpression()
+                            {
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "order_date",
+                                },
+                                TimeZone = new SqlStringExpression()
+                                {
+                                    Value = "Asia/ShangHai"
+                                },
+                            },
+                        },
+                    },
+                    TimeZone = new SqlStringExpression()
+                    {
+                        Value = "Asia/ShangHai"
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "b",
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "date_trunc",
+                        },
+                        Arguments = new List<SqlExpression>()
+                {
+                    new SqlStringExpression()
+                    {
+                        Value = "minute"
+                    },
+                    new SqlAtTimeZoneExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "order_date",
+                        },
+                        TimeZone = new SqlStringExpression()
+                        {
+                            Value = "Asia/ShangHai"
+                        },
+                    },
+                },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "cast",
+                        },
+                        Arguments = new List<SqlExpression>()
+                {
+                    new SqlStringExpression()
+                    {
+                        Value = "2023-04-19 03:11"
+                    },
+                },
+                        CaseAsTargetType = new SqlIdentifierExpression()
+                        {
+                            Value = "timestamp",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select date_trunc('minute', order_date at time zone 'Asia/ShangHai') at time zone 'Asia/ShangHai' as b from orders where(date_trunc('minute', order_date at time zone 'Asia/ShangHai') = cast('2023-04-19 03:11' as timestamp))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval1()
+    {
+        var sql = @" SELECT order_date + INTERVAL '3 hours' AS b  FROM orders";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "order_date",
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlIntervalExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "3 hours"
+                                },
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(order_date + interval '3 hours') as b from orders",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval2()
+    {
+        var sql = @"SELECT DATE_ADD(order_date, INTERVAL 3 HOUR) AS b FROM orders;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "DATE_ADD",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "order_date",
+                                },
+                                new SqlIntervalExpression()
+                                {
+                                    Body = new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    Unit = new SqlTimeUnitExpression()
+                                    {
+                                        Unit = "HOUR"
+                                    },
+                                },
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select DATE_ADD(order_date, interval 3 HOUR) as b from orders",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval3()
+    {
+        var sql = @"SELECT SYSDATE + INTERVAL '1234 12:30:00' DAY(4) TO second(4)  FROM dual";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "SYSDATE",
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlIntervalExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "1234 12:30:00"
+                                },
+                                Unit = new SqlTimeUnitExpression()
+                                {
+                                    Unit = "DAY(4) TO second(4)"
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(SYSDATE + interval '1234 12:30:00' DAY(4) TO second(4)) from dual",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval4()
+    {
+        var sql = @"SELECT SYSDATE + INTERVAL '1' second(4)   FROM dual";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "SYSDATE",
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlIntervalExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "1"
+                                },
+                                Unit = new SqlTimeUnitExpression()
+                                {
+                                    Unit = "second(4)"
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(SYSDATE + interval '1' second(4)) from dual",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval5()
+    {
+        var sql = @"SELECT SYSDATE + (INTERVAL '1-2' YEAR(3) TO MONTH ) FROM dual";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "SYSDATE",
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlIntervalExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "1-2"
+                                },
+                                Unit = new SqlTimeUnitExpression()
+                                {
+                                    Unit = "YEAR(3) TO MONTH"
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(SYSDATE + interval '1-2' YEAR(3) TO MONTH) from dual",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval6()
+    {
+        var sql = @"SELECT SYSDATE + INTERVAL '1 12:30:00' DAY TO second(4)  FROM dual";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "SYSDATE",
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlIntervalExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "1 12:30:00"
+                                },
+                                Unit = new SqlTimeUnitExpression()
+                                {
+                                    Unit = "DAY TO second(4)"
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(SYSDATE + interval '1 12:30:00' DAY TO second(4)) from dual",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestInterval7()
+    {
+        var sql = @"SELECT SYSDATE + INTERVAL '3' DAY FROM dual;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "SYSDATE",
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlIntervalExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "3"
+                                },
+                                Unit = new SqlTimeUnitExpression()
+                                {
+                                    Unit = "DAY"
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select(SYSDATE + interval '3' DAY) from dual",
+            generationSql);
+    }
 }

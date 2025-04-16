@@ -46,4 +46,7 @@ public interface IAstVisitor
     void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression);
     void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression);
     void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression);
+
+    void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression);
+    void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression);
 }
