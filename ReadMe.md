@@ -1638,7 +1638,11 @@ var expect = new SqlSelectExpression()
 ```sql
 select * from test
 ```
-这个解析结果上面已经演示了。
+这个解析结果上面已经演示了。SqlTableExpression表达式主要包含了以下部分
+1. 表名部分，即Name字段
+2. 数据库模式部分，即Schema字段
+3. 数据库名部分，即Database字段，如select * from [EPF].[dbo].[test]里的epf
+4. DbLink部分，即DbLink字段。常用于oracle
 
 #### 1.3.2 子查询（子表）
 ````csharp
