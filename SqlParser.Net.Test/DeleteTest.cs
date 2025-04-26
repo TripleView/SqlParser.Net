@@ -86,4 +86,156 @@ public class DeleteTest
 
         Assert.True(sqlAst.Equals(expect));
     }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.MySql)]
+    public void TestDelete2(DbType dbType)
+    {
+        var sql = "DELETE t FROM T2 t";
+        var sqlAst = DbUtils.Parse(sql, dbType);
+     
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlDeleteExpression()
+        {
+            Body = new SqlIdentifierExpression()
+            {
+                Value = "t",
+            },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "T2",
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "t",
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("delete t from T2 as t", newSql);
+    }
+
+    [Fact]
+    public void TestDelete3()
+    {
+        var sql = "DELETE T2";
+        var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlDeleteExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "T2",
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.MySql)]
+    public void TestDelete4(DbType dbType)
+    {
+        var sql = "DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'";
+        var sqlAst = DbUtils.Parse(sql, dbType);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlDeleteExpression()
+        {
+            Body = new SqlIdentifierExpression()
+            {
+                Value = "t",
+            },
+            Table = new SqlJoinTableExpression()
+            {
+                Left = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "T3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                JoinType = SqlJoinType.InnerJoin,
+                Right = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "T4",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t4",
+                    },
+                },
+                Conditions = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "id",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Pid",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t4",
+                        },
+                    },
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "id",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlStringExpression()
+                {
+                    Value = "abc"
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("delete t from T3 as t inner join T4 as t4 on(t.id = t4.Pid) where(t.id = 'abc')",newSql);
+    }
 }

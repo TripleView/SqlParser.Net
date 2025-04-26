@@ -82,7 +82,11 @@ public class SqlParser
         splitTokenDics = splitTokens.ToDictionary(it => it, it => true);
     }
 
-    private ParseType? parseType;
+    /// <summary>
+    /// sql parsing type
+    /// sql 解析类型
+    /// </summary>
+    public ParseType? SqlParseType { get; private set; }
 
     public string Sql { get; set; }
     /// <summary>
@@ -112,7 +116,7 @@ public class SqlParser
 
         if (CheckNextToken(Token.Select) || CheckNextToken(Token.With) || CheckNextToken(Token.LeftParen))
         {
-            parseType = ParseType.Select;
+            SqlParseType = ParseType.Select;
             var result = new SqlSelectExpression() { DbType = dbType, };
             result = AcceptSelectExpression();
             result.Comments = comments;
@@ -122,7 +126,7 @@ public class SqlParser
         }
         else if (CheckNextToken(Token.Update))
         {
-            parseType = ParseType.Update;
+            SqlParseType = ParseType.Update;
             var result = AcceptUpdateExpression();
             result.Comments = comments;
             CheckIfParsingIsComplete();
@@ -130,7 +134,7 @@ public class SqlParser
         }
         else if (CheckNextToken(Token.Delete))
         {
-            parseType = ParseType.Delete;
+            SqlParseType = ParseType.Delete;
             var result = AcceptDeleteExpression();
             result.Comments = comments;
             CheckIfParsingIsComplete();
@@ -138,7 +142,7 @@ public class SqlParser
         }
         else if (CheckNextToken(Token.Insert))
         {
-            parseType = ParseType.Insert;
+            SqlParseType = ParseType.Insert;
             var result = AcceptInsertExpression();
             result.Comments = comments;
             CheckIfParsingIsComplete();
@@ -163,7 +167,7 @@ public class SqlParser
     {
         var startIndex = tokens[pos].StartPositionIndex;
         var endIndex = tokens[tokens.Count - 1].EndPositionIndex;
-        throw new SqlParsingErrorException($"An error occurred at position :{startIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
+        throw new SqlParsingErrorException($"An error occurred at position :{startIndex},near sql is:   {Sql.Substring(startIndex, endIndex - startIndex + 2)}");
     }
     /// <summary>
     /// remove any comments
@@ -328,16 +332,37 @@ public class SqlParser
     {
         AcceptOrThrowException(Token.Delete);
         var result = new SqlDeleteExpression() { DbType = dbType };
-        if (dbType == DbType.SqlServer)
+        if (dbType == DbType.SqlServer || dbType == DbType.MySql)
         {
-            Accept(Token.From);
+            if (CheckNextToken(Token.IdentifierString) && CheckNextNextToken(Token.From))
+            {
+                Accept(Token.IdentifierString);
+                var bodyToken = currentToken;
+                result.Body=new SqlIdentifierExpression()
+                {
+                    LeftQualifiers = bodyToken.HasValue ? bodyToken.Value.LeftQualifiers : "",
+                    RightQualifiers = bodyToken.HasValue ? bodyToken.Value.RightQualifiers : "",
+                    Value = GetTokenValue(bodyToken),
+                    DbType = dbType
+                };
+            }
+
+            if (dbType == DbType.SqlServer)
+            {
+                Accept(Token.From);
+            }
+
+            if (dbType == DbType.MySql)
+            {
+                AcceptOrThrowException(Token.From);
+            }
         }
         else
         {
             AcceptOrThrowException(Token.From);
         }
 
-        result.Table = AcceptTableExpression();
+        result.Table = AcceptTableSourceExpression();
         result.Where = AcceptWhereExpression();
         return result;
     }
@@ -414,18 +439,21 @@ public class SqlParser
 
                 i++;
                 var isOracleDbLink = dbType == DbType.Oracle && Accept(Token.At);
+
+                //select * from [a.test]..[test]
+                var isSqlServerDotDot = dbType == DbType.SqlServer && Accept(Token.DotDot);
+
                 if (Accept(Token.Dot))
                 {
                     if (Accept(Token.IdentifierString))
                     {
                         var value = GetCurrentTokenValue();
                         mainToken = currentToken;
-                        //nameList.Add(value);
                         nameTokenList.Add(mainToken);
                     }
                     else
                     {
-                        throw new Exception("sql error");
+                        ThrowSqlParsingErrorException();
                     }
                 }
                 else if (isOracleDbLink)
@@ -436,7 +464,23 @@ public class SqlParser
                     }
                     else
                     {
-                        throw new Exception("sql error");
+                        ThrowSqlParsingErrorException();
+                    }
+                }
+                else if (isSqlServerDotDot)
+                {
+                    var dboToken = Token.IdentifierString;
+                    dboToken.Value = "dbo";
+                    nameTokenList.Add(dboToken);
+                    if (Accept(Token.IdentifierString))
+                    {
+                        var value = GetCurrentTokenValue();
+                        mainToken = currentToken;
+                        nameTokenList.Add(mainToken);
+                    }
+                    else
+                    {
+                        ThrowSqlParsingErrorException();
                     }
                 }
                 else
@@ -468,11 +512,24 @@ public class SqlParser
             if (nameTokenList.Count > 1)
             {
                 nameTokenList.RemoveAt(nameTokenList.Count - 1);
-                var schema = string.Join(".", nameTokenList.Where(x => x != null)
-                    .Select(y => y.Value.LeftQualifiers + y.Value.Value + y.Value.RightQualifiers));
+                if (nameTokenList.Count == 2)
+                {
+                    var databaseToken = nameTokenList.First();
+                    table.Database = new SqlIdentifierExpression()
+                    {
+                        LeftQualifiers = databaseToken.HasValue ? databaseToken.Value.LeftQualifiers : "",
+                        RightQualifiers = databaseToken.HasValue ? databaseToken.Value.RightQualifiers : "",
+                        Value = GetTokenValue(databaseToken),
+                        DbType = dbType
+                    };
+                    nameTokenList.RemoveAt(0);
+                }
+                var schemaToken = nameTokenList.First();
                 table.Schema = new SqlIdentifierExpression()
                 {
-                    Value = schema,
+                    LeftQualifiers = schemaToken.HasValue ? schemaToken.Value.LeftQualifiers : "",
+                    RightQualifiers = schemaToken.HasValue ? schemaToken.Value.RightQualifiers : "",
+                    Value = GetTokenValue(schemaToken),
                     DbType = dbType
                 };
             }
@@ -975,7 +1032,10 @@ public class SqlParser
             i++;
             if (CheckNextToken(Token.From)
                 || (dbType == DbType.SqlServer && CheckNextToken(Token.Into))
-                || nextToken == null)
+                || nextToken == null
+                || ((dbType == DbType.Pgsql || dbType == DbType.SqlServer || dbType == DbType.Sqlite) && (CheckNextToken(Token.Union) || CheckNextToken(Token.Except) || CheckNextToken(Token.Intersect)))
+                || (dbType == DbType.MySql && CheckNextToken(Token.Union))
+                || CheckNextToken(Token.RightParen))
             {
                 break;
             }
@@ -1567,13 +1627,13 @@ public class SqlParser
         }
         var notAllowTokens = new List<Token>()
         {
+            Token.Values,
             Token.Comma,
             Token.When,
             Token.Where,
             Token.Group,
             Token.Order,
             Token.Limit,
-            Token.Offset,
             Token.And,
             Token.Or,
             Token.Xor,
@@ -1587,10 +1647,7 @@ public class SqlParser
             Token.Intersect,
             Token.With
         };
-        //if (CheckNextTokenIsOperatorOrSymbol())
-        //{
-        //    return false;
-        //}
+
         if (notAllowTokens.Any(it => CheckNextToken(it)))
         {
             return false;
@@ -1960,7 +2017,7 @@ public class SqlParser
                 }
                 else
                 {
-                    throw new Exception("sql syntc error");
+                    ThrowSqlParsingErrorException();
                 }
             }
             else if (CheckNextToken(Token.LeftParen))
@@ -2033,7 +2090,7 @@ public class SqlParser
             {
                 endIndex = tokens[pos].EndPositionIndex;
             }
-            throw new Exception($"An error occurred at position :{nextToken?.StartPositionIndex},near sql is:{Sql.Substring(startIndex, endIndex - startIndex + 1)}");
+            ThrowSqlParsingErrorException();
         }
 
         if (dbType == DbType.Pgsql && CheckNextToken(Token.ColonColon))
@@ -2837,7 +2894,7 @@ public class SqlParser
             return true;
         }
 
-        if (parseType == ParseType.Select && token.IsToken(Token.IdentifierString))
+        if (token.IsToken(Token.IdentifierString))
         {
             return AcceptKeywordAsIdentifier();
         }
@@ -2851,7 +2908,8 @@ public class SqlParser
             return true;
         }
 
-        throw new Exception("sql语句有语意错误");
+        ThrowSqlParsingErrorException();
+        return false;
     }
 
     private bool AcceptAnyOne()
@@ -2879,6 +2937,20 @@ public class SqlParser
         if (nextToken.HasValue && nextToken.Value.IsToken(token))
         {
             return true;
+        }
+
+        return false;
+    }
+
+    private bool CheckNextNextToken(Token token)
+    {
+        if (pos + 1 <= tokens.Count - 1)
+        {
+            var nextNextToken = tokens[pos + 1];
+            if (nextNextToken.IsToken(token))
+            {
+                return true;
+            }
         }
 
         return false;

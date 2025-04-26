@@ -198,7 +198,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlDeleteExpression()");
         AppendLine("{");
 
-
+        if (sqlDeleteExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlDeleteExpression.Body.Accept(this);
+            });
+        }
         if (sqlDeleteExpression.Table != null)
         {
             AdvanceNext(() =>
@@ -1151,6 +1158,11 @@ public class UnitTestAstVisitor : BaseAstVisitor
         {
             AppendAndNotRequiredNextSpace("Name = ");
             sqlTableExpression.Name?.Accept(this);
+            if (sqlTableExpression.Database != null)
+            {
+                AppendAndNotRequiredNextSpace("Database = ");
+                sqlTableExpression.Database?.Accept(this);
+            }
             if (sqlTableExpression.Schema != null)
             {
                 AppendAndNotRequiredNextSpace("Schema = ");

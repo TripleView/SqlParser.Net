@@ -571,6 +571,13 @@ public class SqlLexer
 
         if (Accept('.'))
         {
+            if (dbType == DbType.SqlServer&&Accept('.'))
+            {
+                var dotDotToken = Token.DotDot;
+                UpdateTokenPosition(ref dotDotToken);
+                tokens.Add(dotDotToken);
+                return true;
+            }
             var token = Token.Dot;
             UpdateTokenPosition(ref token);
             tokens.Add(token);

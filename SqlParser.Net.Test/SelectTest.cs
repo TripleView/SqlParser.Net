@@ -5011,6 +5011,320 @@ ORDER BY
     }
 
     [Fact]
+    public void TestUnionQuery4()
+    {
+        var sql = @"select temp.Value as Value,temp.Text as Text from(
+select 'a' as Value,'b' as Text,1 as InxNbr
+union ALL
+select 'c' as Value,'d' as Text,2 as InxNbr
+) as temp
+order by temp.InxNbr";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Value",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "temp",
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "Value",
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Text",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "temp",
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "Text",
+                },
+            },
+        },
+                From = new SqlSelectExpression()
+                {
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "temp",
+                    },
+                    Query = new SqlUnionQueryExpression()
+                    {
+                        Left = new SqlSelectExpression()
+                        {
+                            Query = new SqlSelectQueryExpression()
+                            {
+                                Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "a"
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "Value",
+                                },
+                            },
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "b"
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "Text",
+                                },
+                            },
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "InxNbr",
+                                },
+                            },
+                        },
+                            },
+                        },
+                        UnionType = SqlUnionType.UnionAll,
+                        Right = new SqlSelectExpression()
+                        {
+                            Query = new SqlSelectQueryExpression()
+                            {
+                                Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "c"
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "Value",
+                                },
+                            },
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlStringExpression()
+                                {
+                                    Value = "d"
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "Text",
+                                },
+                            },
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "InxNbr",
+                                },
+                            },
+                        },
+                            },
+                        },
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "InxNbr",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "temp",
+                        },
+                    },
+                },
+            },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("select temp.Value as Value, temp.Text as Text from(((select 'a' as Value, 'b' as Text, 1 as InxNbr) union all(select 'c' as Value, 'd' as Text, 2 as InxNbr) )) as temp order by temp.InxNbr",
+            newSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.Sqlite)]
+    public void TestUnionQuery5(DbType dbType)
+    {
+        var unionStringList = new List<string>() { "union", "except", "intersect" };
+        foreach (var unionString in unionStringList)
+        {
+
+            var sql = $@"select 1 {unionString} select 2";
+            var unionType = SqlUnionType.Union;
+            switch (unionString)
+            {
+                case "union":
+                    unionType = SqlUnionType.Union;
+                    break;
+                case "except":
+                    unionType = SqlUnionType.Except;
+                    break;
+                case "intersect":
+                    unionType = SqlUnionType.Intersect;
+                    break;
+            }
+
+            var sqlAst = new SqlExpression();
+            var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+            testOutputHelper.WriteLine("time:" + t);
+            var result = sqlAst.ToFormat();
+            var expect = new SqlSelectExpression()
+            {
+                Query = new SqlUnionQueryExpression()
+                {
+                    Left = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                            {
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    UnionType = unionType,
+                    Right = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                            {
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+            Assert.True(sqlAst.Equals(expect));
+
+            var newSql = sqlAst.ToSql();
+            Assert.Equal($"((select 1) {unionString}(select 2) )",
+                newSql);
+        }
+       
+    }
+
+    [Fact]
+    public void TestUnionQuery6()
+    {
+        var sql = @"select 1 union select 2";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlUnionQueryExpression()
+            {
+                Left = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                            },
+                        },
+                    },
+                },
+                UnionType = SqlUnionType.Union,
+                Right = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("((select 1) union(select 2) )",
+            newSql);
+    }
+
+    [Fact]
     public void TestAll()
     {
         var sql = "select all  fa.FlowId  from FlowActivity fa";
@@ -7246,9 +7560,8 @@ ORDER BY
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+      
+        var result = sqlAst.ToFormat();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -7266,9 +7579,13 @@ ORDER BY
                     {
                         Value = "test",
                     },
+                    Database = new SqlIdentifierExpression()
+                    {
+                        Value = "EPF",
+                    },
                     Schema = new SqlIdentifierExpression()
                     {
-                        Value = "EPF.dbo",
+                        Value = "dbo",
                     },
                     Alias = new SqlIdentifierExpression()
                     {
@@ -7278,12 +7595,10 @@ ORDER BY
             },
         };
 
-        Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from EPF.dbo.test as t", generationSql);
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("select * from EPF.dbo.test as t", newSql);
     }
 
     [Fact]
@@ -7294,21 +7609,19 @@ ORDER BY
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
 
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
 
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlAllColumnExpression()
-                    },
-                },
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -7317,9 +7630,13 @@ ORDER BY
                         {
                             Value = "Ability",
                         },
+                        Database = new SqlIdentifierExpression()
+                        {
+                            Value = "epf",
+                        },
                         Schema = new SqlIdentifierExpression()
                         {
-                            Value = "epf.dbo",
+                            Value = "dbo",
                         },
                         Alias = new SqlIdentifierExpression()
                         {
@@ -7333,9 +7650,13 @@ ORDER BY
                         {
                             Value = "ATLAdUsers",
                         },
+                        Database = new SqlIdentifierExpression()
+                        {
+                            Value = "ATL_Login",
+                        },
                         Schema = new SqlIdentifierExpression()
                         {
-                            Value = "ATL_Login.dbo",
+                            Value = "dbo",
                         },
                         Alias = new SqlIdentifierExpression()
                         {
@@ -7372,14 +7693,11 @@ ORDER BY
             },
         };
 
-
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+        var newSql = sqlAst.ToSql();
         Assert.Equal("select * from epf.dbo.Ability as a left join ATL_Login.dbo.ATLAdUsers as au on(a.Id = au.Id)",
-            generationSql);
+            newSql);
     }
 
     [Fact]
@@ -7438,10 +7756,7 @@ ORDER BY
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
-
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
 
         var expect = new SqlSelectExpression()
         {
@@ -7462,9 +7777,17 @@ ORDER BY
                         LeftQualifiers = "[",
                         RightQualifiers = "]",
                     },
+                    Database = new SqlIdentifierExpression()
+                    {
+                        Value = "EPF",
+                        LeftQualifiers = "[",
+                        RightQualifiers = "]",
+                    },
                     Schema = new SqlIdentifierExpression()
                     {
-                        Value = "[EPF].[dbo]",
+                        Value = "dbo",
+                        LeftQualifiers = "[",
+                        RightQualifiers = "]",
                     },
                 },
             },
@@ -7473,11 +7796,60 @@ ORDER BY
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+        var newSql = sqlAst.ToSql();
         Assert.Equal("select * from [EPF].[dbo].[test]",
-            generationSql);
+            newSql);
+    }
+
+    [Fact]
+    public void TestDatabaseScheme5()
+    {
+        var sql = "select * from [a.test]..[test]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test",
+                        LeftQualifiers = "[",
+                        RightQualifiers = "]",
+                    },
+                    Database = new SqlIdentifierExpression()
+                    {
+                        Value = "a.test",
+                        LeftQualifiers = "[",
+                        RightQualifiers = "]",
+                    },
+                    Schema = new SqlIdentifierExpression()
+                    {
+                        Value = "dbo",
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("select * from [a.test].dbo.[test]",
+            newSql);
     }
 
     [Fact]
@@ -9830,6 +10202,55 @@ ORDER BY
             generationSql);
     }
 
+    [Fact]
+    public void TestKeywordAsIdentifier8()
+    {
+        var sql = @"Select Top 0 OffSet From a";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "OffSet",
+                        },
+                    },
+                },
+                Top = new SqlTopExpression()
+                {
+                    Body = new SqlNumberExpression()
+                    {
+                        Value = 0M,
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select top 0 OffSet from a",
+            generationSql);
+    }
 
     [Fact]
     public void TestOracleSpecialParen()
@@ -10493,9 +10914,7 @@ ORDER BY
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
 
         var expect = new SqlSelectExpression()
         {
@@ -10525,7 +10944,9 @@ ORDER BY
                     },
                     Schema = new SqlIdentifierExpression()
                     {
-                        Value = "[sys]",
+                        Value = "sys",
+                        LeftQualifiers = "[",
+                        RightQualifiers = "]",
                     },
                 },
                 OrderBy = new SqlOrderByExpression()
@@ -10549,10 +10970,8 @@ ORDER BY
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select top 100 * from [sys].[objects] order by [object_id] desc", generationSql);
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("select top 100 * from [sys].[objects] order by [object_id] desc", newSql);
     }
 
     [Fact]
@@ -11835,4 +12254,5 @@ ORDER BY
             "select(SYSDATE + interval '3' DAY) from dual",
             generationSql);
     }
+
 }

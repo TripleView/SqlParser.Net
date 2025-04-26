@@ -252,4 +252,6 @@ public struct Token
     public static readonly Token AtValue = new Token("AtValue", "At", 121) { TokenType = TokenType.Keyword };
     public static readonly Token Interval = new Token("Interval", "Interval", 122) { TokenType = TokenType.Keyword };
     public static readonly Token To = new Token("To", "To", 123) { TokenType = TokenType.Keyword };
+
+    public static readonly Token DotDot = new Token("DotDot", "..", 124) { TokenType = TokenType.Symbol };
 }

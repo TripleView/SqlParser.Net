@@ -3147,3 +3147,19 @@ double.tryparse 文化相关，存在预热问题
 4.在SqlParser.Net.Test项目里添加新的单元测试，使用TestHelper.cs自动生成IAcceptVisitor.cs和BaseAstVisitor.cs的代码，然后更新SqlParser.Net项目里的IAcceptVisitor.cs和BaseAstVisitor.cs
 
 Quote Symbol
+
+
+    在 SQL Server 中，一个完整的数据库对象名称由四部分组成，格式为：[服务器名].[数据库名].[架构名].[对象名]
+
+pgsql dblink
+    SELECT *
+FROM dblink('dbname=Test', 'SELECT * FROM public.testb')
+AS t(b varchar );
+
+ if (pos + 1 <= tokens.Count - 1)
+ {
+     pos++;
+     nextToken = tokens[pos];
+ }
+
+ 

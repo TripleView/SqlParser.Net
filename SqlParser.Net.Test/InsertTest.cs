@@ -259,10 +259,9 @@ public class InsertTest
     public void TestInsert6()
     {
         var sql = "insert into message.dbo.TempSMS(sms) values ('333')";
-        var sqlAst = DbUtils.Parse(sql, DbType.MySql);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+
+        var result = sqlAst.ToFormat();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
@@ -288,12 +287,17 @@ public class InsertTest
                 {
                     Value = "TempSMS",
                 },
+                Database = new SqlIdentifierExpression()
+                {
+                    Value = "message",
+                },
                 Schema = new SqlIdentifierExpression()
                 {
-                    Value = "message.dbo",
+                    Value = "dbo",
                 },
             },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
     }

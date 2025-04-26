@@ -146,8 +146,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
-        Append("delete from");
+        Append("delete");
+        if (sqlDeleteExpression.Body != null)
+        {
+            sqlDeleteExpression.Body.Accept(this);
+        }
 
+        Append("from");
 
         if (sqlDeleteExpression.Table != null)
         {
@@ -838,6 +843,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
+        if (sqlTableExpression.Database != null)
+        {
+            sqlTableExpression.Database?.Accept(this);
+            AppendWithoutSpaces(".");
+            this.addSpace = false;
+        }
         if (sqlTableExpression.Schema != null)
         {
             sqlTableExpression.Schema?.Accept(this);

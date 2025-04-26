@@ -24,6 +24,11 @@ public class SqlTableExpression : SqlExpression
     /// </summary>
     public SqlIdentifierExpression Schema { get; set; }
     /// <summary>
+    /// Database name, such as epf in [EPF].[dbo].[test]
+    /// 数据库名称,如[EPF].[dbo].[test]里的epf
+    /// </summary>
+    public SqlIdentifierExpression Database { get; set; }
+    /// <summary>
     /// oracle support db link,such as:SELECT * FROM remote_table@remote_db_link;
     /// oracle数据库支持的dblink,例如:SELECT * FROM remote_table@remote_db_link;
     /// </summary>
@@ -43,6 +48,11 @@ public class SqlTableExpression : SqlExpression
             return false;
         }
         if (!CompareTwoSqlExpression(DbLink, other.DbLink))
+        {
+            return false;
+        }
+
+        if (!CompareTwoSqlExpression(Database, other.Database))
         {
             return false;
         }

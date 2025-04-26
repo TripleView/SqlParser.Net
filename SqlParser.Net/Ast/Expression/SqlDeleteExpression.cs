@@ -13,6 +13,13 @@ public class SqlDeleteExpression : SqlExpression
     {
         this.Type = SqlExpressionType.Delete;
     }
+
+    /// <summary>
+    /// The subject of the deletion, such as t in DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'
+    /// 删除的主体，比如DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'中的t
+    /// </summary>
+    public SqlExpression Body { get; set; }
+
     public SqlExpression Table { get; set; }
 
     public SqlExpression Where { get; set; }
@@ -21,6 +28,11 @@ public class SqlDeleteExpression : SqlExpression
 
     protected bool Equals(SqlDeleteExpression other)
     {
+        if (!CompareTwoSqlExpression(Body, other.Body))
+        {
+            return false;
+        }
+
         if (!CompareTwoSqlExpression(Table, other.Table))
         {
             return false;
