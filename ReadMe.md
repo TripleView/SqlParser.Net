@@ -3014,8 +3014,8 @@ var expect = new SqlDeleteExpression()
 
 如上例子，删除语句表现为一个SqlDeleteExpression，他包含了
 1. 条件过滤子句，即Where字段，代表过滤条件，本例子中值为一个SqlBinaryExpression，即name=4
-2. 待删除数据的表，即Table字段，本例子中值为test
-
+2. 表源头，即Table字段，本例子中值为test
+3. 删除的主体，即Body字段，比如DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'中的t
 
 
 ## 5. 注释处理
