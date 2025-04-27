@@ -338,7 +338,7 @@ public class SqlParser
             {
                 Accept(Token.IdentifierString);
                 var bodyToken = currentToken;
-                result.Body=new SqlIdentifierExpression()
+                result.Body = new SqlIdentifierExpression()
                 {
                     LeftQualifiers = bodyToken.HasValue ? bodyToken.Value.LeftQualifiers : "",
                     RightQualifiers = bodyToken.HasValue ? bodyToken.Value.RightQualifiers : "",
@@ -748,20 +748,47 @@ public class SqlParser
         query.Columns = AcceptSelectItemsExpression();
 
         query.Into = AcceptSelectInto();
-        if (Accept(Token.From))
+        var hasFrom = false;
+
+        if (Accept(Token.From) || (dbType == DbType.Oracle && AcceptOrThrowException(Token.From)))
         {
             query.From = AcceptTableSourceExpression();
-            query.Where = AcceptWhereExpression();
-            query.GroupBy = AcceptGroupByExpression();
-            query.OrderBy = AcceptOrderByExpression();
-            if (dbType == DbType.Oracle)
-            {
-                query.ConnectBy = AcceptConnectByExpression();
-            }
-            query.Limit = AcceptLimitExpression();
-
-            query.Hints = AcceptHints();
+            hasFrom = true;
         }
+
+        if (CheckNextToken(Token.Where))
+        {
+            if (hasFrom || dbType == DbType.Sqlite)
+            {
+                query.Where = AcceptWhereExpression();
+            }
+            else
+            {
+                ThrowSqlParsingErrorException();
+            }
+        }
+
+        if (CheckNextToken(Token.Group) && CheckNextNextToken(Token.By))
+        {
+            if (hasFrom || (dbType == DbType.Pgsql || dbType == DbType.MySql || dbType == DbType.Sqlite))
+            {
+                query.GroupBy = AcceptGroupByExpression();
+            }
+            else
+            {
+                ThrowSqlParsingErrorException();
+            }
+        }
+
+        query.OrderBy = AcceptOrderByExpression();
+
+        if (dbType == DbType.Oracle)
+        {
+            query.ConnectBy = AcceptConnectByExpression();
+        }
+        query.Limit = AcceptLimitExpression();
+
+        query.Hints = AcceptHints();
 
         var result = new SqlSelectExpression()
         {
@@ -1014,6 +1041,27 @@ public class SqlParser
         return null;
     }
 
+
+    /// <summary>
+    /// Check if the next step is order by
+    /// 检查接下来是否是order by
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckNextIsOrderBy()
+    {
+        return CheckNextToken(Token.Order) && CheckNextNextToken(Token.By);
+    }
+
+    /// <summary>
+    /// Check if the next step is group by
+    /// 检查接下来是否是group by
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckNextIsGroupBy()
+    {
+        return CheckNextToken(Token.Group) && CheckNextNextToken(Token.By);
+    }
+
     private List<SqlSelectItemExpression> AcceptSelectItemsExpression()
     {
         var result = new List<SqlSelectItemExpression>();
@@ -1035,9 +1083,17 @@ public class SqlParser
                 || nextToken == null
                 || ((dbType == DbType.Pgsql || dbType == DbType.SqlServer || dbType == DbType.Sqlite) && (CheckNextToken(Token.Union) || CheckNextToken(Token.Except) || CheckNextToken(Token.Intersect)))
                 || (dbType == DbType.MySql && CheckNextToken(Token.Union))
+                || ((dbType == DbType.Pgsql || dbType == DbType.Sqlite || dbType == DbType.MySql) && CheckNextIsGroupBy())
+                || ((dbType == DbType.Pgsql || dbType == DbType.SqlServer || dbType == DbType.Sqlite || dbType == DbType.MySql) && CheckNextIsOrderBy())
+                || (dbType == DbType.Sqlite && CheckNextToken(Token.Where))
                 || CheckNextToken(Token.RightParen))
             {
                 break;
+            }
+
+            if (dbType == DbType.Oracle && (CheckNextIsGroupBy() || CheckNextIsOrderBy()))
+            {
+                ThrowSqlParsingErrorException();
             }
 
             var hasComma = false;

@@ -12255,4 +12255,240 @@ order by temp.InxNbr";
             generationSql);
     }
 
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.Sqlite)]
+    public void TestSelect1(DbType dbType)
+    {
+        var sql = @"select 1 as pn order by pn;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+                    {
+                        new SqlOrderByItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "pn",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select 1 as pn order by pn",
+            generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.Sqlite)]
+    public void TestSelect2(DbType dbType)
+    {
+        var sql = @"select 1 as pn group by pn ;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+                GroupBy = new SqlGroupByExpression()
+                {
+                    Items = new List<SqlExpression>()
+                    {
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select 1 as pn group by pn",
+            generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.Sqlite)]
+    public void TestSelect3(DbType dbType)
+    {
+        var sql = @"select 1 as pn group by pn order by pn;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+                    {
+                        new SqlOrderByItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "pn",
+                            },
+                        },
+                    },
+                },
+                GroupBy = new SqlGroupByExpression()
+                {
+                    Items = new List<SqlExpression>()
+                    {
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select 1 as pn group by pn order by pn",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestSelect4()
+    {
+        var sql = @"select 1 as pn group by pn ;";
+        var sqlAst = new SqlExpression();
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+            testOutputHelper.WriteLine("time:" + t);
+            var result = sqlAst.ToFormat();
+        });
+       
+    }
+
+    [Fact]
+    public void TestSelect5()
+    {
+        var sql = @"select 1 as pn where pn=2";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Sqlite); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlIdentifierExpression()
+                    {
+                        Value = "pn",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlNumberExpression()
+                    {
+                        Value = 2M,
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select 1 as pn where(pn = 2)",
+            generationSql);
+    }
+
 }
