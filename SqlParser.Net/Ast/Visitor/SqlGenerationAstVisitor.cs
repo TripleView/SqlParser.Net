@@ -13,7 +13,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     private bool addSpace = true;
     private DbType dbType = DbType.MySql;
-
+    private bool addParen = true;
     private bool isFirstVisit = true;
 
     public SqlGenerationAstVisitor(DbType dbType)
@@ -311,6 +311,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
+        Append("insert into");
+
         if (sqlInsertExpression.Table != null)
         {
             sqlInsertExpression.Table?.Accept(this);
@@ -504,7 +506,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             Append("order by");
         }
-      
+
         if (sqlOrderByExpression.Items != null)
         {
             for (var i = 0; i < sqlOrderByExpression.Items.Count; i++)
@@ -707,11 +709,28 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     private void WithBrackets(Action action)
     {
-        sb.Append("(");
+        if (addParen)
+        {
+            sb.Append("(");
+        }
+
         this.addSpace = false;
         action();
-        sb.Append(")");
+
+        if (addParen)
+        {
+            sb.Append(")");
+        }
+
     }
+
+    private void DisableBrackets(Action action)
+    {
+        this.addParen = false;
+        action();
+        this.addParen = true;
+    }
+
     public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
         if (sqlSelectQueryExpression.WithSubQuerys != null)
@@ -791,8 +810,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlSelectQueryExpression.OrderBy.Accept(this);
         }
-        
-        if (dbType==DbType.Oracle&&sqlSelectQueryExpression.ConnectBy != null)
+
+        if (dbType == DbType.Oracle && sqlSelectQueryExpression.ConnectBy != null)
         {
             sqlSelectQueryExpression.ConnectBy.Accept(this);
         }
@@ -931,6 +950,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
+        Append("update");
         if (sqlUpdateExpression.Table != null)
         {
             sqlUpdateExpression.Table.Accept(this);
@@ -938,11 +958,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlUpdateExpression.Items != null)
         {
-            Append("set");
+            Append("set ");
             for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
             {
                 var item = sqlUpdateExpression.Items[i];
-                item.Accept(this);
+                DisableBrackets(() =>
+                {
+                    item.Accept(this);
+                });
+
                 if (i < sqlUpdateExpression.Items.Count - 1)
                 {
                     AppendWithoutSpaces(",");
@@ -951,7 +975,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlUpdateExpression.Where != null)
         {
-            sb.Append("where");
+            sb.Append(" where");
             sqlUpdateExpression.Where.Accept(this);
         }
 

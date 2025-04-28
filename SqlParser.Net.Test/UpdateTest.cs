@@ -9,11 +9,11 @@ public class UpdateTest
     [Fact]
     public void TestUpdate()
     {
+        var d = true || false && false;
         var sql = "update test set name ='4',d='2024-11-22 08:19:47.243' where name ='1'";
         var sqlAst = DbUtils.Parse(sql, DbType.MySql);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+      
+        var result = sqlAst.ToFormat();
         var expect = new SqlUpdateExpression()
         {
             Table = new SqlTableExpression()
@@ -63,9 +63,10 @@ public class UpdateTest
                 },
             },
         };
-
+        
         Assert.True(sqlAst.Equals(expect));
-
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("update test set name = '4',d = '2024-11-22 08:19:47.243' where(name = '1')", newSql);
     }
 
     [Fact]
@@ -73,8 +74,48 @@ public class UpdateTest
     {
         var sql = "update test set name =4 where name =1";
         var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlUpdateExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "test",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlIdentifierExpression()
+                {
+                    Value = "name",
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlNumberExpression()
+                {
+                    Value = 1M,
+                },
+            },
+            Items = new List<SqlExpression>()
+            {
+                new SqlBinaryExpression()
+                {
+                    Left = new SqlIdentifierExpression()
+                    {
+                        Value = "name",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlNumberExpression()
+                    {
+                        Value = 4M,
+                    },
+                },
+            },
+        };
 
 
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("update test set name = 4 where(name = 1)", newSql);
     }
 
     [Fact]

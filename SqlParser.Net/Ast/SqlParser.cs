@@ -34,6 +34,24 @@ public class SqlParser
     /// </summary>
     private static HashSet<string> timeUnitSet = new HashSet<string>()
         { "year", "month", "day", "hour", "minute", "second" };
+
+    /// <summary>
+    /// Is order by after the merge result set operation?
+    /// order by是否在合并结果集操作后面
+    /// </summary>
+    private bool isOrderByAfterTheMergeResultSetOperation = false;
+    /// <summary>
+    /// Opening order by is a mark after the merge result set operation
+    /// 开启order by是在合并结果集操作后面的标记
+    /// </summary>
+    /// <param name="act"></param>
+    private void EnableOrderByAfterTheMergeResultSetOperation(Action act)
+    {
+        this.isOrderByAfterTheMergeResultSetOperation = true;
+        act();
+        this.isOrderByAfterTheMergeResultSetOperation = false;
+    }
+
     /// <summary>
     /// while maximum number of loops, used to avoid infinite loops
     /// while最大循环次数，用来避免死循环
@@ -630,6 +648,7 @@ public class SqlParser
     private SqlSelectExpression AcceptSelectExpression()
     {
         var left = AcceptSelectExpression2();
+        SqlSelectExpression right = null;
         SqlExpression total = left;
         var i = 0;
         while (true)
@@ -690,7 +709,11 @@ public class SqlParser
             }
             else
             {
-                var right = AcceptSelectExpression2();
+                EnableOrderByAfterTheMergeResultSetOperation(() =>
+                {
+                    right = AcceptSelectExpression2();
+                });
+
                 total = new SqlUnionQueryExpression()
                 {
                     DbType = dbType,
@@ -737,6 +760,12 @@ public class SqlParser
             return null;
         }
         var query = new SqlSelectQueryExpression() { DbType = dbType };
+        var result = new SqlSelectExpression()
+        {
+            DbType = dbType,
+            Query = query
+        };
+
         query.WithSubQuerys = AcceptWithSubQueryExpression();
 
         AcceptOrThrowException(Token.Select);
@@ -768,7 +797,7 @@ public class SqlParser
             }
         }
 
-        if (CheckNextToken(Token.Group) && CheckNextNextToken(Token.By))
+        if (CheckNextIsGroupBy())
         {
             if (hasFrom || (dbType == DbType.Pgsql || dbType == DbType.MySql || dbType == DbType.Sqlite))
             {
@@ -780,7 +809,17 @@ public class SqlParser
             }
         }
 
-        query.OrderBy = AcceptOrderByExpression();
+        if (CheckNextIsOrderBy())
+        {
+            if (isOrderByAfterTheMergeResultSetOperation)
+            {
+                return result;
+            }
+            else
+            {
+                query.OrderBy = AcceptOrderByExpression();
+            }
+        }
 
         if (dbType == DbType.Oracle)
         {
@@ -790,11 +829,7 @@ public class SqlParser
 
         query.Hints = AcceptHints();
 
-        var result = new SqlSelectExpression()
-        {
-            DbType = dbType,
-            Query = query
-        };
+        
         return result;
     }
 

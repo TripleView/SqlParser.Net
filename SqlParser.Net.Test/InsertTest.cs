@@ -70,9 +70,7 @@ public class InsertTest
     {
         var sql = "insert into test11(name,id) values('a1','a2')";
         var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
@@ -110,15 +108,16 @@ public class InsertTest
         };
 
         Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into test11(name, id) values('a1', 'a2')", newSql);
     }
     [Fact]
     public void TestInsert3()
     {
         var sql = "insert into test11(name,id) values(@a,@b)";
         var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
@@ -159,6 +158,9 @@ public class InsertTest
 
 
         Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into test11(name, id) values(@a,@b)", newSql);
     }
 
     [Fact]
@@ -166,9 +168,7 @@ public class InsertTest
     {
         var sql = "INSERT INTO TEST VALUES ('a1')";
         var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
         var expect = new SqlInsertExpression()
         {
             ValuesList = new List<List<SqlExpression>>()
@@ -192,6 +192,9 @@ public class InsertTest
 
 
         Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into TEST values('a1')", newSql);
     }
 
     [Fact]
@@ -199,9 +202,7 @@ public class InsertTest
     {
         var sql = "INSERT INTO TEST2(name) SELECT name AS name2 FROM TEST t";
         var sqlAst = DbUtils.Parse(sql, DbType.MySql);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
@@ -253,6 +254,8 @@ public class InsertTest
 
 
         Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into TEST2(name) select name as name2 from TEST as t", newSql);
     }
 
     [Fact]
@@ -300,6 +303,9 @@ public class InsertTest
 
 
         Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into message.dbo.TempSMS(sms) values('333')", newSql);
     }
 
     [Fact]
@@ -307,9 +313,7 @@ public class InsertTest
     {
         var sql = "INSERT INTO \"TEST\"  \r\n           (\"Value\",\"Age\")\r\n     VALUES\r\n           (:Value,:Age) ";
         var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
@@ -356,6 +360,9 @@ public class InsertTest
 
 
         Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into \"TEST\"(\"Value\", \"Age\") values(:Value,:Age)", newSql);
     }
 
     [Fact]

@@ -23,7 +23,9 @@ namespace Demo
     WHERE t3.id = t4.pid
 )";//oracle
             sql = "update t3 set Id ='aa' from t4 where t3.Id =t4.Pid ";//sqlite
-            var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+
+            sql = "select 3 as pn except select 2 as pn order by pn;";
+            var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
             var result = sqlAst.ToFormat();
             var newSql= sqlAst.ToSql();
         }
