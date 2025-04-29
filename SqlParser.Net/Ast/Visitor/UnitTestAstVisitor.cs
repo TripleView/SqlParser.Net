@@ -905,6 +905,24 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
+        if (sqlSelectExpression.OrderBy != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("OrderBy = ");
+                sqlSelectExpression.OrderBy.Accept(this);
+            });
+        }
+
+        if (sqlSelectExpression.Limit != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Limit = ");
+                sqlSelectExpression.Limit.Accept(this);
+            });
+        }
+
         if (isFirst)
         {
             AppendLine("};");

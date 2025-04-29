@@ -18,10 +18,25 @@ public class SqlSelectExpression : SqlExpression
 
     public SqlIdentifierExpression Alias { get; set; }
 
+
+    public SqlOrderByExpression OrderBy { get; set; }
+
+    public SqlLimitExpression Limit { get; set; }
+
     public List<string> Comments { get; set; }
 
     protected bool Equals(SqlSelectExpression other)
     {
+        if (!CompareTwoSqlExpression(Limit, other.Limit))
+        {
+            return false;
+        }
+
+        if (!CompareTwoSqlExpression(OrderBy, other.OrderBy))
+        {
+            return false;
+        }
+
         if (!CompareTwoSqlExpression(Alias, other.Alias))
         {
             return false;

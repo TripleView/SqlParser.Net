@@ -28,6 +28,14 @@ public class SqlParser
     private List<Token> tokens = new List<Token>();
     private List<string> comments = new List<string>();
     private DbType dbType;
+
+    private bool IsOracle => this.dbType == DbType.Oracle;
+    private bool IsSqlServer => this.dbType == DbType.SqlServer;
+    private bool IsPgsql => this.dbType == DbType.Pgsql;
+
+    private bool IsMySql => this.dbType == DbType.MySql;
+    private bool IsSqlite => this.dbType == DbType.Sqlite;
+
     private static Dictionary<Token, bool> splitTokenDics = new Dictionary<Token, bool>();
     /// <summary>
     /// List of time units;时间单位列表
@@ -36,20 +44,23 @@ public class SqlParser
         { "year", "month", "day", "hour", "minute", "second" };
 
     /// <summary>
-    /// Is order by after the merge result set operation?
-    /// order by是否在合并结果集操作后面
+    /// Whether it is in the context of a merge result set operation
+    /// 是否在合并结果集操作里的上下文
     /// </summary>
-    private bool isOrderByAfterTheMergeResultSetOperation = false;
+    private InTheMergeResultSetOperationContext inTheMergeResultSetOperationContext = new InTheMergeResultSetOperationContext()
+    {
+        IsInTheMergeResultSetOperation = false
+    };
     /// <summary>
-    /// Opening order by is a mark after the merge result set operation
-    /// 开启order by是在合并结果集操作后面的标记
+    /// Enable the flag in the merge result set operation
+    /// 开启在合并结果集操作里的标记
     /// </summary>
     /// <param name="act"></param>
-    private void EnableOrderByAfterTheMergeResultSetOperation(Action act)
+    private void EnableTheFlagInTheMergeResultSetOperation(Action act)
     {
-        this.isOrderByAfterTheMergeResultSetOperation = true;
+        this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation = true;
         act();
-        this.isOrderByAfterTheMergeResultSetOperation = false;
+        this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation = false;
     }
 
     /// <summary>
@@ -350,7 +361,7 @@ public class SqlParser
     {
         AcceptOrThrowException(Token.Delete);
         var result = new SqlDeleteExpression() { DbType = dbType };
-        if (dbType == DbType.SqlServer || dbType == DbType.MySql)
+        if (IsSqlServer || IsMySql)
         {
             if (CheckNextToken(Token.IdentifierString) && CheckNextNextToken(Token.From))
             {
@@ -365,12 +376,12 @@ public class SqlParser
                 };
             }
 
-            if (dbType == DbType.SqlServer)
+            if (IsSqlServer)
             {
                 Accept(Token.From);
             }
 
-            if (dbType == DbType.MySql)
+            if (IsMySql)
             {
                 AcceptOrThrowException(Token.From);
             }
@@ -456,10 +467,10 @@ public class SqlParser
                 }
 
                 i++;
-                var isOracleDbLink = dbType == DbType.Oracle && Accept(Token.At);
+                var isOracleDbLink = IsOracle && Accept(Token.At);
 
                 //select * from [a.test]..[test]
-                var isSqlServerDotDot = dbType == DbType.SqlServer && Accept(Token.DotDot);
+                var isSqlServerDotDot = IsSqlServer && Accept(Token.DotDot);
 
                 if (Accept(Token.Dot))
                 {
@@ -583,7 +594,7 @@ public class SqlParser
 
     private List<SqlHintExpression> AcceptHints()
     {
-        if (dbType == DbType.SqlServer)
+        if (IsSqlServer)
         {
             if (Accept(Token.HintsConstant))
             {
@@ -709,11 +720,11 @@ public class SqlParser
             }
             else
             {
-                EnableOrderByAfterTheMergeResultSetOperation(() =>
+                EnableTheFlagInTheMergeResultSetOperation(() =>
                 {
                     right = AcceptSelectExpression2();
                 });
-
+                //right = AcceptSelectExpression2();
                 total = new SqlUnionQueryExpression()
                 {
                     DbType = dbType,
@@ -732,11 +743,16 @@ public class SqlParser
         {
             return result;
         }
+
         var sqlSelectExpression = new SqlSelectExpression()
         {
             DbType = dbType,
             Query = total
         };
+
+        sqlSelectExpression.OrderBy = AcceptOrderByExpression();
+        sqlSelectExpression.Limit = AcceptLimitExpression();
+
         return sqlSelectExpression;
     }
 
@@ -744,6 +760,16 @@ public class SqlParser
     {
         if (Accept(Token.LeftParen))
         {
+            if (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation)
+            {
+                if (IsSqlite)
+                {
+                    ThrowSqlParsingErrorException();
+                }
+
+                this.inTheMergeResultSetOperationContext.IncreaseParenDepth();
+            }
+
             var temp = AcceptSelectExpression();
             AcceptOrThrowException(Token.RightParen);
 
@@ -779,7 +805,7 @@ public class SqlParser
         query.Into = AcceptSelectInto();
         var hasFrom = false;
 
-        if (Accept(Token.From) || (dbType == DbType.Oracle && AcceptOrThrowException(Token.From)))
+        if (Accept(Token.From) || (IsOracle && AcceptOrThrowException(Token.From)))
         {
             query.From = AcceptTableSourceExpression();
             hasFrom = true;
@@ -787,7 +813,7 @@ public class SqlParser
 
         if (CheckNextToken(Token.Where))
         {
-            if (hasFrom || dbType == DbType.Sqlite)
+            if (hasFrom || IsSqlite)
             {
                 query.Where = AcceptWhereExpression();
             }
@@ -799,7 +825,7 @@ public class SqlParser
 
         if (CheckNextIsGroupBy())
         {
-            if (hasFrom || (dbType == DbType.Pgsql || dbType == DbType.MySql || dbType == DbType.Sqlite))
+            if (hasFrom || (IsPgsql || IsMySql || IsSqlite))
             {
                 query.GroupBy = AcceptGroupByExpression();
             }
@@ -811,17 +837,22 @@ public class SqlParser
 
         if (CheckNextIsOrderBy())
         {
-            if (isOrderByAfterTheMergeResultSetOperation)
+            if (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation)
             {
-                return result;
+                if ((IsOracle || IsSqlServer) && this.inTheMergeResultSetOperationContext.HasParenDepth)
+                {
+                    ThrowSqlParsingErrorException();
+                }
+
+                if (!this.inTheMergeResultSetOperationContext.HasParenDepth)
+                {
+                    return result;
+                }
             }
-            else
-            {
-                query.OrderBy = AcceptOrderByExpression();
-            }
+            query.OrderBy = AcceptOrderByExpression();
         }
 
-        if (dbType == DbType.Oracle)
+        if (IsOracle)
         {
             query.ConnectBy = AcceptConnectByExpression();
         }
@@ -829,25 +860,25 @@ public class SqlParser
 
         query.Hints = AcceptHints();
 
-        
+
         return result;
     }
 
     private SqlLimitExpression AcceptLimitExpression()
     {
-        if (dbType == DbType.MySql)
+        if (IsMySql)
         {
             return AcceptMysqlLimitExpression();
         }
-        else if (dbType == DbType.SqlServer)
+        else if (IsSqlServer)
         {
             return AcceptSqlServerLimitExpression();
         }
-        else if (dbType == DbType.Pgsql)
+        else if (IsPgsql)
         {
             return AcceptPgsqlLimitExpression();
         }
-        else if (dbType == DbType.Oracle)
+        else if (IsOracle)
         {
             return AcceptOracleLimitExpression();
         }
@@ -948,7 +979,7 @@ public class SqlParser
 
     private SqlExpression AcceptSelectInto()
     {
-        if (dbType == DbType.SqlServer)
+        if (IsSqlServer)
         {
             if (Accept(Token.Into))
             {
@@ -962,7 +993,7 @@ public class SqlParser
 
     private SqlTopExpression AcceptTopN()
     {
-        if (dbType == DbType.SqlServer)
+        if (IsSqlServer)
         {
             if (Accept(Token.Top))
             {
@@ -995,7 +1026,7 @@ public class SqlParser
         {
             resultSetReturnOption = SqlResultSetReturnOption.Distinct;
         }
-        else if (dbType == DbType.Oracle && Accept(Token.Unique))
+        else if (IsOracle && Accept(Token.Unique))
         {
             resultSetReturnOption = SqlResultSetReturnOption.Unique;
         }
@@ -1114,19 +1145,19 @@ public class SqlParser
 
             i++;
             if (CheckNextToken(Token.From)
-                || (dbType == DbType.SqlServer && CheckNextToken(Token.Into))
+                || (IsSqlServer && CheckNextToken(Token.Into))
                 || nextToken == null
-                || ((dbType == DbType.Pgsql || dbType == DbType.SqlServer || dbType == DbType.Sqlite) && (CheckNextToken(Token.Union) || CheckNextToken(Token.Except) || CheckNextToken(Token.Intersect)))
-                || (dbType == DbType.MySql && CheckNextToken(Token.Union))
-                || ((dbType == DbType.Pgsql || dbType == DbType.Sqlite || dbType == DbType.MySql) && CheckNextIsGroupBy())
-                || ((dbType == DbType.Pgsql || dbType == DbType.SqlServer || dbType == DbType.Sqlite || dbType == DbType.MySql) && CheckNextIsOrderBy())
-                || (dbType == DbType.Sqlite && CheckNextToken(Token.Where))
+                || ((IsPgsql || IsSqlServer || IsSqlite) && (CheckNextToken(Token.Union) || CheckNextToken(Token.Except) || CheckNextToken(Token.Intersect)))
+                || (IsMySql && CheckNextToken(Token.Union))
+                || ((IsPgsql || IsSqlite || IsMySql) && CheckNextIsGroupBy())
+                || ((IsPgsql || IsSqlServer || IsSqlite || IsMySql) && CheckNextIsOrderBy())
+                || (IsSqlite && CheckNextToken(Token.Where))
                 || CheckNextToken(Token.RightParen))
             {
                 break;
             }
 
-            if (dbType == DbType.Oracle && (CheckNextIsGroupBy() || CheckNextIsOrderBy()))
+            if (IsOracle && (CheckNextIsGroupBy() || CheckNextIsOrderBy()))
             {
                 ThrowSqlParsingErrorException();
             }
@@ -1174,7 +1205,7 @@ public class SqlParser
     /// <returns></returns>
     private SqlExpression AcceptAtTimeZoneExpression(SqlExpression body)
     {
-        if (dbType == DbType.Pgsql)
+        if (IsPgsql)
         {
             if (Accept(Token.AtValue))
             {
@@ -1789,7 +1820,7 @@ public class SqlParser
 
     private SqlExpression AcceptPgsqlSpecialCaseAs(SqlExpression body)
     {
-        if (dbType == DbType.Pgsql)
+        if (IsPgsql)
         {
             SqlExpression result;
             var i = 0;
@@ -2148,7 +2179,7 @@ public class SqlParser
                 body = sqlIdentifierExpression;
             }
         }
-        else if ((dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql) && CheckNextToken(Token.Interval))
+        else if ((IsPgsql || IsOracle || IsMySql) && CheckNextToken(Token.Interval))
         {
             var intervalExpression = AcceptIntervalExpression();
             return intervalExpression;
@@ -2184,7 +2215,7 @@ public class SqlParser
             ThrowSqlParsingErrorException();
         }
 
-        if (dbType == DbType.Pgsql && CheckNextToken(Token.ColonColon))
+        if (IsPgsql && CheckNextToken(Token.ColonColon))
         {
             var result = AcceptPgsqlSpecialCaseAs(body);
             return result;
@@ -2196,14 +2227,14 @@ public class SqlParser
 
     private SqlIntervalExpression AcceptIntervalExpression()
     {
-        if ((dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql))
+        if ((IsPgsql || IsOracle || IsMySql))
         {
             AcceptOrThrowException(Token.Interval);
             var result = new SqlIntervalExpression()
             {
                 DbType = dbType
             };
-            if (dbType == DbType.Pgsql)
+            if (IsPgsql)
             {
                 AcceptOrThrowException(Token.StringConstant);
                 var value = GetCurrentTokenValue();
@@ -2214,7 +2245,7 @@ public class SqlParser
                 };
                 return result;
             }
-            else if (dbType == DbType.Oracle)
+            else if (IsOracle)
             {
                 AcceptOrThrowException(Token.StringConstant);
                 var body = GetCurrentTokenValue();
@@ -2268,7 +2299,7 @@ public class SqlParser
                 };
                 return result;
             }
-            else if (dbType == DbType.MySql)
+            else if (IsMySql)
             {
                 AcceptOrThrowException(Token.NumberConstant);
                 var value = GetCurrentTokenNumberValue();
@@ -2429,7 +2460,7 @@ public class SqlParser
                 break;
             }
             // such as pgsql,EXTRACT(YEAR FROM order_date)
-            if ((dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql) && Accept(Token.From) && functionName.ToLowerInvariant() == "extract")
+            if ((IsPgsql || IsOracle || IsMySql) && Accept(Token.From) && functionName.ToLowerInvariant() == "extract")
             {
                 var fromSource = AcceptNestedComplexExpression();
                 result.FromSource = fromSource;
@@ -2462,7 +2493,7 @@ public class SqlParser
 
     private SqlWithinGroupExpression AcceptWithinGroup()
     {
-        if (dbType == DbType.SqlServer || dbType == DbType.Pgsql || (dbType == DbType.Oracle))
+        if (IsSqlServer || IsPgsql || (IsOracle))
         {
             if (Accept(Token.Within) && Accept(Token.Group))
             {
@@ -2514,7 +2545,7 @@ public class SqlParser
         }
 
         //sql server兼容单引号包裹列别名，例如select city 'b' from Address 
-        if (dbType == DbType.SqlServer && Accept(Token.StringConstant))
+        if (IsSqlServer && Accept(Token.StringConstant))
         {
             asStr = GetCurrentTokenValue();
             currentToken = new Token()
@@ -2537,7 +2568,7 @@ public class SqlParser
 
     private SqlExpression AcceptPivotTable(SqlExpression source)
     {
-        if ((dbType == DbType.Oracle || dbType == DbType.SqlServer) && Accept(Token.Pivot))
+        if ((IsOracle || IsSqlServer) && Accept(Token.Pivot))
         {
             AcceptOrThrowException(Token.LeftParen);
             AcceptOrThrowException(Token.IdentifierString);
@@ -2569,7 +2600,7 @@ public class SqlParser
                     DbType = dbType,
                     Body = value
                 };
-                if (dbType == DbType.Oracle && Accept(Token.As))
+                if (IsOracle && Accept(Token.As))
                 {
                     AcceptOrThrowException(Token.IdentifierString);
                     var alias = GetCurrentTokenValue();
@@ -2594,7 +2625,7 @@ public class SqlParser
                 For = @for,
                 In = @in
             };
-            if (dbType == DbType.SqlServer)
+            if (IsSqlServer)
             {
                 AcceptOrThrowException(Token.As);
                 AcceptOrThrowException(Token.IdentifierString);
@@ -2607,7 +2638,7 @@ public class SqlParser
                     Value = alias
                 };
             }
-            if (dbType == DbType.Oracle && Accept((Token.IdentifierString)))
+            if (IsOracle && Accept((Token.IdentifierString)))
             {
                 var alias = GetCurrentTokenValue();
                 result.Alias = new SqlIdentifierExpression()
@@ -2741,10 +2772,10 @@ public class SqlParser
 
                 i++;
                 if (nextToken == null
-                    || (dbType == DbType.MySql && nextToken.HasValue && nextToken.Value.IsToken(Token.Limit))
-                    || (dbType == DbType.SqlServer && nextToken.HasValue && nextToken.Value.IsToken(Token.Offset))
-                    || (dbType == DbType.Oracle && nextToken.HasValue && nextToken.Value.IsToken(Token.Fetch))
-                    || (dbType == DbType.Pgsql && nextToken.HasValue && (nextToken.Value.IsToken(Token.Limit) || nextToken.Value.IsToken(Token.Offset)))
+                    || (IsMySql && nextToken.HasValue && nextToken.Value.IsToken(Token.Limit))
+                    || (IsSqlServer && nextToken.HasValue && nextToken.Value.IsToken(Token.Offset))
+                    || (IsOracle && nextToken.HasValue && nextToken.Value.IsToken(Token.Fetch))
+                    || (IsPgsql && nextToken.HasValue && (nextToken.Value.IsToken(Token.Limit) || nextToken.Value.IsToken(Token.Offset)))
                     || (nextToken.HasValue && (nextToken.Value.IsToken(Token.RightParen))))
                 {
                     break;
@@ -2764,7 +2795,7 @@ public class SqlParser
                     }
 
                     SqlOrderByNullsType? nullsType = null;
-                    if (dbType == DbType.Oracle || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
+                    if (IsOracle || IsPgsql || IsSqlite)
                     {
                         if (Accept(Token.Nulls))
                         {

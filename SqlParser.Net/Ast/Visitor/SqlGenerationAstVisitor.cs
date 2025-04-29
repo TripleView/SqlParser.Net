@@ -696,6 +696,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
             sqlSelectExpression.Alias.Accept(this);
         }
+
+        if (sqlSelectExpression.OrderBy != null)
+        {
+            sqlSelectExpression.OrderBy.Accept(this);
+        }
+
+        if (sqlSelectExpression.Limit != null)
+        {
+            sqlSelectExpression.Limit.Accept(this);
+        }
     }
     public override void VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
     {
@@ -905,7 +915,6 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
 
         Append("(");
-
 
         if (sqlUnionQueryExpression.Left != null)
         {

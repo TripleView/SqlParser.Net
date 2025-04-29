@@ -5325,6 +5325,287 @@ order by temp.InxNbr";
     }
 
     [Fact]
+    public void TestUnionQuery7()
+    {
+        var sql = @"select 3 as pn FROM dual union (SELECT * FROM (select 2 as pn  FROM dual)  order by pn)";
+        var sqlAst = new SqlExpression();
+       
+        Assert.Throws<SqlParsingErrorException>((() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        }));
+    }
+
+
+    [Fact]
+    public void TestUnionQuery8()
+    {
+        var sql = @"select 3 as pn union select 2 as pn union (select 5 as pn)";
+        var sqlAst = new SqlExpression();
+
+        Assert.Throws<SqlParsingErrorException>((() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.Sqlite);
+        }));
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.MySql)]
+    public void TestUnionQuery9(DbType dbType)
+    {
+        var sql = @" select 3 as pn union select 2 as pn union (select 5 as pn)";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlUnionQueryExpression()
+            {
+                Left = new SqlUnionQueryExpression()
+                {
+                    Left = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "pn",
+                            },
+                        },
+                    },
+                        },
+                    },
+                    UnionType = SqlUnionType.Union,
+                    Right = new SqlSelectExpression()
+                    {
+                        Query = new SqlSelectQueryExpression()
+                        {
+                            Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlNumberExpression()
+                            {
+                                Value = 2M,
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "pn",
+                            },
+                        },
+                    },
+                        },
+                    },
+                },
+                UnionType = SqlUnionType.Union,
+                Right = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlNumberExpression()
+                        {
+                            Value = 5M,
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("( ((select 3 as pn) union(select 2 as pn) ) union(select 5 as pn) )", newSql);
+    }
+
+    [Fact]
+    public void TestUnionQuery10()
+    {
+        var sql = @"select 3 as pn union (select 2 as pn order by pn)";
+        var sqlAst = new SqlExpression();
+
+        Assert.Throws<SqlParsingErrorException>((() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+        }));
+    }
+
+    [Theory]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.MySql)]
+    public void TestUnionQuery11(DbType dbType)
+    {
+        var sql = @"select 3 as pn  union (select 2 as pn order by pn)";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlUnionQueryExpression()
+            {
+                Left = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
+                        },
+                    },
+                },
+                UnionType = SqlUnionType.Union,
+                Right = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
+                        },
+                        OrderBy = new SqlOrderByExpression()
+                        {
+                            Items = new List<SqlOrderByItemExpression>()
+                            {
+                                new SqlOrderByItemExpression()
+                                {
+                                    Body = new SqlIdentifierExpression()
+                                    {
+                                        Value = "pn",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("((select 3 as pn) union(select 2 as pn order by pn) )", newSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Sqlite)]
+    public void TestUnionQuery12(DbType dbType)
+    {
+        var sql = @"select 3 as pn  union select 2 as pn order by pn";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlUnionQueryExpression()
+            {
+                Left = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
+                        },
+                    },
+                },
+                UnionType = SqlUnionType.Union,
+                Right = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            OrderBy = new SqlOrderByExpression()
+            {
+                Items = new List<SqlOrderByItemExpression>()
+                {
+                    new SqlOrderByItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("((select 3 as pn) union(select 2 as pn) ) order by pn", newSql);
+    }
+
+
+    [Fact]
     public void TestAll()
     {
         var sql = "select all  fa.FlowId  from FlowActivity fa";
