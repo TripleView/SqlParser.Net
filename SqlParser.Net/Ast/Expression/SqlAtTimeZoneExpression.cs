@@ -4,6 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlAtTimeZoneExpression : SqlExpression
 {
+    private SqlExpression body;
+    private SqlStringExpression timeZone;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlAtTimeZoneExpression(this);
@@ -12,12 +15,35 @@ public class SqlAtTimeZoneExpression : SqlExpression
     {
         this.Type = SqlExpressionType.AtTimeZone;
     }
+
     /// <summary>
     /// Time Zone，such as 'Asia/ShangHai';时区，比如'Asia/ShangHai'
     /// </summary>
-    public SqlStringExpression TimeZone { get; set; }
+    public SqlStringExpression TimeZone
+    {
+        get => timeZone;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            timeZone = value;
+        }
+    }
 
-    public SqlExpression Body { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     protected bool Equals(SqlAtTimeZoneExpression other)
     {

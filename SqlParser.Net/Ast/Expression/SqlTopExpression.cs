@@ -4,13 +4,25 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlTopExpression : SqlExpression
 {
+    private SqlNumberExpression body;
 
     public SqlTopExpression()
     {
         this.Type = SqlExpressionType.Top;
     }
 
-    public SqlNumberExpression Body { get; set; }
+    public SqlNumberExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     protected bool Equals(SqlTopExpression other)
     {

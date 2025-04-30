@@ -8,13 +8,25 @@ namespace SqlParser.Net.Ast.Expression;
 /// </summary>
 public class SqlHintExpression : SqlExpression
 {
+    private SqlExpression body;
 
     public SqlHintExpression()
     {
         this.Type = SqlExpressionType.Hint;
     }
 
-    public SqlExpression Body { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     protected bool Equals(SqlHintExpression other)
     {

@@ -5,6 +5,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlAnyExpression : SqlExpression
 {
+    private SqlSelectExpression body;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlAnyExpression(this);
@@ -14,9 +16,21 @@ public class SqlAnyExpression : SqlExpression
         this.Type = SqlExpressionType.Any;
     }
 
-    public SqlAnyExpressionTokenContext TokenContext { get; set; }  
+    public SqlAnyExpressionTokenContext TokenContext { get; set; }
 
-    public SqlSelectExpression Body { get; set; }
+
+    public SqlSelectExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     protected bool Equals(SqlAnyExpression other)
     {

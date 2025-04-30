@@ -4,6 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlUnionQueryExpression : SqlExpression
 {
+    private SqlExpression left;
+    private SqlExpression right;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlUnionQueryExpression(this);
@@ -13,9 +16,33 @@ public class SqlUnionQueryExpression : SqlExpression
         this.Type = SqlExpressionType.UnionQuery;
     }
 
-    public SqlExpression Left { get; set; }
+    public SqlExpression Left
+    {
+        get => left;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            left = value;
+        }
+    }
+
     public SqlUnionType UnionType { get; set; }
-    public SqlExpression Right { get; set; }
+
+    public SqlExpression Right
+    {
+        get => right;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            right = value;
+        }
+    }
 
     protected bool Equals(SqlUnionQueryExpression other)
     {

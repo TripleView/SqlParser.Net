@@ -6,6 +6,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlWithSubQueryExpression : SqlExpression
 {
+    private SqlIdentifierExpression alias;
+    private List<SqlIdentifierExpression> columns;
+    private SqlSelectExpression fromSelect;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlWithSubQueryExpression(this);
@@ -15,11 +19,50 @@ public class SqlWithSubQueryExpression : SqlExpression
         this.Type = SqlExpressionType.WithSubQuery;
     }
 
-    public SqlIdentifierExpression Alias { get; set; }
+    public SqlIdentifierExpression Alias
+    {
+        get => alias;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            alias = value;
+        }
+    }
 
-    public List<SqlIdentifierExpression> Columns { get; set; }
+    public List<SqlIdentifierExpression> Columns
+    {
+        get => columns;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            columns = value;
+        }
+    }
 
-    public SqlSelectExpression FromSelect { get; set; }
+    public SqlSelectExpression FromSelect
+    {
+        get => fromSelect;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            fromSelect = value;
+        }
+    }
 
     protected bool Equals(SqlWithSubQueryExpression other)
     {

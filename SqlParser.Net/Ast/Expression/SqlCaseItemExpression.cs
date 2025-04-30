@@ -5,6 +5,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlCaseItemExpression : SqlExpression
 {
+    private SqlExpression condition;
+    private SqlExpression value;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlCaseItemExpression(this);
@@ -16,9 +19,31 @@ public class SqlCaseItemExpression : SqlExpression
 
     public SqlCaseItemExpressionTokenContext TokenContext { get; set; }
 
-    public SqlExpression Condition { get; set; }
+    public SqlExpression Condition
+    {
+        get => condition;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            condition = value;
+        }
+    }
 
-    public SqlExpression Value { get; set; }
+    public SqlExpression Value
+    {
+        get => value;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            this.value = value;
+        }
+    }
 
     protected bool Equals(SqlCaseItemExpression other)
     {

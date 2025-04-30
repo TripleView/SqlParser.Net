@@ -6,6 +6,18 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlSelectQueryExpression : SqlExpression
 {
+    private List<SqlWithSubQueryExpression> withSubQuerys;
+    private List<SqlSelectItemExpression> columns;
+    private SqlExpression into;
+    private SqlExpression from;
+    private SqlTopExpression top;
+    private SqlExpression where;
+    private SqlGroupByExpression groupBy;
+    private SqlConnectByExpression connectBy;
+    private SqlOrderByExpression orderBy;
+    private SqlLimitExpression limit;
+    private List<SqlHintExpression> hints;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlSelectQueryExpression(this);
@@ -19,41 +31,185 @@ public class SqlSelectQueryExpression : SqlExpression
     /// cte sub query
     /// cte公共表表达式子查询
     /// </summary>
-    public List<SqlWithSubQueryExpression> WithSubQuerys { get; set; }
+    public List<SqlWithSubQueryExpression> WithSubQuerys
+    {
+        get => withSubQuerys;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            withSubQuerys = value;
+        }
+    }
 
-    public List<SqlSelectItemExpression> Columns { get; set; }
+    public List<SqlSelectItemExpression> Columns
+    {
+        get => columns;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            columns = value;
+        }
+    }
+
     /// <summary>
     /// SQL result set return options, such as all, distinct
     /// sql结果集返回选项，例如all，distinct
     /// </summary>
     public SqlResultSetReturnOption? ResultSetReturnOption { get; set; }
+
     /// <summary>
     /// sqlserver suport,such as sql: SELECT id,name into test14 from TEST t
     /// sqlserver 支持,比如sql:  SELECT id,name into test14 from TEST t
     /// </summary>
-    public SqlExpression Into { get; set; }
-    public SqlExpression From { get; set; }
+    public SqlExpression Into
+    {
+        get => into;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            into = value;
+        }
+    }
+
+    public SqlExpression From
+    {
+        get => from;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            from = value;
+        }
+    }
 
     /// <summary>
     /// sqlserver 支持,比如sql:SELECT   TOP  100 * from test 
     /// </summary>
-    public SqlTopExpression Top { get; set; }
+    public SqlTopExpression Top
+    {
+        get => top;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            
+            top = value;
+        }
+    }
 
-    public SqlExpression Where { get; set; }
+    public SqlExpression Where
+    {
+        get => where;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            where = value;
+        }
+    }
 
-    public SqlGroupByExpression GroupBy { get; set; }
+    public SqlGroupByExpression GroupBy
+    {
+        get => groupBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            groupBy = value;
+        }
+    }
+
     /// <summary>
     /// just for oracle,such as sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
     /// 仅oracle中有用，例如sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
     /// </summary>
-    public SqlConnectByExpression ConnectBy { get; set; }
+    public SqlConnectByExpression ConnectBy
+    {
+        get => connectBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            connectBy = value;
+        }
+    }
 
 
-    public SqlOrderByExpression OrderBy { get; set; }
+    public SqlOrderByExpression OrderBy
+    {
+        get => orderBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            orderBy = value;
+        }
+    }
 
-    public SqlLimitExpression Limit { get; set; }
+    public SqlLimitExpression Limit
+    {
+        get => limit;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            limit = value;
+        }
+    }
 
-    public List<SqlHintExpression> Hints { get; set; }
+    public List<SqlHintExpression> Hints
+    {
+        get => hints;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            hints = value;
+        }
+    }
 
     protected bool Equals(SqlSelectQueryExpression other)
     {

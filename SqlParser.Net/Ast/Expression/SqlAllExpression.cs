@@ -6,12 +6,24 @@ namespace SqlParser.Net.Ast.Expression;
 public class SqlAllExpression : SqlExpression
 {
 
+    private SqlSelectExpression body;
     public SqlAllExpression()
     {
         this.Type = SqlExpressionType.All;
     }
 
-    public SqlSelectExpression Body { get; set; }
+    public SqlSelectExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     public SqlAllExpressionTokenContext TokenContext { get; set; }
 

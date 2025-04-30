@@ -5,6 +5,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlGroupByExpression : SqlExpression
 {
+    private List<SqlExpression> items;
+    private SqlExpression having;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlGroupByExpression(this);
@@ -14,9 +17,37 @@ public class SqlGroupByExpression : SqlExpression
         this.Type = SqlExpressionType.GroupBy;
     }
 
-    public List<SqlExpression> Items { get; set; }
+    public List<SqlExpression> Items
+    {
+        get => items;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            items = value;
+        }
+    }
 
-    public SqlExpression Having { get; set; }
+    public SqlExpression Having
+    {
+        get => having;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            having = value;
+        }
+    }
 
     protected bool Equals(SqlGroupByExpression other)
     {

@@ -5,6 +5,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlBetweenAndExpression : SqlExpression
 {
+    private SqlExpression body;
+    private SqlExpression begin;
+    private SqlExpression end;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlBetweenAndExpression(this);
@@ -21,9 +25,44 @@ public class SqlBetweenAndExpression : SqlExpression
     /// </summary>
     public bool IsNot { get; set; }
 
-    public SqlExpression Body { get; set; }
-    public SqlExpression Begin { get; set; }
-    public SqlExpression End { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
+
+    public SqlExpression Begin
+    {
+        get => begin;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            begin = value;
+        }
+    }
+
+    public SqlExpression End
+    {
+        get => end;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            end = value;
+        }
+    }
 
     protected bool Equals(SqlBetweenAndExpression other)
     {

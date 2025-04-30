@@ -4,6 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlOverExpression : SqlExpression
 {
+    private SqlOrderByExpression orderBy;
+    private SqlPartitionByExpression partitionBy;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlOverExpression(this);
@@ -13,9 +16,31 @@ public class SqlOverExpression : SqlExpression
         this.Type = SqlExpressionType.Over;
     }
 
-    public SqlOrderByExpression OrderBy { get; set; }
+    public SqlOrderByExpression OrderBy
+    {
+        get => orderBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            orderBy = value;
+        }
+    }
 
-    public SqlPartitionByExpression PartitionBy { get; set; }
+    public SqlPartitionByExpression PartitionBy
+    {
+        get => partitionBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            partitionBy = value;
+        }
+    }
 
     protected bool Equals(SqlOverExpression other)
     {

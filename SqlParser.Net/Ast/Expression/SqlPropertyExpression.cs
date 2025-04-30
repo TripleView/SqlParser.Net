@@ -4,6 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlPropertyExpression : SqlExpression
 {
+    private SqlIdentifierExpression name;
+    private SqlIdentifierExpression table;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlPropertyExpression(this);
@@ -17,8 +20,31 @@ public class SqlPropertyExpression : SqlExpression
     /// property name
     /// 属性名称
     /// </summary>
-    public SqlIdentifierExpression Name { get; set; }
-    public SqlIdentifierExpression Table { set; get; }
+    public SqlIdentifierExpression Name
+    {
+        get => name;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            name = value;
+        }
+    }
+
+    public SqlIdentifierExpression Table
+    {
+        get => table;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            table = value;
+        }
+    }
 
     protected bool Equals(SqlPropertyExpression other)
     {

@@ -835,10 +835,13 @@ public class SqlParser
             }
         }
 
-        if (CheckNextIsOrderBy())
+
+
+        if (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation)
         {
-            if (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation)
+            if (CheckNextIsOrderBy())
             {
+                // select 3 as pn union (select 2 as pn order by pn)
                 if ((IsOracle || IsSqlServer) && this.inTheMergeResultSetOperationContext.HasParenDepth)
                 {
                     ThrowSqlParsingErrorException();
@@ -848,19 +851,58 @@ public class SqlParser
                 {
                     return result;
                 }
+
             }
-            query.OrderBy = AcceptOrderByExpression();
         }
+
+        query.OrderBy = AcceptOrderByExpression();
+
 
         if (IsOracle)
         {
             query.ConnectBy = AcceptConnectByExpression();
         }
+
+        if (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation)
+        {
+            if (CheckNextIsLimit())
+            {
+                if (!this.inTheMergeResultSetOperationContext.HasParenDepth)
+                {
+                    return result;
+                }
+            }
+        }
+
         query.Limit = AcceptLimitExpression();
+
 
         query.Hints = AcceptHints();
 
 
+        return result;
+    }
+
+
+    /// <summary>
+    /// Virtual Advance
+    /// 虚拟前进
+    /// </summary>
+    /// <param name="action"></param>
+    private void VirtualAdvance(Action action)
+    {
+        this.SavePoint();
+        action();
+        this.RestoreSavePoint();
+    }
+
+    private bool CheckNextIsLimit()
+    {
+        var result = false;
+        VirtualAdvance(() =>
+        {
+            result = AcceptLimitExpression() != null;
+        });
         return result;
     }
 
@@ -1150,9 +1192,10 @@ public class SqlParser
                 || ((IsPgsql || IsSqlServer || IsSqlite) && (CheckNextToken(Token.Union) || CheckNextToken(Token.Except) || CheckNextToken(Token.Intersect)))
                 || (IsMySql && CheckNextToken(Token.Union))
                 || ((IsPgsql || IsSqlite || IsMySql) && CheckNextIsGroupBy())
-                || ((IsPgsql || IsSqlServer || IsSqlite || IsMySql) && CheckNextIsOrderBy())
+                || (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation && (IsPgsql || IsSqlServer || IsSqlite || IsMySql) && CheckNextIsOrderBy())
                 || (IsSqlite && CheckNextToken(Token.Where))
-                || CheckNextToken(Token.RightParen))
+                || CheckNextToken(Token.RightParen)
+                || (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation && CheckNextIsLimit()))
             {
                 break;
             }
@@ -1725,7 +1768,6 @@ public class SqlParser
             nextToken = tokens[pos];
             savePoint = -1;
         }
-
     }
     private void RestoreSavePoint2()
     {
@@ -2903,7 +2945,6 @@ public class SqlParser
                 IsPrior = isPrior,
                 Body = body
             };
-            body.Parent = result;
 
             return result;
         }

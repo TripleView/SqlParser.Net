@@ -11,9 +11,15 @@ public class SqlExpression : IAcceptVisitor
         
     }
     public virtual SqlExpressionType Type { get; protected set; }
-
+    /// <summary>
+    /// Parent Expression
+    /// 父级表达式
+    /// </summary>
     public SqlExpression Parent { get; set; }
-
+    /// <summary>
+    /// Database Type
+    /// 数据库类型
+    /// </summary>
     public DbType? DbType { set; get; }
     
     public SqlExpression()

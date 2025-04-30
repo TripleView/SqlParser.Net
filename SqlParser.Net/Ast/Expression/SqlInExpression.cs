@@ -5,6 +5,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlInExpression : SqlExpression
 {
+    private SqlExpression body;
+    private List<SqlExpression> targetList;
+    private SqlSelectExpression subQuery;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlInExpression(this);
@@ -20,11 +24,52 @@ public class SqlInExpression : SqlExpression
     /// </summary>
     public bool IsNot { get; set; }
 
-    public SqlExpression Body { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
-    public List<SqlExpression> TargetList { get; set; }
+    public List<SqlExpression> TargetList
+    {
+        get => targetList;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                    
+                }
+            }
+            targetList = value;
+        }
+    }
 
-    public SqlSelectExpression SubQuery { get; set; }
+    public SqlSelectExpression SubQuery
+    {
+        get => subQuery;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            subQuery = value;
+        }
+    }
+
     protected bool Equals(SqlInExpression other)
     {
         if (IsNot != other.IsNot)

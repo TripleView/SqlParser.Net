@@ -5,6 +5,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlDeleteExpression : SqlExpression
 {
+    private SqlExpression body;
+    private SqlExpression table;
+    private SqlExpression where;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlDeleteExpression(this);
@@ -18,11 +22,44 @@ public class SqlDeleteExpression : SqlExpression
     /// The subject of the deletion, such as t in DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'
     /// 删除的主体，比如DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'中的t
     /// </summary>
-    public SqlExpression Body { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
-    public SqlExpression Table { get; set; }
+    public SqlExpression Table
+    {
+        get => table;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            table = value;
+        }
+    }
 
-    public SqlExpression Where { get; set; }
+    public SqlExpression Where
+    {
+        get => where;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            where = value;
+        }
+    }
 
     public List<string> Comments { get; set; }
 

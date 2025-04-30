@@ -6,6 +6,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlConnectByExpression : SqlExpression
 {
+    private SqlExpression startWith;
+    private SqlExpression body;
+    private SqlOrderByExpression orderBy;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlConnectByExpression(this);
@@ -19,11 +23,45 @@ public class SqlConnectByExpression : SqlExpression
 
     public bool IsPrior { get; set; }
 
-    public SqlExpression StartWith { get; set; }
+    public SqlExpression StartWith
+    {
+        get => startWith;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            startWith = value;
+        }
+    }
 
-    public SqlExpression Body { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
-    public SqlOrderByExpression OrderBy { get; set; }
+    public SqlOrderByExpression OrderBy
+    {
+        get => orderBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            orderBy = value;
+        }
+    }
+
     protected bool Equals(SqlConnectByExpression other)
     {
         if (IsNocycle != other.IsNocycle)

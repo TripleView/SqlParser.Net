@@ -15,7 +15,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     private DbType dbType = DbType.MySql;
     private bool addParen = true;
     private bool isFirstVisit = true;
+    private bool IsOracle => this.dbType == DbType.Oracle;
+    private bool IsSqlServer => this.dbType == DbType.SqlServer;
+    private bool IsPgsql => this.dbType == DbType.Pgsql;
 
+    private bool IsMySql => this.dbType == DbType.MySql;
+    private bool IsSqlite => this.dbType == DbType.Sqlite;
     public SqlGenerationAstVisitor(DbType dbType)
     {
         this.dbType = dbType;
@@ -679,13 +684,24 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         else
         {
-            WithBrackets((() =>
+            var checkChildrenIsUnionQuery= sqlSelectExpression.Query is SqlUnionQueryExpression sqlUnionQueryExpression;
+            if (IsSqlite|| checkChildrenIsUnionQuery)
             {
                 if (sqlSelectExpression.Query != null)
                 {
                     sqlSelectExpression.Query?.Accept(this);
                 }
-            }));
+            }
+            else
+            {
+                WithBrackets((() =>
+                {
+                    if (sqlSelectExpression.Query != null)
+                    {
+                        sqlSelectExpression.Query?.Accept(this);
+                    }
+                }));
+            }
         }
 
         if (sqlSelectExpression.Alias != null)
@@ -719,6 +735,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     private void WithBrackets(Action action)
     {
+        if (sb.Length == 0)
+        {
+            action();
+            return;
+        }
         if (addParen)
         {
             sb.Append("(");
@@ -852,6 +873,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
 
     }
+
+    private void AppendSpace()
+    {
+        sb.Append($" ");
+    }
+
     private void AppendWithoutSpaces(string str)
     {
         sb.Append($"{str}");
@@ -913,9 +940,28 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
+        WithBrackets(() =>
+        {
+            VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
+        });
+        return;
+        if (sb.Length == 0|| sb[sb.Length-1]=='(')
+        {
+            VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
+        }
+        else
+        {
+            AppendSpace();
+            WithBrackets(() =>
+            {
+                VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
+            });
+        }
+        
+    }
 
-        Append("(");
-
+    private void VisitSqlUnionQueryExpressionInternal(SqlUnionQueryExpression sqlUnionQueryExpression)
+    {
         if (sqlUnionQueryExpression.Left != null)
         {
             sqlUnionQueryExpression.Left.Accept(this);
@@ -949,14 +995,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     break;
             }
             Append(unionType);
+            AppendSpace();
         }
-
-        if (sqlUnionQueryExpression.Right != null)
+        var right = sqlUnionQueryExpression.Right;
+        if (right != null)
         {
-            sqlUnionQueryExpression.Right.Accept(this);
+            right.Accept(this);
         }
-        Append(")");
     }
+
     public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
         Append("update");

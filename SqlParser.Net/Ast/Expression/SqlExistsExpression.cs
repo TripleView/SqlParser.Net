@@ -4,6 +4,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlExistsExpression : SqlExpression
 {
+    private SqlSelectExpression body;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlExistsExpression(this);
@@ -19,7 +21,18 @@ public class SqlExistsExpression : SqlExpression
     /// </summary>
     public bool IsNot { get; set; }
 
-    public SqlSelectExpression Body { get; set; }
+    public SqlSelectExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     protected bool Equals(SqlExistsExpression other)
     {

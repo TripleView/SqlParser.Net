@@ -4,6 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlBinaryExpression : SqlExpression
 {
+    private SqlExpression left;
+    private SqlExpression right;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlBinaryExpression(this);
@@ -15,9 +18,31 @@ public class SqlBinaryExpression : SqlExpression
         this.Type = SqlExpressionType.Binary;
     }
 
-    public SqlExpression Left { set; get; }
+    public SqlExpression Left
+    {
+        get => left;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            left = value;
+        }
+    }
 
-    public SqlExpression Right { set; get; }
+    public SqlExpression Right
+    {
+        get => right;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            right = value;
+        }
+    }
 
     public SqlBinaryOperator Operator { get; set; }
 

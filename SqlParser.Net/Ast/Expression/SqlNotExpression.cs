@@ -4,6 +4,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlNotExpression : SqlExpression
 {
+    private SqlExpression body;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlNotExpression(this);
@@ -14,7 +16,18 @@ public class SqlNotExpression : SqlExpression
         this.Type = SqlExpressionType.Not;
     }
 
-    public SqlExpression Body { get; set; }
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
 
     protected bool Equals(SqlNotExpression other)
     {

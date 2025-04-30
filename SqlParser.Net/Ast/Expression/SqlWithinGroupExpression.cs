@@ -4,6 +4,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlWithinGroupExpression : SqlExpression
 {
+    private SqlOrderByExpression orderBy;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlWithinGroupExpression(this);
@@ -14,7 +16,18 @@ public class SqlWithinGroupExpression : SqlExpression
         this.Type = SqlExpressionType.WithinGroup;
     }
 
-    public SqlOrderByExpression OrderBy { get; set; }
+    public SqlOrderByExpression OrderBy
+    {
+        get => orderBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            orderBy = value;
+        }
+    }
 
     protected bool Equals(SqlWithinGroupExpression other)
     {

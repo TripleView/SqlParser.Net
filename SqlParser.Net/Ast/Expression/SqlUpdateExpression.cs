@@ -5,6 +5,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlUpdateExpression : SqlExpression
 {
+    private SqlExpression table;
+    private List<SqlExpression> items;
+    private SqlExpression where;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlUpdateExpression(this);
@@ -14,11 +18,50 @@ public class SqlUpdateExpression : SqlExpression
         this.Type = SqlExpressionType.Update;
     }
 
-    public SqlExpression Table { get; set; }
+    public SqlExpression Table
+    {
+        get => table;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            table = value;
+        }
+    }
 
-    public List<SqlExpression> Items { get; set; }
+    public List<SqlExpression> Items
+    {
+        get => items;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            items = value;
+        }
+    }
 
-    public SqlExpression Where { get; set; }
+    public SqlExpression Where
+    {
+        get => where;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            where = value;
+        }
+    }
 
     public List<string> Comments { get; set; }
 

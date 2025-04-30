@@ -4,6 +4,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlOrderByItemExpression : SqlExpression
 {
+    private SqlExpression body;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlOrderByItemExpression(this);
@@ -13,8 +15,19 @@ public class SqlOrderByItemExpression : SqlExpression
         this.Type = SqlExpressionType.OrderByItem;
     }
 
-    public SqlExpression Body { get; set; }
-    
+    public SqlExpression Body
+    {
+        get => body;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            body = value;
+        }
+    }
+
     public SqlOrderByType? OrderByType { get; set; }
 
     public SqlOrderByNullsType? NullsType { get; set; }

@@ -5,6 +5,12 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlPivotTableExpression : SqlExpression
 {
+    private SqlIdentifierExpression alias;
+    private SqlExpression subQuery;
+    private SqlFunctionCallExpression functionCall;
+    private SqlExpression forValue;
+    private List<SqlExpression> inValue;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlPivotTableExpression(this);
@@ -14,15 +20,76 @@ public class SqlPivotTableExpression : SqlExpression
         this.Type = SqlExpressionType.PivotTable;
     }
 
-    public SqlIdentifierExpression Alias { get; set; }
+    public SqlIdentifierExpression Alias
+    {
+        get => alias;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            alias = value;
+        }
+    }
 
-    public SqlExpression SubQuery { get; set; }
+    public SqlExpression SubQuery
+    {
+        get => subQuery;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            subQuery = value;
+        }
+    }
 
-    public SqlFunctionCallExpression FunctionCall { get; set; }
+    public SqlFunctionCallExpression FunctionCall
+    {
+        get => functionCall;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            functionCall = value;
+        }
+    }
 
-    public SqlExpression For { get; set; }
+    public SqlExpression For
+    {
+        get => forValue;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            forValue = value;
+        }
+    }
 
-    public List<SqlExpression> In { get; set; }
+    public List<SqlExpression> In
+    {
+        get => inValue;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            inValue = value;
+        }
+    }
 
     protected bool Equals(SqlPivotTableExpression other)
     {

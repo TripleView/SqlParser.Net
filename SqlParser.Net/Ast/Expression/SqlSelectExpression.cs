@@ -5,6 +5,11 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlSelectExpression : SqlExpression
 {
+    private SqlExpression query;
+    private SqlIdentifierExpression alias;
+    private SqlOrderByExpression orderBy;
+    private SqlLimitExpression limit;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlSelectExpression(this);
@@ -14,14 +19,58 @@ public class SqlSelectExpression : SqlExpression
         this.Type = SqlExpressionType.Select;
     }
 
-    public SqlExpression Query { get; set; }
+    public SqlExpression Query
+    {
+        get => query;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            query = value;
+        }
+    }
 
-    public SqlIdentifierExpression Alias { get; set; }
+    public SqlIdentifierExpression Alias
+    {
+        get => alias;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            alias = value;
+        }
+    }
 
 
-    public SqlOrderByExpression OrderBy { get; set; }
+    public SqlOrderByExpression OrderBy
+    {
+        get => orderBy;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            orderBy = value;
+        }
+    }
 
-    public SqlLimitExpression Limit { get; set; }
+    public SqlLimitExpression Limit
+    {
+        get => limit;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            limit = value;
+        }
+    }
 
     public List<string> Comments { get; set; }
 

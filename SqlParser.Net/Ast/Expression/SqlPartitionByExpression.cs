@@ -5,6 +5,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlPartitionByExpression : SqlExpression
 {
+    private List<SqlExpression> items;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlPartitionByExpression(this);
@@ -14,7 +16,24 @@ public class SqlPartitionByExpression : SqlExpression
         this.Type = SqlExpressionType.PartitionBy;
     }
 
-    public List<SqlExpression> Items { get; set; }
+    public List<SqlExpression> Items
+    {
+        get => items;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            items = value;
+        }
+    }
 
     protected bool Equals(SqlPartitionByExpression other)
     {

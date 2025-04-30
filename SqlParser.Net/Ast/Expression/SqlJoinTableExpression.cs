@@ -4,6 +4,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlJoinTableExpression : SqlExpression
 {
+    private SqlExpression left;
+    private SqlExpression right;
+    private SqlExpression conditions;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlJoinTableExpression(this);
@@ -13,12 +17,46 @@ public class SqlJoinTableExpression : SqlExpression
         this.Type = SqlExpressionType.JoinTable;
     }
 
-    public SqlExpression Left { get; set; }
+    public SqlExpression Left
+    {
+        get => left;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            left = value;
+        }
+    }
 
     public SqlJoinType JoinType { get; set; }
-    public SqlExpression Right { get; set; }
 
-    public SqlExpression Conditions { get; set; }
+    public SqlExpression Right
+    {
+        get => right;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            right = value;
+        }
+    }
+
+    public SqlExpression Conditions
+    {
+        get => conditions;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            conditions = value;
+        }
+    }
 
     protected bool Equals(SqlJoinTableExpression other)
     {

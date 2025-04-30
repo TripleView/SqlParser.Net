@@ -7,6 +7,10 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlCaseExpression : SqlExpression
 {
+    private List<SqlCaseItemExpression> items;
+    private SqlExpression elseValue;
+    private SqlExpression value;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlCaseExpression(this);
@@ -18,11 +22,50 @@ public class SqlCaseExpression : SqlExpression
 
     public SqlCaseExpressionTokenContext TokenContext { get; set; }
 
-    public List<SqlCaseItemExpression> Items { get; set; }
+    public List<SqlCaseItemExpression> Items
+    {
+        get => items;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            items = value;
+        }
+    }
 
-    public SqlExpression Else { get; set; }
+    public SqlExpression Else
+    {
+        get => elseValue;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            elseValue = value;
+        }
+    }
 
-    public SqlExpression Value { get; set; }
+    public SqlExpression Value
+    {
+        get => value;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            this.value = value;
+        }
+    }
 
     protected bool Equals(SqlCaseExpression other)
     {

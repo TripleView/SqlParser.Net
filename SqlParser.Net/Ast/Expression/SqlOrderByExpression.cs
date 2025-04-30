@@ -5,6 +5,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlOrderByExpression : SqlExpression
 {
+    private List<SqlOrderByItemExpression> items;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlOrderByExpression(this);
@@ -14,7 +16,21 @@ public class SqlOrderByExpression : SqlExpression
         this.Type = SqlExpressionType.OrderBy;
     }
 
-    public List<SqlOrderByItemExpression> Items { get; set; }
+    public List<SqlOrderByItemExpression> Items
+    {
+        get => items;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    expression.Parent = this;
+                }
+            }
+            items = value;
+        }
+    }
 
     /// <summary>
     /// just for oracle ,such as:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e  CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID

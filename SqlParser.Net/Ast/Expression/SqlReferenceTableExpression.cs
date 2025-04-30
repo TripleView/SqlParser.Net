@@ -4,6 +4,8 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlReferenceTableExpression : SqlExpression
 {
+    private SqlFunctionCallExpression functionCall;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlReferenceTableExpression(this);
@@ -13,7 +15,18 @@ public class SqlReferenceTableExpression : SqlExpression
         this.Type = SqlExpressionType.ReferenceTable;
     }
 
-    public SqlFunctionCallExpression FunctionCall { get; set; }
+    public SqlFunctionCallExpression FunctionCall
+    {
+        get => functionCall;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            functionCall = value;
+        }
+    }
 
     protected bool Equals(SqlReferenceTableExpression other)
     {

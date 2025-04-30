@@ -5,6 +5,13 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlFunctionCallExpression : SqlExpression
 {
+    private List<SqlExpression> arguments;
+    private SqlIdentifierExpression name;
+    private SqlIdentifierExpression caseAsTargetType;
+    private SqlExpression fromSource;
+    private SqlOverExpression over;
+    private SqlWithinGroupExpression withinGroup;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlFunctionCallExpression(this);
@@ -14,28 +21,102 @@ public class SqlFunctionCallExpression : SqlExpression
         this.Type = SqlExpressionType.FunctionCall;
     }
 
-    public List<SqlExpression> Arguments { get; set; }
+    public List<SqlExpression> Arguments
+    {
+        get => arguments;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            arguments = value;
+        }
+    }
 
-    public SqlIdentifierExpression Name { get; set; }
+    public SqlIdentifierExpression Name
+    {
+        get => name;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            name = value;
+        }
+    }
+
     /// <summary>
     /// Only for case as functions,such as sql:SELECT CAST('123' AS INT)
     /// 只为case as函数,比如sql：SELECT CAST('123' AS INT)
     /// </summary>
-    public SqlIdentifierExpression CaseAsTargetType { get; set; }
+    public SqlIdentifierExpression CaseAsTargetType
+    {
+        get => caseAsTargetType;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            caseAsTargetType = value;
+        }
+    }
+
     /// <summary>
     /// Only for EXTRACT functions,such as sql:EXTRACT(YEAR FROM order_date)
     /// 只为EXTRACT函数,比如sql：EXTRACT(YEAR FROM order_date)
     /// </summary>
-    public SqlExpression FromSource { get; set; }
+    public SqlExpression FromSource
+    {
+        get => fromSource;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            fromSource = value;
+        }
+    }
 
     /// <summary>
     /// 是否不重复
     /// </summary>
     public bool IsDistinct { get; set; }
 
-    public SqlOverExpression Over { get; set; }
+    public SqlOverExpression Over
+    {
+        get => over;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            over = value;
+        }
+    }
 
-    public SqlWithinGroupExpression WithinGroup { get; set; }
+    public SqlWithinGroupExpression WithinGroup
+    {
+        get => withinGroup;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            withinGroup = value;
+        }
+    }
 
     protected bool Equals(SqlFunctionCallExpression other)
     {

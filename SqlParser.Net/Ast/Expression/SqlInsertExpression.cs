@@ -6,6 +6,11 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlInsertExpression : SqlExpression
 {
+    private SqlExpression table;
+    private List<SqlExpression> columns;
+    private List<List<SqlExpression>> valuesList;
+    private SqlSelectExpression fromSelect;
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlInsertExpression(this);
@@ -15,20 +20,83 @@ public class SqlInsertExpression : SqlExpression
         this.Type = SqlExpressionType.Insert;
     }
 
-    public SqlExpression Table { get; set; }
+    public SqlExpression Table
+    {
+        get => table;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            table = value;
+        }
+    }
 
-    public List<SqlExpression> Columns { get; set; }
+    public List<SqlExpression> Columns
+    {
+        get => columns;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            columns = value;
+        }
+    }
 
     /// <summary>
     /// Since MySQL, SQL Server, SQLite, and PostgreSQL support inserting multiple rows of data in an insert statement, the values ​​value is a list.
     /// 由于mysql，sqlserver,SQLite,PostgreSQL支持在insert语句中插入多行数据，所以values值是列表
     /// </summary>
-    public List<List<SqlExpression>> ValuesList { get; set; }
+    public List<List<SqlExpression>> ValuesList
+    {
+        get => valuesList;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expressions in value)
+                {
+                    if (expressions != null)
+                    {
+                        foreach (var expression in expressions)
+                        {
+                            if (expression != null)
+                            {
+                                expression.Parent = this;
+                            }
+                        }
+                    }
+                }
+            }
+
+            valuesList = value;
+        }
+    }
 
     /// <summary>
     /// INSERT INTO TEST2(name) SELECT name AS name2 FROM TEST t
     /// </summary>
-    public SqlSelectExpression FromSelect { get; set; }
+    public SqlSelectExpression FromSelect
+    {
+        get => fromSelect;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            fromSelect = value;
+        }
+    }
 
     public List<string> Comments { get; set; }
 
@@ -49,7 +117,7 @@ public class SqlInsertExpression : SqlExpression
             return false;
         }
 
-      
+
         if (ValuesList is null ^ other.ValuesList is null)
         {
             return false;
