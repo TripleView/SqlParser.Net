@@ -994,7 +994,7 @@ public class SqlLexer
             tokenDic.TryAdd("Last".ToLowerInvariant(), Token.Last);
             tokenDic.TryAdd("Nulls".ToLowerInvariant(), Token.Nulls);
         }
-        if (dbType == DbType.MySql || dbType == DbType.Pgsql)
+        if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
         {
             tokenDic.TryAdd("Limit".ToLowerInvariant(), Token.Limit);
         }

@@ -8,6 +8,8 @@ public class SqlUpdateExpression : SqlExpression
     private SqlExpression table;
     private List<SqlExpression> items;
     private SqlExpression where;
+    private SqlExpression from;
+    private List<string> comments;
 
     public override void Accept(IAstVisitor visitor)
     {
@@ -63,7 +65,24 @@ public class SqlUpdateExpression : SqlExpression
         }
     }
 
-    public List<string> Comments { get; set; }
+    public SqlExpression From
+    {
+        get => from;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            from = value;
+        }
+    }
+
+    public List<string> Comments
+    {
+        get => comments;
+        set => comments = value;
+    }
 
     protected bool Equals(SqlUpdateExpression other)
     {
@@ -71,6 +90,7 @@ public class SqlUpdateExpression : SqlExpression
         {
             return false;
         }
+
         if (!CompareTwoSqlExpression(Where, other.Where))
         {
             return false;
@@ -80,6 +100,12 @@ public class SqlUpdateExpression : SqlExpression
         {
             return false;
         }
+
+        if (!CompareTwoSqlExpression(From, other.From))
+        {
+            return false;
+        }
+
 
         return true;
 

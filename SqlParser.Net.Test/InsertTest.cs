@@ -366,6 +366,113 @@ public class InsertTest
     }
 
     [Fact]
+    public void TestInsert8()
+    {
+        var sql = "insert into TEST2(name) select t.name as name2 from TEST as t join test2 on t.name =test2.name ";
+        var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlInsertExpression()
+        {
+            Columns = new List<SqlExpression>()
+    {
+        new SqlIdentifierExpression()
+        {
+            Value = "name",
+        },
+    },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "TEST2",
+                },
+            },
+            FromSelect = new SqlSelectExpression()
+            {
+                Query = new SqlSelectQueryExpression()
+                {
+                    Columns = new List<SqlSelectItemExpression>()
+            {
+                new SqlSelectItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "name2",
+                    },
+                },
+            },
+                    From = new SqlJoinTableExpression()
+                    {
+                        Left = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "TEST",
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                        JoinType = SqlJoinType.InnerJoin,
+                        Right = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "test2",
+                            },
+                        },
+                        Conditions = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "name",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "name",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "test2",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("insert into TEST2(name) select t.name as name2 from TEST as t inner join test2 on(t.name = test2.name)", newSql);
+    }
+
+    [Fact]
     public void TestInsertCheckIfParsingIsComplete()
     {
         var sql = "insert into test11(name,id) values('a1','a2') a";
@@ -375,4 +482,6 @@ public class InsertTest
             var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         });
     }
+
+
 }

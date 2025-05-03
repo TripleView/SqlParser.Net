@@ -401,11 +401,29 @@ public class SqlParser
         AcceptOrThrowException(Token.Update);
         var result = new SqlUpdateExpression() { DbType = dbType };
 
-        result.Table = AcceptTableExpression();
+
+
+        if (IsMySql)
+        {
+            result.Table = AcceptTableSourceExpression();
+        }
+        else
+        {
+            result.Table = AcceptTableExpression();
+        }
 
         result.Items = AcceptUpdateItemsExpression();
 
-        result.Where = AcceptWhereExpression();
+        //var hasFrom = false;
+        if ((IsPgsql || IsSqlServer) && Accept(Token.From))
+        {
+            result.From = AcceptTableSourceExpression();
+        }
+        if (CheckNextToken(Token.Where))
+        {
+            result.Where = AcceptWhereExpression();
+        }
+
         return result;
     }
 
@@ -633,7 +651,9 @@ public class SqlParser
 
             i++;
 
-            if (CheckNextToken(Token.Where) || nextToken == null)
+            if (CheckNextToken(Token.Where)
+                || nextToken == null
+                || ((IsSqlServer || IsPgsql) && CheckNextToken(Token.From)))
             {
                 break;
             }
@@ -835,8 +855,6 @@ public class SqlParser
             }
         }
 
-
-
         if (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation)
         {
             if (CheckNextIsOrderBy())
@@ -908,7 +926,7 @@ public class SqlParser
 
     private SqlLimitExpression AcceptLimitExpression()
     {
-        if (IsMySql)
+        if (IsMySql || IsSqlite)
         {
             return AcceptMysqlLimitExpression();
         }
@@ -929,8 +947,9 @@ public class SqlParser
     }
     private SqlLimitExpression AcceptSqlServerLimitExpression()
     {
-        if (Accept(Token.Offset))
+        if (CheckNextToken(Token.Offset) && CheckNextNextToken(Token.NumberConstant))
         {
+            Accept(Token.Offset);
             var result = new SqlLimitExpression() { DbType = dbType };
             var first = AcceptNestedComplexExpression();
             AcceptOrThrowException(Token.Rows);
@@ -950,8 +969,9 @@ public class SqlParser
 
     private SqlLimitExpression AcceptOracleLimitExpression()
     {
-        if (Accept(Token.Fetch))
+        if (CheckNextToken(Token.Fetch) && CheckNextNextToken(Token.First))
         {
+            Accept(Token.Fetch);
             var result = new SqlLimitExpression() { DbType = dbType };
             AcceptOrThrowException(Token.First);
             var rowCount = AcceptNestedComplexExpression();
@@ -967,9 +987,9 @@ public class SqlParser
     private SqlLimitExpression AcceptPgsqlLimitExpression()
     {
         var result = new SqlLimitExpression() { DbType = dbType };
-        if (Accept(Token.Limit))
+        if (CheckNextToken(Token.Limit) && CheckNextNextToken(Token.NumberConstant))
         {
-
+            Accept(Token.Limit);
             var rowCount = AcceptNestedComplexExpression();
 
             if (Accept(Token.Offset))
@@ -985,8 +1005,9 @@ public class SqlParser
 
             return result;
         }
-        else if (Accept(Token.Offset))
+        else if (CheckNextToken(Token.Offset) && CheckNextNextToken(Token.NumberConstant))
         {
+            Accept(Token.Offset);
             var offset = AcceptNestedComplexExpression();
             result.Offset = offset;
             return result;
@@ -997,8 +1018,9 @@ public class SqlParser
 
     private SqlLimitExpression AcceptMysqlLimitExpression()
     {
-        if (Accept(Token.Limit))
+        if (CheckNextToken(Token.Limit) && CheckNextNextToken(Token.NumberConstant))
         {
+            Accept(Token.Limit);
             var result = new SqlLimitExpression() { DbType = dbType };
             var first = AcceptNestedComplexExpression();
 
@@ -1187,15 +1209,15 @@ public class SqlParser
 
             i++;
             if (CheckNextToken(Token.From)
-                || (IsSqlServer && CheckNextToken(Token.Into))
                 || nextToken == null
+                || CheckNextToken(Token.RightParen)
+                || (IsSqlServer && CheckNextToken(Token.Into))
                 || ((IsPgsql || IsSqlServer || IsSqlite) && (CheckNextToken(Token.Union) || CheckNextToken(Token.Except) || CheckNextToken(Token.Intersect)))
                 || (IsMySql && CheckNextToken(Token.Union))
                 || ((IsPgsql || IsSqlite || IsMySql) && CheckNextIsGroupBy())
-                || (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation && (IsPgsql || IsSqlServer || IsSqlite || IsMySql) && CheckNextIsOrderBy())
+                || ((IsPgsql || IsSqlServer || IsSqlite || IsMySql) && CheckNextIsOrderBy())
                 || (IsSqlite && CheckNextToken(Token.Where))
-                || CheckNextToken(Token.RightParen)
-                || (this.inTheMergeResultSetOperationContext.IsInTheMergeResultSetOperation && CheckNextIsLimit()))
+                || (CheckNextIsLimit()))
             {
                 break;
             }
@@ -2758,7 +2780,7 @@ public class SqlParser
                 var right = AcceptTableExpression();
 
                 SqlExpression conditions = null;
-                if (isRequireOnCondition)
+                if (isRequireOnCondition || IsMySql)
                 {
                     AcceptOrThrowException(Token.On);
                     conditions = AcceptNestedComplexExpression();

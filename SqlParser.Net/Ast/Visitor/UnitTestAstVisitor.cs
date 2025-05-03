@@ -1272,6 +1272,15 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlUpdateExpression.Table.Accept(this);
             });
         }
+
+        if (sqlUpdateExpression.From != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("From = ");
+                sqlUpdateExpression.From.Accept(this);
+            });
+        }
         if (sqlUpdateExpression.Where != null)
         {
             AdvanceNext(() =>

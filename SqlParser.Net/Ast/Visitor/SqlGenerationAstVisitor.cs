@@ -14,13 +14,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     private bool addSpace = true;
     private DbType dbType = DbType.MySql;
     private bool addParen = true;
-    private bool isFirstVisit = true;
     private bool IsOracle => this.dbType == DbType.Oracle;
     private bool IsSqlServer => this.dbType == DbType.SqlServer;
     private bool IsPgsql => this.dbType == DbType.Pgsql;
 
     private bool IsMySql => this.dbType == DbType.MySql;
     private bool IsSqlite => this.dbType == DbType.Sqlite;
+
+    private ParseType sqlParseType;
+
     public SqlGenerationAstVisitor(DbType dbType)
     {
         this.dbType = dbType;
@@ -430,6 +432,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 Append("rows only");
                 break;
             case DbType.MySql:
+            case DbType.Sqlite:
                 Append("limit");
                 if (sqlLimitExpression.Offset != null)
                 {
@@ -674,9 +677,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
-        if (isFirstVisit)
+        if (sb.Length == 0 || sqlSelectExpression.Parent is SqlInsertExpression)
         {
-            isFirstVisit = false;
             if (sqlSelectExpression.Query != null)
             {
                 sqlSelectExpression.Query?.Accept(this);
@@ -684,8 +686,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         else
         {
-            var checkChildrenIsUnionQuery= sqlSelectExpression.Query is SqlUnionQueryExpression sqlUnionQueryExpression;
-            if (IsSqlite|| checkChildrenIsUnionQuery)
+            var checkChildrenIsUnionQuery = sqlSelectExpression.Query is SqlUnionQueryExpression sqlUnionQueryExpression;
+            if (IsSqlite || checkChildrenIsUnionQuery)
             {
                 if (sqlSelectExpression.Query != null)
                 {
@@ -744,7 +746,6 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sb.Append("(");
         }
-
         this.addSpace = false;
         action();
 
@@ -944,20 +945,6 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
         });
-        return;
-        if (sb.Length == 0|| sb[sb.Length-1]=='(')
-        {
-            VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
-        }
-        else
-        {
-            AppendSpace();
-            WithBrackets(() =>
-            {
-                VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
-            });
-        }
-        
     }
 
     private void VisitSqlUnionQueryExpressionInternal(SqlUnionQueryExpression sqlUnionQueryExpression)
@@ -1006,6 +993,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
+        sqlParseType = ParseType.Update;
         Append("update");
         if (sqlUpdateExpression.Table != null)
         {
@@ -1018,6 +1006,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
             {
                 var item = sqlUpdateExpression.Items[i];
+                
                 DisableBrackets(() =>
                 {
                     item.Accept(this);
@@ -1029,6 +1018,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 }
             }
         }
+
+        if (IsSqlServer || IsPgsql)
+        {
+            if (sqlUpdateExpression.From != null)
+            {
+                Append("from");
+                sqlUpdateExpression.From.Accept(this);
+            }
+        }
+
         if (sqlUpdateExpression.Where != null)
         {
             sb.Append(" where");
