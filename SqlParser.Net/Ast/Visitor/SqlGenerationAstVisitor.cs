@@ -23,6 +23,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     private ParseType sqlParseType;
 
+    private bool isInUpdateSetContext = false;
+
     public SqlGenerationAstVisitor(DbType dbType)
     {
         this.dbType = dbType;
@@ -41,7 +43,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("all");
         if (sqlAllExpression.Body != null)
         {
-            WithBrackets(() => { sqlAllExpression.Body.Accept(this); });
+            EnableParen(() => { sqlAllExpression.Body.Accept(this); });
         }
     }
     public override void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
@@ -49,7 +51,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("any");
         if (sqlAnyExpression.Body != null)
         {
-            WithBrackets(() => { sqlAnyExpression.Body.Accept(this); });
+            EnableParen(() => { sqlAnyExpression.Body.Accept(this); });
         }
     }
     public override void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
@@ -97,17 +99,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
-        if (sqlBinaryExpression.Parent is SqlConnectByExpression)
+        if (sqlBinaryExpression.Parent is SqlConnectByExpression
+            || (sqlBinaryExpression.Parent is SqlUpdateExpression && isInUpdateSetContext))
         {
             action();
         }
         else
         {
-            WithBrackets(() =>
-            {
-                action();
-
-            });
+            EnableParen(action);
         }
     }
     public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
@@ -183,7 +182,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlExistsExpression.Body != null)
         {
-            WithBrackets(() =>
+            EnableParen(() =>
             {
                 sqlExistsExpression.Body.Accept(this);
             });
@@ -200,7 +199,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlFunctionCallExpression.Arguments != null)
         {
-            WithBrackets(() =>
+            EnableParen(() =>
             {
                 for (var i = 0; i < sqlFunctionCallExpression.Arguments.Count; i++)
                 {
@@ -297,7 +296,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlInExpression.TargetList != null)
         {
-            WithBrackets(() =>
+            EnableParen(() =>
             {
                 for (var i = 0; i < sqlInExpression.TargetList.Count; i++)
                 {
@@ -327,7 +326,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlInsertExpression.Columns != null)
         {
-            WithBrackets(() =>
+            EnableParen(() =>
             {
                 for (var i = 0; i < sqlInsertExpression.Columns.Count; i++)
                 {
@@ -346,7 +345,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             for (var i = 0; i < sqlInsertExpression.ValuesList.Count; i++)
             {
                 var items = sqlInsertExpression.ValuesList[i];
-                WithBrackets((() =>
+                EnableParen((() =>
                 {
                     for (var j = 0; j < items.Count; j++)
                     {
@@ -483,7 +482,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("not");
         if (sqlNotExpression.Body != null)
         {
-            WithBrackets(() =>
+            EnableParen(() =>
             {
                 sqlNotExpression.Body.Accept(this);
             });
@@ -574,7 +573,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
     {
         Append("over");
-        WithBrackets((() =>
+        EnableParen((() =>
         {
             if (sqlOverExpression.PartitionBy != null)
             {
@@ -612,7 +611,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
 
         Append("pivot");
-        WithBrackets(() =>
+        EnableParen(() =>
         {
             if (sqlPivotTableExpression.FunctionCall != null)
             {
@@ -626,7 +625,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             if (sqlPivotTableExpression.In != null)
             {
                 Append("in");
-                WithBrackets(() =>
+                EnableParen(() =>
                 {
                     for (var i = 0; i < sqlPivotTableExpression.In.Count; i++)
                     {
@@ -677,7 +676,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
-        if (sb.Length == 0 || sqlSelectExpression.Parent is SqlInsertExpression)
+        if (sb.Length == 0
+            || sqlSelectExpression.Parent is SqlInsertExpression
+            || IsSqlite
+            || sqlSelectExpression.Query is SqlUnionQueryExpression
+            || sqlSelectExpression.Parent is SqlExistsExpression)
         {
             if (sqlSelectExpression.Query != null)
             {
@@ -686,24 +689,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         else
         {
-            var checkChildrenIsUnionQuery = sqlSelectExpression.Query is SqlUnionQueryExpression sqlUnionQueryExpression;
-            if (IsSqlite || checkChildrenIsUnionQuery)
+            EnableParen(() =>
             {
                 if (sqlSelectExpression.Query != null)
                 {
                     sqlSelectExpression.Query?.Accept(this);
                 }
-            }
-            else
-            {
-                WithBrackets((() =>
-                {
-                    if (sqlSelectExpression.Query != null)
-                    {
-                        sqlSelectExpression.Query?.Accept(this);
-                    }
-                }));
-            }
+            }, isInUpdateSetContext);
         }
 
         if (sqlSelectExpression.Alias != null)
@@ -735,32 +727,39 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
     }
 
-    private void WithBrackets(Action action)
+    private void EnableParen(Action action, bool isForce = false)
     {
         if (sb.Length == 0)
         {
             action();
             return;
         }
-        if (addParen)
+        if (addParen || isForce)
         {
             sb.Append("(");
         }
         this.addSpace = false;
         action();
 
-        if (addParen)
+        if (addParen || isForce)
         {
             sb.Append(")");
         }
 
     }
 
-    private void DisableBrackets(Action action)
+    private void DisableParen(Action action)
     {
         this.addParen = false;
         action();
         this.addParen = true;
+    }
+
+    private void EnableUpdateSetContext(Action action)
+    {
+        this.isInUpdateSetContext = true;
+        action();
+        this.isInUpdateSetContext = false;
     }
 
     public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
@@ -941,7 +940,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
-        WithBrackets(() =>
+        EnableParen(() =>
         {
             VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
         });
@@ -1002,12 +1001,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlUpdateExpression.Items != null)
         {
-            Append("set ");
+            Append("set");
             for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
             {
                 var item = sqlUpdateExpression.Items[i];
-                
-                DisableBrackets(() =>
+                //item.Accept(this);
+                EnableUpdateSetContext(() =>
                 {
                     item.Accept(this);
                 });
@@ -1019,7 +1018,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
-        if (IsSqlServer || IsPgsql)
+        if (IsSqlServer || IsPgsql || IsSqlite)
         {
             if (sqlUpdateExpression.From != null)
             {
@@ -1050,7 +1049,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
         Append("within group");
-        WithBrackets((() =>
+        EnableParen((() =>
         {
             if (sqlWithinGroupExpression.OrderBy != null)
             {
@@ -1067,7 +1066,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlWithSubQueryExpression.Columns != null)
         {
-            WithBrackets((() =>
+            EnableParen((() =>
             {
                 for (var i = 0; i < sqlWithSubQueryExpression.Columns.Count; i++)
                 {
@@ -1085,7 +1084,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("as");
         if (sqlWithSubQueryExpression.FromSelect != null)
         {
-            WithBrackets(() =>
+            EnableParen(() =>
             {
                 sqlWithSubQueryExpression.FromSelect.Accept(this);
             });

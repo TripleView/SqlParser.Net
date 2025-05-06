@@ -73,7 +73,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update test set name = '4',d = '2024-11-22 08:19:47.243' where(name = '1')", newSql);
+        Assert.Equal("update test set name = '4', d = '2024-11-22 08:19:47.243' where(name = '1')", newSql);
     }
 
     [Fact]
@@ -1008,10 +1008,83 @@ public class UpdateTest
     },
         };
 
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("update t3 set id =(select pid from t4 where(t3.id = t4.PID)) where exists(select 1 from t4 where(t3.id = t4.pid))", newSql);
+    }
 
+    [Fact]
+    public void TestUpdateJoinSqlite()
+    {
+
+        var sql = @"update t3 set Id ='aa' from t4 where t3.Id =t4.Pid";
+        var sqlAst = new SqlExpression();
+
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Sqlite); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlUpdateExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "t3",
+                },
+            },
+            From = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "t4",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Id",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "t3",
+                    },
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Pid",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "t4",
+                    },
+                },
+            },
+            Items = new List<SqlExpression>()
+            {
+                new SqlBinaryExpression()
+                {
+                    Left = new SqlIdentifierExpression()
+                    {
+                        Value = "Id",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlStringExpression()
+                    {
+                        Value = "aa"
+                    },
+                },
+            },
+        };
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        //Assert.Equal("update t3 as a inner join T4 as b on(a.id = b.Pid) set a.Id = '1' where(1 = 1)", newSql);
+        Assert.Equal("update t3 set Id = 'aa' from t4 where(t3.Id = t4.Pid)", newSql);
     }
 }

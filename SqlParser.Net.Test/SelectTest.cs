@@ -4576,7 +4576,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t where(exists((select * from TEST1 t2)) or(1 = 1))", generationSql);
+        Assert.Equal("select * from TEST t where(exists(select * from TEST1 t2) or(1 = 1))", generationSql);
     }
 
     [Fact]
@@ -8446,7 +8446,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t where not exists((select * from TEST1 t2))", generationSql);
+        Assert.Equal("select * from TEST t where not exists(select * from TEST1 t2)", generationSql);
     }
 
     [Fact]

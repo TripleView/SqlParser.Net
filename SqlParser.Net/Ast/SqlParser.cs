@@ -401,8 +401,6 @@ public class SqlParser
         AcceptOrThrowException(Token.Update);
         var result = new SqlUpdateExpression() { DbType = dbType };
 
-
-
         if (IsMySql)
         {
             result.Table = AcceptTableSourceExpression();
@@ -415,7 +413,7 @@ public class SqlParser
         result.Items = AcceptUpdateItemsExpression();
 
         //var hasFrom = false;
-        if ((IsPgsql || IsSqlServer) && Accept(Token.From))
+        if ((IsPgsql || IsSqlServer || IsSqlite) && Accept(Token.From))
         {
             result.From = AcceptTableSourceExpression();
         }
@@ -653,7 +651,7 @@ public class SqlParser
 
             if (CheckNextToken(Token.Where)
                 || nextToken == null
-                || ((IsSqlServer || IsPgsql) && CheckNextToken(Token.From)))
+                || ((IsSqlServer || IsPgsql || IsSqlite) && CheckNextToken(Token.From)))
             {
                 break;
             }

@@ -9,7 +9,12 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var sql = "";
+            var sql = @"update [winter.staff].[dbo].Teacher
+                set IdentityUserId = u.id
+                from [winter.staff].[dbo].Teacher t
+                inner join [winter.identity].[dbo].UserLogins ul on ul.ProviderKey=t.PhoneNumber and ul.LoginProvider='SMS'
+                inner join [winter.identity].[dbo].Users u on u.Id=ul.UserId
+                where t.PhoneNumber = @PhoneNumber";
 //            sql = "update t3 set Id ='1' from  T4 where t3.id = t4.Pid ";//pgsql
 //            sql = "update t set t.Id ='1' from T3 as t inner join T4 as t4 on t.id = t4.Pid where t.id = 'abc'";//sqlserver
 //            sql = "update t3  join T4  t4 on t3.id = t4.Pid  set t3.Id ='1'  where 1=1";//mysql
