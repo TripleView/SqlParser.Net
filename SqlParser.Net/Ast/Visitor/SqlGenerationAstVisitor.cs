@@ -913,7 +913,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
 
         sqlTableExpression.Name?.Accept(this);
-        if (dbType == DbType.Oracle && sqlTableExpression.DbLink != null)
+        if ((IsOracle || IsPgsql) && sqlTableExpression.DbLink != null)
         {
             AppendWithoutSpaces("@");
             this.addSpace = false;

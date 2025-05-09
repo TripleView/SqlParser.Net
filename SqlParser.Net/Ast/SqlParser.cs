@@ -457,6 +457,7 @@ public class SqlParser
 
         var name = GetCurrentTokenValue();
         var mainToken = currentToken;
+        Token? dbLinkToken = null;
         //var nameList = new List<string>() { name };
         var nameTokenList = new List<Token?>() { mainToken };
 
@@ -483,7 +484,7 @@ public class SqlParser
                 }
 
                 i++;
-                var isOracleDbLink = IsOracle && Accept(Token.At);
+                var isOracleDbLink = (IsOracle || IsPgsql) && Accept(Token.At);
 
                 //select * from [a.test]..[test]
                 var isSqlServerDotDot = IsSqlServer && Accept(Token.DotDot);
@@ -505,6 +506,7 @@ public class SqlParser
                 {
                     if (Accept(Token.IdentifierString))
                     {
+                        dbLinkToken = currentToken;
                         dbLinkName = GetCurrentTokenValue();
                     }
                     else
@@ -549,6 +551,8 @@ public class SqlParser
             {
                 table.DbLink = new SqlIdentifierExpression()
                 {
+                    LeftQualifiers = dbLinkToken.HasValue ? dbLinkToken.Value.LeftQualifiers : "",
+                    RightQualifiers = dbLinkToken.HasValue ? dbLinkToken.Value.RightQualifiers : "",
                     Value = dbLinkName,
                     DbType = dbType
                 };

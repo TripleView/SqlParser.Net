@@ -9010,6 +9010,223 @@ order by temp.InxNbr";
     }
 
     [Fact]
+    public void TestDatabaseScheme6()
+    {
+        var sql = "select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on(a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Id",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "LTRIM",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlBinaryExpression()
+                        {
+                            Left = new SqlBinaryExpression()
+                            {
+                                Left = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "OrganizationName",
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                },
+                                Operator = SqlBinaryOperator.Concat,
+                                Right = new SqlStringExpression()
+                                {
+                                    Value = " / "
+                                },
+                            },
+                            Operator = SqlBinaryOperator.Concat,
+                            Right = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "TeacherName",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                            },
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "OrganizationName",
+                },
+            },
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Total",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+            },
+        },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "RewardDocPersonSummary",
+                            LeftQualifiers = "\"",
+                            RightQualifiers = "\"",
+                        },
+                        Schema = new SqlIdentifierExpression()
+                        {
+                            Value = "public",
+                            LeftQualifiers = "\"",
+                            RightQualifiers = "\"",
+                        },
+                        DbLink = new SqlIdentifierExpression()
+                        {
+                            Value = "winter.fixform",
+                            LeftQualifiers = "\"",
+                            RightQualifiers = "\"",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                    },
+                    JoinType = SqlJoinType.InnerJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Organization",
+                        },
+                        Schema = new SqlIdentifierExpression()
+                        {
+                            Value = "public",
+                            LeftQualifiers = "\"",
+                            RightQualifiers = "\"",
+                        },
+                        DbLink = new SqlIdentifierExpression()
+                        {
+                            Value = "winter.school",
+                            LeftQualifiers = "\"",
+                            RightQualifiers = "\"",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "o",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "OrganizationId",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "o",
+                            },
+                        },
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "InxNbr",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "o",
+                        },
+                    },
+                },
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "TeacherName",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                    },
+                },
+            },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on(a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName",
+            newSql);
+    }
+
+    [Fact]
     public void TestComplexSelectItem()
     {
         var sql =
