@@ -938,7 +938,6 @@ public class SqlLexer
         tokenDic.TryAdd("Cast".ToLowerInvariant(), Token.Cast);
         tokenDic.TryAdd("And".ToLowerInvariant(), Token.And);
         tokenDic.TryAdd("Or".ToLowerInvariant(), Token.Or);
-        tokenDic.TryAdd("Xor".ToLowerInvariant(), Token.Xor);
         tokenDic.TryAdd("BitwiseAnd".ToLowerInvariant(), Token.BitwiseAnd);
         tokenDic.TryAdd("BitwiseXor".ToLowerInvariant(), Token.BitwiseXor);
 

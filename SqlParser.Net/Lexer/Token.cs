@@ -123,7 +123,6 @@ public struct Token
     public static readonly Token Cast = new Token("Cast", "Cast", 31) { TokenType = TokenType.Keyword };
     public static readonly Token And = new Token("And", "And", 32) { TokenType = TokenType.Keyword };
     public static readonly Token Or = new Token("Or", "Or", 33) { TokenType = TokenType.Keyword };
-    public static readonly Token Xor = new Token("Xor", "Xor", 34) { TokenType = TokenType.Keyword };
     public static readonly Token Case = new Token("Case", "Case", 35) { TokenType = TokenType.Keyword };
     public static readonly Token When = new Token("When", "When", 36) { TokenType = TokenType.Keyword };
     public static readonly Token Then = new Token("Then", "Then", 37) { TokenType = TokenType.Keyword };

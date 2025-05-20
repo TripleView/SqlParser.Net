@@ -83,7 +83,6 @@ public class SqlParser
             Token.Offset,
             Token.And,
             Token.Or,
-            Token.Xor,
             Token.LeftParen,
             Token.RightParen,
             Token.From,
@@ -107,6 +106,7 @@ public class SqlParser
             Token.LessThen,
             Token.GreaterThen,
             Token.EqualTo,
+            Token.As,
         };
         splitTokenDics = splitTokens.ToDictionary(it => it, it => true);
     }
@@ -1333,7 +1333,13 @@ public class SqlParser
     /// <returns></returns>
     private SqlExpression AcceptLogicalExpression()
     {
-        var left = AcceptEquationOperationExpression();
+        var exp = AcceptLogicalExpressionForOr();
+        return exp;
+    }
+
+    private SqlExpression AcceptLogicalExpressionForOr()
+    {
+        var left = AcceptLogicalExpressionForAnd();
         var i = 0;
         while (true)
         {
@@ -1348,20 +1354,12 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.Or;
             }
-            else if (Accept(Token.And))
-            {
-                @operator = SqlBinaryOperator.And;
-            }
-            else if (Accept(Token.Xor))
-            {
-                @operator = SqlBinaryOperator.Xor;
-            }
             else
             {
                 break;
             }
 
-            var right = AcceptEquationOperationExpression();
+            var right = AcceptLogicalExpressionForAnd();
 
             left = new SqlBinaryExpression()
             {
@@ -1370,11 +1368,65 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
-
         }
 
         return left;
     }
+
+
+    private SqlExpression AcceptLogicalExpressionForAnd()
+    {
+        var left = AcceptLogicalExpressionForNot();
+        var i = 0;
+        while (true)
+        {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
+            SqlBinaryOperator @operator;
+            if (Accept(Token.And))
+            {
+                @operator = SqlBinaryOperator.And;
+            }
+            else
+            {
+                break;
+            }
+
+            var right = AcceptLogicalExpressionForNot();
+
+            left = new SqlBinaryExpression()
+            {
+                DbType = dbType,
+                Left = left,
+                Right = right,
+                Operator = @operator
+            };
+        }
+
+        return left;
+    }
+
+
+    private SqlExpression AcceptLogicalExpressionForNot()
+    {
+        var isNot = Accept(Token.Not);
+        var exp = AcceptEquationOperationExpression();
+        if (isNot)
+        {
+            return new SqlNotExpression()
+            {
+                DbType = dbType,
+                Body = exp
+            };
+        }
+
+        return exp;
+    }
+
     /// <summary>
     /// 解析等式运算
     /// </summary>
@@ -1824,7 +1876,6 @@ public class SqlParser
             Token.Limit,
             Token.And,
             Token.Or,
-            Token.Xor,
             Token.LeftParen,
             Token.RightParen,
             Token.From,
@@ -2252,32 +2303,6 @@ public class SqlParser
         }
         else
         {
-            var startIndex = -1;
-            if (pos - 2 >= 0)
-            {
-                startIndex = tokens[pos - 2].StartPositionIndex;
-            }
-            else if (pos - 1 >= 0)
-            {
-                startIndex = tokens[pos - 1].StartPositionIndex;
-            }
-            else
-            {
-                startIndex = tokens[pos].StartPositionIndex;
-            }
-            var endIndex = -1;
-            if (pos + 2 <= tokens.Count - 1)
-            {
-                endIndex = tokens[pos + 2].EndPositionIndex;
-            }
-            else if (pos + 1 <= tokens.Count - 1)
-            {
-                endIndex = tokens[pos + 1].EndPositionIndex;
-            }
-            else
-            {
-                endIndex = tokens[pos].EndPositionIndex;
-            }
             ThrowSqlParsingErrorException();
         }
 
@@ -2419,7 +2444,7 @@ public class SqlParser
 
     private SqlExpression AcceptNot()
     {
-        if (Accept(Token.Not))
+        if (CheckNextToken(Token.Not))
         {
             var not = currentToken;
             var expression = AcceptLogicalExpression();
@@ -3127,6 +3152,11 @@ public class SqlParser
         }
 
         return false;
+    }
+
+    private bool CheckPreviewToken(Token token)
+    {
+        return pos - 1 >= 0 && tokens[pos - 1].IsToken(token);
     }
 
     private bool CheckNextNextToken(Token token)
