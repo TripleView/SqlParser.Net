@@ -253,4 +253,8 @@ public struct Token
     public static readonly Token To = new Token("To", "To", 123) { TokenType = TokenType.Keyword };
 
     public static readonly Token DotDot = new Token("DotDot", "..", 124) { TokenType = TokenType.Symbol };
+
+    public static readonly Token ILike = new Token("ILike", "ILike", 125) { TokenType = TokenType.Keyword };
+
+    public static readonly Token BitwiseXorForPg = new Token("BitwiseXorForPg", "#", 126) { TokenType = TokenType.Operator };
 }

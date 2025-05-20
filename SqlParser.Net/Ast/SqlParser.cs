@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Xml.Linq;
 using SqlParser.Net.Ast.Expression;
@@ -1327,8 +1328,8 @@ public class SqlParser
     }
 
     /// <summary>
-    /// Parsing logical expressions, and or xor
-    /// 解析逻辑表达式，and or xor
+    /// Parsing logical expressions,not、and、or,The order of logical operators is not, and, or
+    /// 解析逻辑表达式，not、and、or,逻辑运算符的顺序为not、and、or
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptLogicalExpression()
@@ -1337,6 +1338,13 @@ public class SqlParser
         return exp;
     }
 
+
+    /// <summary>
+    /// Parsing logical expressions or
+    /// 解析逻辑表达式or
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     private SqlExpression AcceptLogicalExpressionForOr()
     {
         var left = AcceptLogicalExpressionForAnd();
@@ -1373,7 +1381,12 @@ public class SqlParser
         return left;
     }
 
-
+    /// <summary>
+    /// Parsing logical expressions and
+    /// 解析逻辑表达式and
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     private SqlExpression AcceptLogicalExpressionForAnd()
     {
         var left = AcceptLogicalExpressionForNot();
@@ -1410,13 +1423,23 @@ public class SqlParser
         return left;
     }
 
-
+    /// <summary>
+    /// Parsing logical expression not
+    /// 解析逻辑表达式not
+    /// </summary>
+    /// <returns></returns>
     private SqlExpression AcceptLogicalExpressionForNot()
     {
         var isNot = Accept(Token.Not);
         var exp = AcceptEquationOperationExpression();
         if (isNot)
         {
+            if (exp is SqlExistsExpression sqlExistsExpression)
+            {
+                sqlExistsExpression.IsNot = true;
+                return sqlExistsExpression;
+            }
+
             return new SqlNotExpression()
             {
                 DbType = dbType,
@@ -1600,6 +1623,10 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.Like;
             }
+            else if (IsPgsql && Accept(Token.ILike))
+            {
+                @operator = SqlBinaryOperator.ILike;
+            }
             else if (Accept(Token.BarBar))
             {
                 @operator = SqlBinaryOperator.Concat;
@@ -1610,6 +1637,10 @@ public class SqlParser
                 if (Accept(Token.Like))
                 {
                     @operator = SqlBinaryOperator.NotLike;
+                }
+                else if (IsPgsql && Accept(Token.ILike))
+                {
+                    @operator = SqlBinaryOperator.NotILike;
                 }
                 else
                 {
@@ -1791,6 +1822,10 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.BitwiseXor;
             }
+            else if (IsPgsql && Accept(Token.BitwiseXorForPg))
+            {
+                @operator = SqlBinaryOperator.BitwiseXorForPg;
+            }
             else
             {
                 break;
@@ -1952,27 +1987,78 @@ public class SqlParser
                 if (Accept(Token.ColonColon))
                 {
                     var targetTypeNameStringBuilder = new StringBuilder();
-                    var j = 0;
-                    while (true)
+
+                    void AppendCurrentTokenValue()
                     {
-                        if (j >= whileMaximumNumberOfLoops)
-                        {
-                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
-                        }
-
-                        j++;
-                        if (CheckNextTokenIsSplitToken())
-                        {
-                            break;
-                        }
-
-                        if (CheckNextToken(Token.ColonColon))
-                        {
-                            break;
-                        }
-                        AcceptAnyOne();
                         targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
                         targetTypeNameStringBuilder.Append(" ");
+                    }
+
+                    if ((AcceptSpecifiedWord("TIMESTAMP") || Accept(Token.Time)))
+                    {
+                        AppendCurrentTokenValue();
+                        if (Accept(Token.With))
+                        {
+                            AppendCurrentTokenValue();
+                            if (Accept(Token.Time))
+                            {
+                                AppendCurrentTokenValue();
+                                if (Accept(Token.Zone))
+                                {
+                                    targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                                }
+                                else
+                                {
+                                    ThrowSqlParsingErrorException();
+                                }
+                            }
+                            else
+                            {
+                                ThrowSqlParsingErrorException();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        AcceptAnyOne();
+                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        if (AcceptSpecifiedWord("varying"))
+                        {
+                            targetTypeNameStringBuilder.Append(" ");
+                            targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        }
+                    }
+
+                    var isParentheses = false;
+                    if (Accept(Token.LeftParen))
+                    {
+                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        var k = 0;
+                        while (true)
+                        {
+                            if (k >= whileMaximumNumberOfLoops)
+                            {
+                                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                            }
+
+                            k++;
+                            if (Accept(Token.RightParen))
+                            {
+                                targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                                isParentheses = true;
+                                break;
+                            }
+                            AcceptAnyOne();
+                            targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        }
+                    }
+
+                    if (Accept(Token.LeftSquareBracket))
+                    {
+                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        AcceptOrThrowException(Token.RightSquareBracket);
+                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        isParentheses = true;
                     }
 
                     var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
@@ -1999,6 +2085,15 @@ public class SqlParser
                         break;
                     }
 
+                    if (isParentheses)
+                    {
+                        break;
+                    }
+
+                    if (!CheckNextToken(Token.ColonColon))
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -2030,11 +2125,6 @@ public class SqlParser
             expr = AcceptAtTimeZoneExpression(expr) ?? expr;
             AcceptOrThrowException(Token.RightParen);
             return expr;
-        }
-        else if (CheckNextToken(Token.Not))
-        {
-            var result = AcceptNot();
-            return result;
         }
 
         SqlExpression body = new SqlExpression();
@@ -2428,12 +2518,12 @@ public class SqlParser
     /// <returns></returns>
     private bool AcceptTimeUnit()
     {
-        return AcceptSpecifiedWord(timeUnitSet);
+        return AcceptSpecifiedWords(timeUnitSet);
     }
 
-    private bool AcceptSpecifiedWord(HashSet<string> set)
+    private bool AcceptSpecifiedWords(HashSet<string> set)
     {
-        if (nextToken.HasValue && set.Contains(nextToken.Value.RawValue.ToLowerInvariant()))
+        if (nextToken.HasValue && !string.IsNullOrWhiteSpace(nextToken.Value.RawValue) && set.Contains(nextToken.Value.RawValue.ToLowerInvariant()))
         {
             GetNextToken();
             return true;
@@ -2442,44 +2532,15 @@ public class SqlParser
         return false;
     }
 
-    private SqlExpression AcceptNot()
+    private bool AcceptSpecifiedWord(string word)
     {
-        if (CheckNextToken(Token.Not))
+        if (nextToken.HasValue && !string.IsNullOrWhiteSpace(nextToken.Value.RawValue) && nextToken.Value.RawValue.ToLowerInvariant() == word.ToLowerInvariant())
         {
-            var not = currentToken;
-            var expression = AcceptLogicalExpression();
-            if (expression is SqlExistsExpression sqlExistsExpression)
-            {
-                sqlExistsExpression.IsNot = true;
-                return sqlExistsExpression;
-            }
-            else if (expression is SqlInExpression sqlInExpression)
-            {
-                sqlInExpression.IsNot = true;
-                return sqlInExpression;
-            }
-            else if (expression is SqlBetweenAndExpression sqlBetweenAndExpression)
-            {
-                sqlBetweenAndExpression.IsNot = true;
-                if (sqlBetweenAndExpression.TokenContext != null)
-                {
-                    sqlBetweenAndExpression.TokenContext.Not = not;
-                }
-                return sqlBetweenAndExpression;
-            }
-            else
-            {
-                var result = new SqlNotExpression()
-                {
-                    DbType = dbType,
-                    Body = expression
-                };
-                return result;
-            }
-
+            GetNextToken();
+            return true;
         }
 
-        return null;
+        return false;
     }
 
     private SqlFunctionCallExpression AcceptFunctionCall(string functionName)

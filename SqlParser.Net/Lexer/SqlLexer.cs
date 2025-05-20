@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -34,6 +35,12 @@ public class SqlLexer
     public static ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>> AllDbTypeTokenDic = new ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>>();
     private List<Token> tokens = new List<Token>();
     private DbType dbType;
+    private bool IsOracle => this.dbType == DbType.Oracle;
+    private bool IsSqlServer => this.dbType == DbType.SqlServer;
+    private bool IsPgsql => this.dbType == DbType.Pgsql;
+
+    private bool IsMySql => this.dbType == DbType.MySql;
+    private bool IsSqlite => this.dbType == DbType.Sqlite;
     /// <summary>
     /// right Qualifiers char
     /// 右限定符
@@ -571,7 +578,7 @@ public class SqlLexer
 
         if (Accept('.'))
         {
-            if (dbType == DbType.SqlServer&&Accept('.'))
+            if (dbType == DbType.SqlServer && Accept('.'))
             {
                 var dotDotToken = Token.DotDot;
                 UpdateTokenPosition(ref dotDotToken);
@@ -731,6 +738,13 @@ public class SqlLexer
         if (Accept('^'))
         {
             var token = Token.BitwiseXor;
+            UpdateTokenPosition(ref token);
+            tokens.Add(token);
+            return true;
+        }
+        if (IsPgsql && Accept('#'))
+        {
+            var token = Token.BitwiseXorForPg;
             UpdateTokenPosition(ref token);
             tokens.Add(token);
             return true;
@@ -1030,6 +1044,8 @@ public class SqlLexer
             tokenDic.TryAdd("At".ToLowerInvariant(), Token.AtValue);
             tokenDic.TryAdd("Time".ToLowerInvariant(), Token.Time);
             tokenDic.TryAdd("Zone".ToLowerInvariant(), Token.Zone);
+            tokenDic.TryAdd("ILike".ToLowerInvariant(), Token.ILike);
+            tokenDic.TryAdd("BitwiseXorForPg".ToLowerInvariant(), Token.BitwiseXorForPg);
         }
 
         if (dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql)

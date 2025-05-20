@@ -1649,6 +1649,441 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
         Assert.Equal("select case(('1' || cast(cast('01' as bit varying) as varchar)) = '1') when('1' =('1' || cast(cast('01' as bit varying) as varchar))) then('1' =('1' || cast(cast('01' as bit varying) as varchar))) end from test as a inner join test2 as b on((('1' =('1' || cast(cast('01' as bit varying) as varchar))) and('2' =('1' || cast(cast('01' as bit varying) as varchar)))) or(('1' || cast(cast('01' as bit varying) as varchar)) = '1')) left join test3 on('1' =('1' || cast(cast('01' as bit varying) as varchar))) right join test4 on('1' =('1' || cast(cast('01' as bit varying) as varchar))) full join test5 on('1' =('1' || cast(cast('01' as bit varying) as varchar))) where('2' =('1' || cast(cast('01' as bit varying) as varchar))) group by('1' || cast(cast('01' as bit varying) as varchar)) order by('1' || cast(cast('01' as bit varying) as varchar)) limit cast(cast(1 as smallint) as float8) offset 1", generationSql);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs8(string asStr)
+    {
+        var sql = $"select '2'::int {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "2"
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "int",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast('2' as int) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs9(string asStr)
+    {
+        var sql = $"select 3.14::NUMERIC(5,2) {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 3.14M,
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "NUMERIC(5,2)",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast(3.14 as NUMERIC(5,2)) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs10(string asStr)
+    {
+        var sql = $"select 1::VARCHAR(2) {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "VARCHAR(2)",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast(1 as VARCHAR(2)) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs11(string asStr)
+    {
+        var sql = $"select 1::VARCHAR {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "VARCHAR",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast(1 as VARCHAR) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs12(string asStr)
+    {
+        var sql = $"select '010'::BIT VARYING(2) {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "010"
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "BIT VARYING(2)",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast('010' as BIT VARYING(2)) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs13(string asStr)
+    {
+        var sql = $"select '{{1,2,3}}'::INTEGER[] {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "{1,2,3}"
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "INTEGER[]",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast('{1,2,3}' as INTEGER[]) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs14(string asStr)
+    {
+        var sql = $"SELECT '13:30:00+08'::TIME WITH TIME ZONE {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "13:30:00+08"
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "TIME WITH TIME ZONE",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast('13:30:00+08' as TIME WITH TIME ZONE) as b", generationSql);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("as")]
+    public void TestFunctionCall3ForCaseAs15(string asStr)
+    {
+        var sql = $"SELECT '2023-01-01 13:30:00+08'::TIMESTAMP WITH TIME zone {asStr} b";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "2023-01-01 13:30:00+08"
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "TIMESTAMP WITH TIME zone",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast('2023-01-01 13:30:00+08' as TIMESTAMP WITH TIME zone) as b", generationSql);
+    }
+
     [Fact]
     public void TestFunctionCall4()
     {
@@ -4625,6 +5060,69 @@ ORDER BY
         };
 
         Assert.True(sqlAst.Equals(expect));
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(" not ")]
+    public void TestILikeAndNotILike(string notStr)
+    {
+        var sql = $"select * from test3 t where t.a{notStr}ilike '%a%'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var op = notStr == " " ? SqlBinaryOperator.ILike : SqlBinaryOperator.NotILike;
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Operator = op,
+                    Right = new SqlStringExpression()
+                    {
+                        Value = "%a%"
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select * from test3 as t where(t.a{notStr}ilike '%a%')", generationSql);
     }
 
     [Fact]
@@ -10953,6 +11451,48 @@ order by temp.InxNbr";
     }
 
     [Fact]
+    public void TestBitwiseXorForPg()
+    {
+        var sql = $"SELECT 5 # 3";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                            Operator = SqlBinaryOperator.BitwiseXorForPg,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select(5 # 3)", generationSql);
+    }
+
+    [Fact]
     public void TestNegativenumber()
     {
         var sql = $"select -3*5";
@@ -13862,4 +14402,371 @@ order by temp.InxNbr";
             generationSql);
     }
 
+    [Fact]
+    public void TestLogical()
+    {
+        var sql = @"select * from test3 t where t.a ='a' or t.b ='2' and t.c ='3'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "a"
+                        },
+                    },
+                    Operator = SqlBinaryOperator.Or,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "b",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "2"
+                            },
+                        },
+                        Operator = SqlBinaryOperator.And,
+                        Right = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "c",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "3"
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select * from test3 as t where((t.a = 'a') or((t.b = '2') and(t.c = '3')))",
+            generationSql);
+    }
+    [Fact]
+    public void TestLogical2()
+    {
+        var sql = @"select * from test3 t where not t.a ='a'  and t.c ='3'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlNotExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "a"
+                            },
+                        },
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "3"
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select * from test3 as t where(not((t.a = 'a')) and(t.c = '3'))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestLogical3()
+    {
+        var sql = @"select * from test3 t where not (t.a ='a'  and t.c ='3')";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlNotExpression()
+                {
+                    Body = new SqlBinaryExpression()
+                    {
+                        Left = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "a"
+                            },
+                        },
+                        Operator = SqlBinaryOperator.And,
+                        Right = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "c",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "3"
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select * from test3 as t where not(((t.a = 'a') and(t.c = '3')))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestLogical4()
+    {
+        var sql = @"select * from test3 t where  t.a ='a'  and not t.c ='3'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "a"
+                        },
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlNotExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "c",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "3"
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select * from test3 as t where((t.a = 'a') and not((t.c = '3')))",
+            generationSql);
+    }
 }

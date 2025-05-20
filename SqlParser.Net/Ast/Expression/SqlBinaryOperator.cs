@@ -22,8 +22,8 @@ public class SqlBinaryOperator
     public static readonly SqlBinaryOperator IsNot = new SqlBinaryOperator("IsNot", "Is Not");
     public static readonly SqlBinaryOperator Or = new SqlBinaryOperator("Or", "Or");
     public static readonly SqlBinaryOperator And = new SqlBinaryOperator("And", "And");
-    public static readonly SqlBinaryOperator Xor = new SqlBinaryOperator("Xor", "Xor");
     public static readonly SqlBinaryOperator Like = new SqlBinaryOperator("Like", "Like");
+    public static readonly SqlBinaryOperator ILike = new SqlBinaryOperator("ILike", "ILike");
     //math
     public static readonly SqlBinaryOperator Add = new SqlBinaryOperator("Add", "+");
     public static readonly SqlBinaryOperator Sub = new SqlBinaryOperator("Sub", "-");
@@ -35,7 +35,8 @@ public class SqlBinaryOperator
     public static readonly SqlBinaryOperator BitwiseOr = new SqlBinaryOperator("BitwiseOr", "|");
     public static readonly SqlBinaryOperator BitwiseAnd = new SqlBinaryOperator("BitwiseAnd", "&");
     public static readonly SqlBinaryOperator BitwiseXor = new SqlBinaryOperator("BitwiseXor", "^");
-    
+    public static readonly SqlBinaryOperator NotILike = new SqlBinaryOperator("NotILike", "Not ILike");
+    public static readonly SqlBinaryOperator BitwiseXorForPg = new SqlBinaryOperator("BitwiseXorForPg", "#");
     protected bool Equals(SqlBinaryOperator other)
     {
         return Name == other.Name && Value.Equals(other.Value);
