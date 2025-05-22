@@ -1247,7 +1247,7 @@ public class SqlParser
 
             item.Body = AcceptNestedComplexExpression();
 
-            var asStr = AcceptAsToken();
+            var asStr = AcceptAsToken(true);
             if (!string.IsNullOrWhiteSpace(asStr))
             {
                 item.Alias = new SqlIdentifierExpression()
@@ -2683,12 +2683,23 @@ public class SqlParser
         return null;
     }
 
-    private string AcceptAsToken()
+    private string AcceptAsToken(bool isSelectItem)
     {
         var asStr = "";
         if (Accept(Token.As))
         {
-            AcceptOrThrowException(Token.IdentifierString);
+            if (isSelectItem && IsPgsql)
+            {
+                if (!(Accept(Token.IdentifierString) || AcceptKeyword()))
+                {
+                    ThrowSqlParsingErrorException();
+                }
+            }
+            else
+            {
+                AcceptOrThrowException(Token.IdentifierString);
+            }
+           
             asStr = GetCurrentTokenValue();
         }
         else if (Accept(Token.IdentifierString))

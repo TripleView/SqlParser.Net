@@ -2911,6 +2911,67 @@ FROM
     }
 
     [Fact]
+    public void TestWhere3()
+    {
+        var sql = "select * from test3 t where t.a ilike @abc";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.ILike,
+                    Right = new SqlVariableExpression()
+                    {
+                        Name = "abc",
+                        Prefix = "@",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select * from test3 as t where(t.a ilike @abc)", generationSql);
+    }
+
+    [Fact]
     public void TestBetweenAnd()
     {
         var sql = "select * from FlowActivity fa where fa.CreateOn BETWEEN '2024-01-01' and '2024-10-10'";
@@ -13102,7 +13163,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from FlowStartUpSetting where(active =@active) OPTION (OPTIMIZE FOR (@active =0))", generationSql);
+        Assert.Equal("select * from FlowStartUpSetting where(active = @active) OPTION (OPTIMIZE FOR (@active =0))", generationSql);
     }
 
     [Fact]
@@ -14769,4 +14830,85 @@ order by temp.InxNbr";
             "select * from test3 as t where((t.a = 'a') and not((t.c = '3')))",
             generationSql);
     }
+
+    [Fact]
+    public void TestSpecialSelectItemForPgsql()
+    {
+        var sql = @"select t.a as from  from test3 as t";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "from",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select t.a as from from test3 as t",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestSpecialSelectItemForPgsql2()
+    {
+        var sql = @"select t.a from  from test3 as t";
+        var sqlAst = new SqlExpression();
+
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+        });
+    }
+
+    [Fact]
+    public void TestSpecialSelectItem3()
+    {
+        var sql = @"select c.Id as from from customer c";
+        var sqlAst = new SqlExpression();
+
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.MySql);
+        });
+    }
+
 }

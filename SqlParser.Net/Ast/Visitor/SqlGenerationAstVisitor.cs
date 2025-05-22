@@ -91,6 +91,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             if (sqlBinaryExpression.Operator != null)
             {
                 Append(sqlBinaryExpression.Operator.Value.ToString().ToLowerInvariant());
+                if (sqlBinaryExpression.Right is SqlVariableExpression)
+                {
+                    AppendSpace();
+                }
             }
 
             if (sqlBinaryExpression.Right != null)
