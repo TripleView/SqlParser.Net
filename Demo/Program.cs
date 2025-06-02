@@ -9,12 +9,9 @@ namespace Demo
         static void Main(string[] args)
         {
      
-            var sql = "select TIMESTAMP '2023-01-01'::VARCHAR(10) ";
-            sql = "select * from test3 t where t.a not ilike '%a%'";
+            var sql = "select * from test3 where a regexp 'a' COLLATE utf8mb4_general_ci";
 
-            sql = @"select * from test3 t where t.a ilike @abc";
-       
-            var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+            var sqlAst = DbUtils.Parse(sql, DbType.MySql);
             var result = sqlAst.ToFormat();
             var newSql= sqlAst.ToSql();
         }

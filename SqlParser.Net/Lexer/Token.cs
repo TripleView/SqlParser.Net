@@ -257,4 +257,8 @@ public struct Token
     public static readonly Token ILike = new Token("ILike", "ILike", 125) { TokenType = TokenType.Keyword };
 
     public static readonly Token BitwiseXorForPg = new Token("BitwiseXorForPg", "#", 126) { TokenType = TokenType.Operator };
+
+    public static readonly Token Collate = new Token("Collate", "Collate", 127) { TokenType = TokenType.Keyword };
+    public static readonly Token RegexPForPg = new Token("RegexPForPg", "~", 128) { TokenType = TokenType.Operator };
+    public static readonly Token RegexpForMysql = new Token("RegexpForMysql", "regexp", 129) { TokenType = TokenType.Keyword };
 }

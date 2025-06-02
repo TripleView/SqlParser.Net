@@ -17,6 +17,10 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+    public virtual void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    {
+
+    }
     public virtual void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
     {
 
@@ -34,6 +38,10 @@ public class BaseAstVisitor : IAstVisitor
 
     }
     public virtual void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
+    {
+
+    }
+    public virtual void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
     {
 
     }
@@ -70,6 +78,10 @@ public class BaseAstVisitor : IAstVisitor
 
     }
     public virtual void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
+    {
+
+    }
+    public virtual void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
     {
 
     }
@@ -121,6 +133,10 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+    public virtual void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    {
+
+    }
     public virtual void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
 
@@ -138,6 +154,10 @@ public class BaseAstVisitor : IAstVisitor
 
     }
     public virtual void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
+    {
+
+    }
+    public virtual void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
     {
 
     }
@@ -162,21 +182,6 @@ public class BaseAstVisitor : IAstVisitor
 
     }
     public virtual void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
-    {
-
-    }
-
-    public virtual void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
-    {
-
-    }
-
-    public virtual void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
-    {
-
-    }
-
-    public virtual void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
     {
 
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlFunctionCallExpression : SqlExpression
+public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 {
     private List<SqlExpression> arguments;
     private SqlIdentifierExpression name;
@@ -11,7 +11,13 @@ public class SqlFunctionCallExpression : SqlExpression
     private SqlExpression fromSource;
     private SqlOverExpression over;
     private SqlWithinGroupExpression withinGroup;
+    /// <summary>
+    /// The collate clause is mainly used to specify string comparison and sorting rules.
+    /// collate子句主要用于指定字符串比较和排序的规则
+    /// </summary>
 
+    private SqlCollateExpression collate;
+  
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlFunctionCallExpression(this);
@@ -50,6 +56,23 @@ public class SqlFunctionCallExpression : SqlExpression
                 value.Parent = this;
             }
             name = value;
+        }
+    }
+
+    /// <summary>
+    /// The collate clause is mainly used to specify string comparison and sorting rules.
+    /// collate子句主要用于指定字符串比较和排序的规则
+    /// </summary>
+    public SqlCollateExpression Collate
+    {
+        get => collate;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            collate = value;
         }
     }
 
@@ -144,6 +167,10 @@ public class SqlFunctionCallExpression : SqlExpression
             return false;
         }
 
+        if (!CompareTwoSqlExpression(Collate, other.Collate))
+        {
+            return false;
+        }
 
         if (!CompareTwoSqlExpression(WithinGroup, other.WithinGroup))
         {

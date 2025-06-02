@@ -14911,4 +14911,786 @@ order by temp.InxNbr";
         });
     }
 
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate(DbType dbType, string sortingRules)
+    {
+        var sql = $"SELECT * FROM test3 t  ORDER BY t.a COLLATE {sortingRules} desc,t.b desc;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                OrderBy = new SqlOrderByExpression()
+                {
+                    Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Collate = new SqlCollateExpression()
+                    {
+                        Body = body
+                    },
+                    OrderByType = SqlOrderByType.Desc,
+                },
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    OrderByType = SqlOrderByType.Desc,
+                },
+            },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select * from test3{asStr}t order by t.a collate {sortingRules} desc, t.b desc", generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate2(DbType dbType, string sortingRules)
+    {
+        var sql = $"SELECT * FROM test3 t  WHERE t.a='a'  COLLATE {sortingRules} and t.b !='c' COLLATE {sortingRules}   and t.c like '%c%' COLLATE {sortingRules};";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "a"
+                            },
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body
+                            },
+                        },
+                        Operator = SqlBinaryOperator.And,
+                        Right = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "b",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.NotEqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "c"
+                            },
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body
+                            },
+                        },
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.Like,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "%c%"
+                        },
+                        Collate = new SqlCollateExpression()
+                        {
+                            Body = body
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select * from test3{asStr}t where(((t.a = 'a' collate {sortingRules}) and(t.b != 'c' collate {sortingRules})) and(t.c like '%c%' collate {sortingRules}))", generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate3(DbType dbType, string sortingRules)
+    {
+        var sql = $"SELECT max(t.a) FROM test3 t GROUP BY a COLLATE {sortingRules} , t.b COLLATE {sortingRules};";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "max",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                GroupBy = new SqlGroupByExpression()
+                {
+                    Items = new List<SqlExpression>()
+            {
+            new SqlIdentifierExpression()
+            {
+                Value = "a",
+                Collate = new SqlCollateExpression()
+                {
+                    Body = body
+                },
+            },
+            new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "b",
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "t",
+                },
+                Collate = new SqlCollateExpression()
+                {
+                    Body = body
+                },
+            },
+            },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select max(t.a) from test3{asStr}t group by a collate {sortingRules}, t.b collate {sortingRules}", generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN", "SUBSTRING")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci", "SUBSTRING")]
+    [InlineData(DbType.Pgsql, "\"C\"", "SUBSTRING")]
+    [InlineData(DbType.Sqlite, "BINARY", "SUBSTRING")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"", "SUBSTR")]
+    public void TestCollate4(DbType dbType, string sortingRules,string functionName)
+    {
+        var sql = $"SELECT {functionName}(t.a, 1, 10) COLLATE {sortingRules} FROM test3 t;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = functionName,
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "t",
+                                    },
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 10M,
+                                },
+                            },
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select {functionName}(t.a, 1, 10) collate {sortingRules} from test3{asStr}t", generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate5(DbType dbType, string sortingRules)
+    {
+        var sql = $"SELECT RANK() OVER (partition by t.a COLLATE {sortingRules} ORDER BY t.a   COLLATE {sortingRules} DESC) AS a FROM test3 t ;";
+  
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "RANK",
+                    },
+                    Over = new SqlOverExpression()
+                    {
+                        PartitionBy = new SqlPartitionByExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "t",
+                                    },
+                                    Collate = new SqlCollateExpression()
+                                    {
+                                        Body = body
+                                    },
+                                },
+                            },
+                        },
+                        OrderBy = new SqlOrderByExpression()
+                        {
+                            Items = new List<SqlOrderByItemExpression>()
+                            {
+                                new SqlOrderByItemExpression()
+                                {
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "a",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t",
+                                        },
+                                    },
+                                    Collate = new SqlCollateExpression()
+                                    {
+                                        Body = body
+                                    },
+                                    OrderByType = SqlOrderByType.Desc,
+                                },
+                            },
+                        },
+                    },
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "a",
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select RANK() over(partition by t.a collate {sortingRules} order by t.a collate {sortingRules} desc) as a from test3{asStr}t", generationSql);
+    }
+
+    [Fact]
+    public void TestRegExForPgsql2()
+    {
+        var sql = @$"select * from test3 where a ~ '^a' COLLATE ""C""";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                },
+                Where = new SqlRegexExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                    RegEx = new SqlStringExpression()
+                    {
+                        Value = "^a"
+                    },
+                    Collate = new SqlCollateExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "C",
+                            LeftQualifiers = "\"",
+                            RightQualifiers = "\"",
+                        },
+                    },
+                    IsCaseSensitive = true,
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from test3 where a ~ '^a' collate \"C\"",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestRegExForMysql()
+    {
+        var sql = @$"SELECT * FROM test3 WHERE a regexp 'a'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                },
+                Where = new SqlRegexExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                    RegEx = new SqlStringExpression()
+                    {
+                        Value = "a"
+                    },
+                    IsCaseSensitive = true,
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from test3 where a regexp 'a'",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestRegExForMysql2()
+    {
+        var sql = @$"select * from test3 where a regexp 'a' COLLATE utf8mb4_general_ci";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                },
+                Where = new SqlRegexExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                    RegEx = new SqlStringExpression()
+                    {
+                        Value = "a"
+                    },
+                    Collate = new SqlCollateExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "utf8mb4_general_ci",
+                        },
+                    },
+                    IsCaseSensitive = true,
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from test3 where a regexp 'a' collate utf8mb4_general_ci",
+            generationSql);
+    }
 }

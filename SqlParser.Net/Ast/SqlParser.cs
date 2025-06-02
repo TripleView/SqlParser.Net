@@ -1220,7 +1220,7 @@ public class SqlParser
                 || ((IsPgsql || IsSqlite || IsMySql) && CheckNextIsGroupBy())
                 || ((IsPgsql || IsSqlServer || IsSqlite || IsMySql) && CheckNextIsOrderBy())
                 || (IsSqlite && CheckNextToken(Token.Where))
-                || (CheckNextIsLimit()))
+                || CheckNextIsLimit())
             {
                 break;
             }
@@ -1510,6 +1510,7 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
+            AppendCollateExpression(left);
             right = null;
         }
 
@@ -1627,6 +1628,67 @@ public class SqlParser
             {
                 @operator = SqlBinaryOperator.ILike;
             }
+            else if (IsPgsql && Accept(Token.RegexPForPg))
+            {
+                var result = new SqlRegexExpression()
+                {
+                    DbType = dbType,
+                    IsCaseSensitive = true,
+                    Body = left
+                };
+                if (Accept(Token.Star))
+                {
+                    result.IsCaseSensitive = false;
+                }
+                else if (CheckNextToken(Token.StringConstant))
+                {
+                   
+                }
+                else
+                {
+                    ThrowSqlParsingErrorException();
+                }
+
+                if (Accept(Token.StringConstant))
+                {
+                    var regex = GetCurrentTokenValue();
+                    result.RegEx = new SqlStringExpression()
+                    {
+                        DbType = dbType,
+                        Value = regex
+                    };
+                }
+
+                AppendCollateExpression(result);
+
+                return result;
+            }
+            else if (IsMySql && Accept(Token.RegexpForMysql))
+            {
+                var result = new SqlRegexExpression()
+                {
+                    DbType = dbType,
+                    IsCaseSensitive = true,
+                    Body = left
+                };
+                if (Accept(Token.StringConstant))
+                {
+                    var regEx = GetCurrentTokenValue();
+                    result.RegEx = new SqlStringExpression()
+                    {
+                        DbType = dbType,
+                        Value = regEx
+                    };
+                }
+                else
+                {
+                    ThrowSqlParsingErrorException();
+                }
+
+                AppendCollateExpression(result);
+
+                return result;
+            }
             else if (Accept(Token.BarBar))
             {
                 @operator = SqlBinaryOperator.Concat;
@@ -1663,8 +1725,10 @@ public class SqlParser
                 DbType = dbType,
                 Left = left,
                 Right = right,
-                Operator = @operator
+                Operator = @operator,
             };
+
+            AppendCollateExpression(left);
             if (isNot)
             {
                 isNot = false;
@@ -2640,6 +2704,8 @@ public class SqlParser
             }
         }
 
+        AppendCollateExpression(result);
+
         return result;
     }
 
@@ -2699,7 +2765,7 @@ public class SqlParser
             {
                 AcceptOrThrowException(Token.IdentifierString);
             }
-           
+
             asStr = GetCurrentTokenValue();
         }
         else if (Accept(Token.IdentifierString))
@@ -2947,6 +3013,8 @@ public class SqlParser
                 if (i == 1 || Accept(Token.Comma))
                 {
                     var item = AcceptNestedComplexExpression();
+                    var collate = AcceptCollateExpression();
+
                     SqlOrderByType? orderByType = null;
                     if (Accept(Token.Asc))
                     {
@@ -2982,7 +3050,8 @@ public class SqlParser
                         DbType = dbType,
                         Body = item,
                         OrderByType = orderByType,
-                        NullsType = nullsType
+                        NullsType = nullsType,
+                        Collate = collate
                     };
                     items.Add(orderByItem);
                 }
@@ -2998,6 +3067,50 @@ public class SqlParser
         return null;
     }
 
+    /// <summary>
+    /// The collate clause is mainly used to specify string comparison and sorting rules.
+    /// collate子句主要用于指定字符串比较和排序的规则
+    /// </summary>
+    private SqlCollateExpression AcceptCollateExpression()
+    {
+        if (Accept(Token.Collate))
+        {
+            SqlExpression body = null;
+            if (Accept(Token.IdentifierString))
+            {
+                var bodyToken = currentToken;
+                body = new SqlIdentifierExpression()
+                {
+                    LeftQualifiers = bodyToken.HasValue ? bodyToken.Value.LeftQualifiers : "",
+                    RightQualifiers = bodyToken.HasValue ? bodyToken.Value.RightQualifiers : "",
+                    Value = GetTokenValue(bodyToken),
+                    DbType = dbType
+                };
+            }
+            else if (Accept(Token.StringConstant))
+            {
+                var value = GetCurrentTokenValue();
+                body = new SqlStringExpression()
+                {
+                    DbType = dbType,
+                    Value = value
+                };
+            }
+            else
+            {
+                ThrowSqlParsingErrorException();
+            }
+
+            var result = new SqlCollateExpression()
+            {
+                DbType = dbType,
+                Body = body
+            };
+            return result;
+        }
+
+        return null;
+    }
     private SqlPartitionByExpression AcceptPartitionByExpression()
     {
         if (Accept(Token.Partition) && Accept(Token.By))
@@ -3028,7 +3141,7 @@ public class SqlParser
                 if (i == 1 || Accept(Token.Comma))
                 {
                     var item = AcceptNestedComplexExpression();
-
+                    AppendCollateExpression(item);
                     items.Add(item);
                 }
                 else
@@ -3097,6 +3210,7 @@ public class SqlParser
                 if (i == 1 || Accept(Token.Comma))
                 {
                     var item = AcceptNestedComplexExpression();
+                    AppendCollateExpression(item);
                     items.Add(item);
                 }
                 else
@@ -3121,6 +3235,19 @@ public class SqlParser
 
         return null;
     }
+
+    private void AppendCollateExpression(SqlExpression item)
+    {
+        var collate = AcceptCollateExpression();
+        if (collate != null)
+        {
+            if (item is ICollateExpression collateExpression)
+            {
+                collateExpression.Collate = collate;
+            }
+        }
+    }
+
     private SqlExpression AcceptWhereExpression()
     {
         if (Accept(Token.Where))

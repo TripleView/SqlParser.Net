@@ -8,11 +8,13 @@ public interface IAstVisitor
     void VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression);
     void VisitSqlAllExpression(SqlAllExpression sqlAllExpression);
     void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression);
+    void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression);
     void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression);
     void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression);
     void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression);
     void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression);
     void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression);
+    void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression);
     void VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression);
     void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression);
     void VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression);
@@ -22,6 +24,7 @@ public interface IAstVisitor
     void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression);
     void VisitSqlInExpression(SqlInExpression sqlInExpression);
     void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression);
+    void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression);
     void VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression);
     void VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression);
     void VisitSqlNotExpression(SqlNotExpression sqlNotExpression);
@@ -34,19 +37,17 @@ public interface IAstVisitor
     void VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression);
     void VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression);
     void VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression);
+    void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression);
     void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression);
     void VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression);
     void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression);
     void VisitSqlStringExpression(SqlStringExpression sqlStringExpression);
     void VisitSqlTableExpression(SqlTableExpression sqlTableExpression);
+    void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression);
     void VisitSqlTopExpression(SqlTopExpression sqlTopExpression);
     void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression);
     void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression);
     void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression);
     void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression);
     void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression);
-    void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression);
-
-    void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression);
-    void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression);
 }

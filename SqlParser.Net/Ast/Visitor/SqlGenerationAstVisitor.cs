@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using SqlParser.Net.Ast.Expression;
 
 namespace SqlParser.Net.Ast.Visitor;
@@ -100,6 +101,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             if (sqlBinaryExpression.Right != null)
             {
                 sqlBinaryExpression.Right?.Accept(this);
+            }
+
+            if (sqlBinaryExpression.Collate != null)
+            {
+                sqlBinaryExpression.Collate?.Accept(this);
             }
         }
 
@@ -250,6 +256,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlFunctionCallExpression.Over?.Accept(this);
         }
 
+        if (sqlFunctionCallExpression.Collate != null)
+        {
+            sqlFunctionCallExpression.Collate?.Accept(this);
+        }
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
@@ -283,6 +293,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         else
         {
             Append(sqlIdentifierExpression.Value);
+        }
+
+        if (sqlIdentifierExpression.Collate != null)
+        {
+            sqlIdentifierExpression.Collate?.Accept(this);
         }
     }
     public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
@@ -565,6 +580,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlOrderByItemExpression.Body?.Accept(this);
         }
+        if (sqlOrderByItemExpression.Collate != null)
+        {
+            sqlOrderByItemExpression.Collate?.Accept(this);
+        }
         if (sqlOrderByItemExpression.OrderByType.HasValue)
         {
             Append(sqlOrderByItemExpression.OrderByType == SqlOrderByType.Asc ? "asc" : "desc");
@@ -668,6 +687,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         if (sqlPropertyExpression.Name != null)
         {
             sqlPropertyExpression.Name?.Accept(this);
+        }
+
+        if (sqlPropertyExpression.Collate != null)
+        {
+            sqlPropertyExpression.Collate?.Accept(this);
         }
 
     }
@@ -1141,5 +1165,47 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             Append(sqlTimeUnitExpression.Unit);
         }
+    }
+
+    public override void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
+    {
+        Append("collate");
+        if (sqlCollateExpression.Body != null)
+        {
+            sqlCollateExpression.Body.Accept(this);
+        }
+    }
+
+    public override void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    {
+        if (sqlRegexExpression.Body != null)
+        {
+            sqlRegexExpression.Body.Accept(this);
+        }
+        if (IsPgsql)
+        {
+            if (sqlRegexExpression.IsCaseSensitive)
+            {
+                Append("~");
+            }
+            else
+            {
+                Append("~*");
+            }
+        }
+        else if (IsMySql)
+        {
+            Append("regexp");
+        }
+
+        if (sqlRegexExpression.RegEx != null)
+        {
+            sqlRegexExpression.RegEx.Accept(this);
+        }
+        if (sqlRegexExpression.Collate != null)
+        {
+            sqlRegexExpression.Collate.Accept(this);
+        }
+
     }
 }

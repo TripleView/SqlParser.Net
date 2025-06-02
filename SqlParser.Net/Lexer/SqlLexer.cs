@@ -564,6 +564,7 @@ public class SqlLexer
     }
 
     /// <summary>
+    /// Accepts common symbols
     /// 接受普通符号
     /// </summary>
     private bool AcceptSymbol()
@@ -787,6 +788,15 @@ public class SqlLexer
             }
             return true;
         }
+
+        if (IsPgsql && Accept('~'))
+        {
+            var token = Token.RegexPForPg;
+            UpdateTokenPosition(ref token);
+            tokens.Add(token);
+            return true;
+        }
+
         return false;
     }
 
@@ -1046,12 +1056,20 @@ public class SqlLexer
             tokenDic.TryAdd("Zone".ToLowerInvariant(), Token.Zone);
             tokenDic.TryAdd("ILike".ToLowerInvariant(), Token.ILike);
             tokenDic.TryAdd("BitwiseXorForPg".ToLowerInvariant(), Token.BitwiseXorForPg);
+            tokenDic.TryAdd("RegexPForPg".ToLowerInvariant(), Token.RegexPForPg);
+        }
+
+        if (dbType == DbType.MySql)
+        {
+            tokenDic.TryAdd("Regexp".ToLowerInvariant(), Token.RegexpForMysql);
         }
 
         if (dbType == DbType.Pgsql || dbType == DbType.Oracle || dbType == DbType.MySql)
         {
             tokenDic.TryAdd("Interval".ToLowerInvariant(), Token.Interval);
         }
+
+        tokenDic.TryAdd("Collate".ToLowerInvariant(), Token.Collate);
 
         AllDbTypeTokenDic.TryAdd(dbType, tokenDic);
     }

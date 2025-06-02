@@ -120,6 +120,15 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlBinaryExpression.Right?.Accept(this);
             });
         }
+
+        if (sqlBinaryExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlBinaryExpression.Collate?.Accept(this);
+            });
+        }
         AppendLine("},");
     }
     public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
@@ -322,6 +331,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlFunctionCallExpression.CaseAsTargetType?.Accept(this);
             });
         }
+        if (sqlFunctionCallExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlFunctionCallExpression.Collate?.Accept(this);
+            });
+        }
         AppendLine("},");
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
@@ -364,6 +381,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
             AppendLine($"Value = \"{value}\",");
             HandleQualifiers(sqlIdentifierExpression);
         });
+        if (sqlIdentifierExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlIdentifierExpression.Collate?.Accept(this);
+            });
+        }
         AppendLine("},");
     }
     public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
@@ -714,6 +739,16 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlOrderByItemExpression.Body?.Accept(this);
             });
         }
+
+        if (sqlOrderByItemExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlOrderByItemExpression.Collate?.Accept(this);
+            });
+        }
+
         if (sqlOrderByItemExpression.OrderByType != null)
         {
 
@@ -859,6 +894,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
             {
                 AppendAndNotRequiredNextSpace("Table = ");
                 sqlPropertyExpression.Table?.Accept(this);
+            });
+        }
+        if (sqlPropertyExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlPropertyExpression.Collate?.Accept(this);
             });
         }
         AppendLine("},");
@@ -1499,6 +1542,65 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine($"Unit = \"{sqlTimeUnitExpression.Unit}\"");
             });
         }
+
+        AppendLine("},");
+    }
+
+    public override void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
+    {
+        AppendLine("new SqlCollateExpression()");
+        AppendLine("{");
+
+        if (sqlCollateExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlCollateExpression.Body.Accept(this);
+            });
+        }
+
+        AppendLine("},");
+    }
+
+    public override void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    {
+        AppendLine("new SqlRegexExpression()");
+        AppendLine("{");
+
+        if (sqlRegexExpression.Body != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Body = ");
+                sqlRegexExpression.Body.Accept(this);
+            });
+        }
+
+        if (sqlRegexExpression.RegEx != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("RegEx = ");
+                sqlRegexExpression.RegEx.Accept(this);
+            });
+        }
+
+        if (sqlRegexExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlRegexExpression.Collate.Accept(this);
+            });
+        }
+
+        
+        AdvanceNext(() =>
+        {
+            var boolStr = sqlRegexExpression.IsCaseSensitive ? "true" : "false";
+            AppendLine($"IsCaseSensitive = {boolStr},");
+        });
 
         AppendLine("},");
     }

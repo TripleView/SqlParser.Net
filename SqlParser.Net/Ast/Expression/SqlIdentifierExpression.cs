@@ -2,8 +2,15 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlIdentifierExpression : SqlExpression, IQualifierExpression
+public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICollateExpression
 {
+    /// <summary>
+    /// The collate clause is mainly used to specify string comparison and sorting rules.
+    /// collate子句主要用于指定字符串比较和排序的规则
+    /// </summary>
+
+    private SqlCollateExpression collate;
+  
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlIdentifierExpression(this);
@@ -24,9 +31,31 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression
     public string RightQualifiers { get; set; }
     public string Value { get; set; }
 
+    /// <summary>
+    /// The collate clause is mainly used to specify string comparison and sorting rules.
+    /// collate子句主要用于指定字符串比较和排序的规则
+    /// </summary>
+    public SqlCollateExpression Collate
+    {
+        get => collate;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            collate = value;
+        }
+    }
+
     protected bool Equals(SqlIdentifierExpression other)
     {
         if (LeftQualifiers != other.LeftQualifiers || RightQualifiers != other.RightQualifiers)
+        {
+            return false;
+        }
+
+        if (!CompareTwoSqlExpression(Collate, other.Collate))
         {
             return false;
         }

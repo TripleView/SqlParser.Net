@@ -1,26 +1,33 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
-
-public class SqlPropertyExpression : SqlExpression, ICollateExpression
+/// <summary>
+/// Regular Expressions
+/// 正则表达式
+/// </summary>
+public class SqlRegexExpression : SqlExpression, ICollateExpression
 {
-    private SqlIdentifierExpression name;
-    private SqlIdentifierExpression table;
-    /// <summary>
-    /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collate子句主要用于指定字符串比较和排序的规则
-    /// </summary>
-
     private SqlCollateExpression collate;
+
+    private SqlStringExpression regEx;
+
+    private SqlExpression body;
+
 
     public override void Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlPropertyExpression(this);
+        visitor.VisitSqlRegexExpression(this);
     }
-    public SqlPropertyExpression()
+    public SqlRegexExpression()
     {
-        this.Type = SqlExpressionType.Property;
+        this.Type = SqlExpressionType.Regex;
     }
+
+    /// <summary>
+    /// Is it case sensitive
+    /// 是否区分大小写
+    /// </summary>
+    public bool IsCaseSensitive { get; set; }
 
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
@@ -38,55 +45,47 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
             collate = value;
         }
     }
-    /// <summary>
-    /// property name
-    /// 属性名称
-    /// </summary>
-    public SqlIdentifierExpression Name
+
+    public SqlStringExpression RegEx
     {
-        get => name;
+        get => regEx;
         set
         {
             if (value != null)
             {
                 value.Parent = this;
             }
-            name = value;
+            regEx = value;
         }
     }
-
-    public SqlIdentifierExpression Table
+    public SqlExpression Body
     {
-        get => table;
+        get => body;
         set
         {
             if (value != null)
             {
                 value.Parent = this;
             }
-            table = value;
+            body = value;
         }
     }
 
-    protected bool Equals(SqlPropertyExpression other)
+    protected bool Equals(SqlRegexExpression other)
     {
-        if (!CompareTwoSqlExpression(Name, other.Name))
-        {
-            return false;
-        }
-
-        if (!CompareTwoSqlExpression(Table, other.Table))
-        {
-            return false;
-        }
-
         if (!CompareTwoSqlExpression(Collate, other.Collate))
         {
             return false;
         }
-
-
-        return true;
+        if (!CompareTwoSqlExpression(RegEx, other.RegEx))
+        {
+            return false;
+        }
+        if (!CompareTwoSqlExpression(Body, other.Body))
+        {
+            return false;
+        }
+        return this.IsCaseSensitive == other.IsCaseSensitive;
     }
 
     public override bool Equals(object? obj)
@@ -94,14 +93,13 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((SqlPropertyExpression)obj);
+        return Equals((SqlRegexExpression)obj);
     }
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            return (Name.GetHashCode() * 397) ^ Table.GetHashCode();
-        }
+        throw new System.NotImplementedException();
     }
+
+
 }
