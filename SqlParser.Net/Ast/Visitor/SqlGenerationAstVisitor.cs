@@ -82,11 +82,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
     {
-        void action()
+        void internalAction()
         {
             if (sqlBinaryExpression.Left != null)
             {
-                sqlBinaryExpression.Left?.Accept(this);
+                sqlBinaryExpression.Left.Accept(this);
             }
 
             if (sqlBinaryExpression.Operator != null)
@@ -100,7 +100,20 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
             if (sqlBinaryExpression.Right != null)
             {
-                sqlBinaryExpression.Right?.Accept(this);
+                sqlBinaryExpression.Right.Accept(this);
+            }
+        }
+
+        void action()
+        {
+            if (sqlBinaryExpression.Collate != null)
+            {
+                EnableParen(internalAction);
+                sqlBinaryExpression.Collate.Accept(this);
+            }
+            else
+            {
+                internalAction();
             }
         }
 

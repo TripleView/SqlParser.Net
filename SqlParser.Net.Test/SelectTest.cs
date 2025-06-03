@@ -15784,6 +15784,109 @@ order by temp.InxNbr";
         Assert.Equal($"select * from test3{asStr}t where(t.a = {prefix}name collate {sortingRules})", generationSql);
     }
 
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate8(DbType dbType, string sortingRules)
+    {
+        var contact = "";
+        var operatorSymbol = SqlBinaryOperator.Concat;
+        switch (dbType)
+        {
+            case DbType.Oracle:
+            case DbType.Sqlite:
+            case DbType.Pgsql:
+                contact = "||";
+                break;
+            case DbType.SqlServer:
+                operatorSymbol=SqlBinaryOperator.Add;
+                contact = "+";
+                break;
+        }
+
+        var sql = $"select * from  test3 where ( a {contact} b ) COLLATE {sortingRules} like '%a%'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+
+                break;
+            case DbType.SqlServer:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Operator = operatorSymbol,
+                        Right = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                        Collate = new SqlCollateExpression()
+                        {
+                            Body = body,
+                        },
+                    },
+                    Operator = SqlBinaryOperator.Like,
+                    Right = new SqlStringExpression()
+                    {
+                        Value = "%a%",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var exceptSql = $"select * from test3 where(((a {contact} b) collate {sortingRules}) like '%a%')";
+        Assert.Equal(exceptSql, generationSql);
+    }
+
     [Fact]
     public void TestRegExForPgsql2()
     {
