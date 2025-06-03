@@ -14988,11 +14988,12 @@ order by temp.InxNbr";
                         {
                             Value = "t",
                         },
+                        Collate = new SqlCollateExpression()
+                        {
+                            Body = body
+                        },
                     },
-                    Collate = new SqlCollateExpression()
-                    {
-                        Body = body
-                    },
+                    
                     OrderByType = SqlOrderByType.Desc,
                 },
                 new SqlOrderByItemExpression()
@@ -15061,6 +15062,7 @@ order by temp.InxNbr";
                 break;
         }
 
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -15103,11 +15105,11 @@ order by temp.InxNbr";
                             Operator = SqlBinaryOperator.EqualTo,
                             Right = new SqlStringExpression()
                             {
-                                Value = "a"
-                            },
-                            Collate = new SqlCollateExpression()
-                            {
-                                Body = body
+                                Value = "a",
+                                Collate = new SqlCollateExpression()
+                                {
+                                    Body = body,
+                                },
                             },
                         },
                         Operator = SqlBinaryOperator.And,
@@ -15127,11 +15129,11 @@ order by temp.InxNbr";
                             Operator = SqlBinaryOperator.NotEqualTo,
                             Right = new SqlStringExpression()
                             {
-                                Value = "c"
-                            },
-                            Collate = new SqlCollateExpression()
-                            {
-                                Body = body
+                                Value = "c",
+                                Collate = new SqlCollateExpression()
+                                {
+                                    Body = body,
+                                },
                             },
                         },
                     },
@@ -15152,16 +15154,17 @@ order by temp.InxNbr";
                         Operator = SqlBinaryOperator.Like,
                         Right = new SqlStringExpression()
                         {
-                            Value = "%c%"
-                        },
-                        Collate = new SqlCollateExpression()
-                        {
-                            Body = body
+                            Value = "%c%",
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body,
+                            },
                         },
                     },
                 },
             },
         };
+
 
         Assert.True(sqlAst.Equals(expect));
 
@@ -15486,10 +15489,10 @@ order by temp.InxNbr";
                                         {
                                             Value = "t",
                                         },
-                                    },
-                                    Collate = new SqlCollateExpression()
-                                    {
-                                        Body = body
+                                        Collate = new SqlCollateExpression()
+                                        {
+                                            Body = body
+                                        },
                                     },
                                     OrderByType = SqlOrderByType.Desc,
                                 },
@@ -15522,6 +15525,263 @@ order by temp.InxNbr";
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
         Assert.Equal($"select RANK() over(partition by t.a collate {sortingRules} order by t.a collate {sortingRules} desc) as a from test3{asStr}t", generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate6(DbType dbType, string sortingRules)
+    {
+        var sql = $"SELECT * FROM test3 t  WHERE t.a COLLATE {sortingRules} ='a'   and t.b COLLATE {sortingRules} !='c' and t.c COLLATE {sortingRules} like '%c%' ;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                                Collate = new SqlCollateExpression()
+                                {
+                                    Body = body,
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.And,
+                        Right = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "b",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                                Collate = new SqlCollateExpression()
+                                {
+                                    Body = body,
+                                },
+                            },
+                            Operator = SqlBinaryOperator.NotEqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "c",
+                            },
+                        },
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body,
+                            },
+                        },
+                        Operator = SqlBinaryOperator.Like,
+                        Right = new SqlStringExpression()
+                        {
+                            Value = "%c%",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select * from test3{asStr}t where(((t.a collate {sortingRules} = 'a') and(t.b collate {sortingRules} != 'c')) and(t.c collate {sortingRules} like '%c%'))", generationSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer, "Latin1_General_BIN")]
+    [InlineData(DbType.MySql, "utf8mb4_general_ci")]
+    [InlineData(DbType.Pgsql, "\"C\"")]
+    [InlineData(DbType.Sqlite, "BINARY")]
+    [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
+    public void TestCollate7(DbType dbType, string sortingRules)
+    {
+        var prefix = "";
+        switch (dbType)
+        {
+            case DbType.Oracle:
+            case DbType.Sqlite:
+                prefix = ":";
+                break;
+            case DbType.SqlServer:
+            case DbType.Pgsql:
+            case DbType.MySql:
+                prefix = "@";
+                break;
+        }
+
+        var sql = $"SELECT * FROM test3 t  WHERE t.a ={prefix}name COLLATE {sortingRules}";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        SqlExpression body = null;
+        switch (dbType)
+        {
+            case DbType.Pgsql:
+            case DbType.Oracle:
+                body = new SqlIdentifierExpression()
+                {
+                    DbType = dbType,
+                    Value = sortingRules.Trim('"'),
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                };
+
+                break;
+            case DbType.SqlServer:
+            case DbType.MySql:
+            case DbType.Sqlite:
+                body = new SqlIdentifierExpression()
+                {
+                    Value = sortingRules,
+                };
+                break;
+        }
+
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlVariableExpression()
+                    {
+                        Name = "name",
+                        Prefix =prefix,
+                        Collate = new SqlCollateExpression()
+                        {
+                            Body = body,
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        var asStr = dbType == DbType.Oracle ? " " : " as ";
+        Assert.Equal($"select * from test3{asStr}t where(t.a = {prefix}name collate {sortingRules})", generationSql);
     }
 
     [Fact]

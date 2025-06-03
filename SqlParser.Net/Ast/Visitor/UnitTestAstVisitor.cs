@@ -121,14 +121,6 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlBinaryExpression.Collate != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Collate = ");
-                sqlBinaryExpression.Collate?.Accept(this);
-            });
-        }
         AppendLine("},");
     }
     public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
@@ -740,15 +732,6 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlOrderByItemExpression.Collate != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("Collate = ");
-                sqlOrderByItemExpression.Collate?.Accept(this);
-            });
-        }
-
         if (sqlOrderByItemExpression.OrderByType != null)
         {
 
@@ -1194,8 +1177,16 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
         AdvanceNext(() =>
         {
-            AppendLine($"Value = \"{sqlStringExpression.Value}\"");
+            AppendLine($"Value = \"{sqlStringExpression.Value}\",");
         });
+        if (sqlStringExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlStringExpression.Collate?.Accept(this);
+            });
+        }
         AppendLine("},");
     }
 
@@ -1378,6 +1369,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
             AdvanceNext(() =>
             {
                 AppendLine($"Prefix = \"{sqlVariableExpression.Prefix}\",");
+            });
+        }
+        if (sqlVariableExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlVariableExpression.Collate?.Accept(this);
             });
         }
         AppendLine("},");

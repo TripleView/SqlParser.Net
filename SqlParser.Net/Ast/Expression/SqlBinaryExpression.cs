@@ -2,11 +2,10 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlBinaryExpression : SqlExpression, ICollateExpression
+public class SqlBinaryExpression : SqlExpression
 {
     private SqlExpression left;
     private SqlExpression right;
-    private SqlCollateExpression collate;
 
     public override void Accept(IAstVisitor visitor)
     {
@@ -45,24 +44,6 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
         }
     }
 
-    /// <summary>
-    /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collate子句主要用于指定字符串比较和排序的规则
-    /// </summary>
-    public SqlCollateExpression Collate
-    {
-        get => collate;
-        set
-        {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
-            collate = value;
-        }
-    }
-
-
     public SqlBinaryOperator Operator { get; set; }
 
     protected bool Equals(SqlBinaryExpression other)
@@ -82,12 +63,6 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
         {
             return false;
         }
-
-        if (!CompareTwoSqlExpression(Collate, other.Collate))
-        {
-            return false;
-        }
-
 
         return true;
     }

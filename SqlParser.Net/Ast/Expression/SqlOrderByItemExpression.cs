@@ -2,11 +2,9 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlOrderByItemExpression : SqlExpression, ICollateExpression
+public class SqlOrderByItemExpression : SqlExpression
 {
     private SqlExpression body;
-
-    private SqlCollateExpression collate;
 
     public override void Accept(IAstVisitor visitor)
     {
@@ -30,24 +28,6 @@ public class SqlOrderByItemExpression : SqlExpression, ICollateExpression
         }
     }
 
-    /// <summary>
-    /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collate子句主要用于指定字符串比较和排序的规则
-    /// </summary>
-    public SqlCollateExpression Collate
-    {
-        get => collate;
-        set
-        {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
-            collate = value;
-        }
-    }
-
-
     public SqlOrderByType? OrderByType { get; set; }
 
     public SqlOrderByNullsType? NullsType { get; set; }
@@ -55,11 +35,6 @@ public class SqlOrderByItemExpression : SqlExpression, ICollateExpression
     protected bool Equals(SqlOrderByItemExpression other)
     {
         if (!CompareTwoSqlExpression(Body, other.Body))
-        {
-            return false;
-        }
-
-        if (!CompareTwoSqlExpression(Collate, other.Collate))
         {
             return false;
         }

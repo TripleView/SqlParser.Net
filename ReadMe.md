@@ -2675,7 +2675,7 @@ At Time Zone子句，在本例子中值为SqlAtTimeZoneExpression，代表这是
 1. 时区，即TimeZone字段，值为Asia/ShangHai
 2. 主体关联条件子句，即Body字段，值为order_date
 
-### 1.8 Interval子句
+### 1.9 Interval子句
 
 ````csharp
 var sql = "SELECT DATE_ADD(order_date, INTERVAL 3 HOUR) AS b FROM orders;";
@@ -2738,6 +2738,122 @@ var expect = new SqlSelectExpression()
 Interval子句，在本例子中值为SqlIntervalExpression，代表这是一个Interval表达式，SqlIntervalExpression它包含了
 1. 单位，即Unit字段，值为SqlTimeUnitExpression表达式，SqlTimeUnitExpression表达式代表了这是用来存储时间单位的表达式，在这里SqlTimeUnitExpression里的值为HOUR
 2. 时间间隔数值，即Body字段，值为3
+
+### 1.10 Collate子句
+
+````csharp
+var sql = "SELECT * FROM test3 t  ORDER BY t.a collate utf8_general_ci;";
+var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+````
+解析结果如下：
+````csharp
+var expect = new SqlSelectExpression()
+{
+    Query = new SqlSelectQueryExpression()
+    {
+        Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+        From = new SqlTableExpression()
+        {
+            Name = new SqlIdentifierExpression()
+            {
+                Value = "test3",
+            },
+            Alias = new SqlIdentifierExpression()
+            {
+                Value = "t",
+            },
+        },
+        OrderBy = new SqlOrderByExpression()
+        {
+            Items = new List<SqlOrderByItemExpression>()
+            {
+                new SqlOrderByItemExpression()
+                {
+                    Body = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "t",
+                        },
+                    },
+                    Collate = new SqlCollateExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "utf8_general_ci",
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
+
+````
+
+Collate子句，即字符串比较和排序规则子句，在本例子中值为SqlCollateExpression，代表这是一个Collate表达式，SqlCollateExpression它包含了
+
+1. 排序规则，即Body字段，值为utf8_general_ci
+
+### 1.11 RegEx子句
+
+````csharp
+var sql = "SELECT * FROM test3 WHERE a regexp 'a'";
+var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+````
+解析结果如下：
+````csharp
+var expect = new SqlSelectExpression()
+{
+    Query = new SqlSelectQueryExpression()
+    {
+        Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+        From = new SqlTableExpression()
+        {
+            Name = new SqlIdentifierExpression()
+            {
+                Value = "test3",
+            },
+        },
+        Where = new SqlRegexExpression()
+        {
+            Body = new SqlIdentifierExpression()
+            {
+                Value = "a",
+            },
+            RegEx = new SqlStringExpression()
+            {
+                Value = "a"
+            },
+            IsCaseSensitive = true,
+        },
+    },
+};
+
+
+````
+
+RegEx子句，即正则表达式子句，仅在mysql和pgsql中出现，在本例子中值为SqlRegexExpression，代表这是一个Regex表达式，SqlRegexExpression它包含了
+
+1. 要进行正则匹配的字段，即Body字段，值为a
+2. 正则表达式，即RegEx字段，值为a
+3. 是否大小写敏感，即IsCaseSensitive字段，值为true
 
 ## 2. Insert插入语句
 

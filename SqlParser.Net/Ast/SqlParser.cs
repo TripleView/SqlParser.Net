@@ -1457,6 +1457,7 @@ public class SqlParser
     private SqlExpression AcceptEquationOperationExpression()
     {
         var left = AcceptRelationalExpression();
+        AppendCollateExpression(left);
         SqlExpression right = null;
         // not in,not like,not between
         var i = 0;
@@ -1501,6 +1502,7 @@ public class SqlParser
             if (right == null)
             {
                 right = AcceptRelationalExpression();
+                AppendCollateExpression(right);
             }
 
             left = new SqlBinaryExpression()
@@ -1510,7 +1512,7 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
-            AppendCollateExpression(left);
+            
             right = null;
         }
 
@@ -1524,6 +1526,7 @@ public class SqlParser
     private SqlExpression AcceptRelationalExpression()
     {
         var left = AcceptFourArithmeticOperationsAddOrSub();
+        AppendCollateExpression(left);
         SqlExpression right = null;
         // not in,not like,not between
         var isNot = false;
@@ -1718,6 +1721,7 @@ public class SqlParser
             if (right == null)
             {
                 right = AcceptFourArithmeticOperationsAddOrSub();
+                AppendCollateExpression(right);
             }
 
             left = new SqlBinaryExpression()
@@ -1728,7 +1732,6 @@ public class SqlParser
                 Operator = @operator,
             };
 
-            AppendCollateExpression(left);
             if (isNot)
             {
                 isNot = false;
@@ -3013,7 +3016,6 @@ public class SqlParser
                 if (i == 1 || Accept(Token.Comma))
                 {
                     var item = AcceptNestedComplexExpression();
-                    var collate = AcceptCollateExpression();
 
                     SqlOrderByType? orderByType = null;
                     if (Accept(Token.Asc))
@@ -3050,8 +3052,7 @@ public class SqlParser
                         DbType = dbType,
                         Body = item,
                         OrderByType = orderByType,
-                        NullsType = nullsType,
-                        Collate = collate
+                        NullsType = nullsType
                     };
                     items.Add(orderByItem);
                 }

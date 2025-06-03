@@ -9,9 +9,9 @@ namespace Demo
         static void Main(string[] args)
         {
      
-            var sql = "select * from test3 where a regexp 'a' COLLATE utf8mb4_general_ci";
+            var sql = "select \"Id\", LTRIM((((\"Id\" || '(') || \"TableName\") || ')')) as ProgramId, \"Name\", \"TableName\", \"Icon\", \"Descr\" from \"winter.system\".\"Program\" as \"sr\" where((1 = 1) and((1 = 1) and((\"Id\" COLLATE \"C\" like '%FX%'))))";
 
-            var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+            var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
             var result = sqlAst.ToFormat();
             var newSql= sqlAst.ToSql();
         }

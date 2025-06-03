@@ -102,11 +102,6 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 sqlBinaryExpression.Right?.Accept(this);
             }
-
-            if (sqlBinaryExpression.Collate != null)
-            {
-                sqlBinaryExpression.Collate?.Accept(this);
-            }
         }
 
         if (sqlBinaryExpression.Parent is SqlConnectByExpression
@@ -580,10 +575,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlOrderByItemExpression.Body?.Accept(this);
         }
-        if (sqlOrderByItemExpression.Collate != null)
-        {
-            sqlOrderByItemExpression.Collate?.Accept(this);
-        }
+
         if (sqlOrderByItemExpression.OrderByType.HasValue)
         {
             Append(sqlOrderByItemExpression.OrderByType == SqlOrderByType.Asc ? "asc" : "desc");
@@ -924,6 +916,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
         Append($"{(sqlStringExpression.IsUniCode ? "N" : "")}'{sqlStringExpression.Value.Replace("'", "''")}'");
+        if (sqlStringExpression.Collate != null)
+        {
+            sqlStringExpression.Collate?.Accept(this);
+        }
     }
     public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
@@ -1072,6 +1068,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Name))
         {
             sb.Append(sqlVariableExpression.Name);
+        }
+        if (sqlVariableExpression.Collate != null)
+        {
+            sqlVariableExpression.Collate?.Accept(this);
         }
     }
     public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
