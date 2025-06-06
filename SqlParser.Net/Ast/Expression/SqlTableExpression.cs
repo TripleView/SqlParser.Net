@@ -3,7 +3,7 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlTableExpression : SqlExpression
+public class SqlTableExpression : SqlExpression, IAliasExpression
 {
     private SqlIdentifierExpression alias;
     private SqlIdentifierExpression name;

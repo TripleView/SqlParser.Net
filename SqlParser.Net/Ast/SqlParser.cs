@@ -472,6 +472,9 @@ public class SqlParser
                 FunctionCall = functionCall,
                 DbType = dbType
             };
+
+            AppendAliasExpression(table);
+
             return table;
         }
         else
@@ -584,33 +587,38 @@ public class SqlParser
                 };
             }
 
-            var alias = "";
-            if (Accept(Token.As))
-            {
-                AcceptOrThrowException(Token.IdentifierString);
-                alias = GetCurrentTokenValue();
-            }
-            else if (Accept(Token.IdentifierString))
-            {
-                alias = GetCurrentTokenValue();
-            }
-
-            if (!string.IsNullOrWhiteSpace(alias))
-            {
-                table.Alias = new SqlIdentifierExpression()
-                {
-                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
-                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                    Value = alias,
-                    DbType = dbType
-                };
-            }
+            AppendAliasExpression(table);
 
             table.Hints = AcceptHints();
 
             return table;
         }
 
+    }
+
+    private void AppendAliasExpression(IAliasExpression aliasExpression)
+    {
+        var alias = "";
+        if (Accept(Token.As))
+        {
+            AcceptOrThrowException(Token.IdentifierString);
+            alias = GetCurrentTokenValue();
+        }
+        else if (Accept(Token.IdentifierString))
+        {
+            alias = GetCurrentTokenValue();
+        }
+
+        if (!string.IsNullOrWhiteSpace(alias))
+        {
+            aliasExpression.Alias = new SqlIdentifierExpression()
+            {
+                LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
+                RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
+                Value = alias,
+                DbType = dbType
+            };
+        }
     }
 
     private List<SqlHintExpression> AcceptHints()

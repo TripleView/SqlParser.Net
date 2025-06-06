@@ -65,9 +65,8 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+
+        var result = sqlAst.ToFormat();
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -115,10 +114,63 @@ public class SelectTest
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+
+        var generationSql = sqlAst.ToSql();
         Assert.Equal("select * from TABLE(splitstr('a;b', ';'))", generationSql);
+    }
+
+    [Fact]
+    public void TestReferenceTable2()
+    {
+        var sql = "SELECT * FROM generate_series(1, 5) as t;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlReferenceTableExpression()
+                {
+                    FunctionCall = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "generate_series",
+                        },
+                        Arguments = new List<SqlExpression>()
+                        {
+                            new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                            new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t",
+                    },
+                }
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select * from generate_series(1, 5) as t", generationSql);
     }
 
     [Fact]

@@ -2,10 +2,10 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlReferenceTableExpression : SqlExpression
+public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
 {
     private SqlFunctionCallExpression functionCall;
-
+    private SqlIdentifierExpression alias;
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlReferenceTableExpression(this);
@@ -28,8 +28,26 @@ public class SqlReferenceTableExpression : SqlExpression
         }
     }
 
+    public SqlIdentifierExpression Alias
+    {
+        get => alias;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            alias = value;
+        }
+    }
+
     protected bool Equals(SqlReferenceTableExpression other)
     {
+        if (!CompareTwoSqlExpression(Alias, other.Alias))
+        {
+            return false;
+        }
+
         if (!CompareTwoSqlExpression(FunctionCall, other.FunctionCall))
         {
             return false;

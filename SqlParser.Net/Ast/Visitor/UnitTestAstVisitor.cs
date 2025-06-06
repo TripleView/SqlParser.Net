@@ -901,6 +901,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlReferenceTableExpression.FunctionCall?.Accept(this);
             });
         }
+        if (sqlReferenceTableExpression.Alias != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Alias = ");
+                sqlReferenceTableExpression.Alias?.Accept(this);
+            });
+        }
         AppendLine("}");
     }
     public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)

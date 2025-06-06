@@ -693,6 +693,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlReferenceTableExpression.FunctionCall?.Accept(this);
         }
+
+        if (sqlReferenceTableExpression.Alias != null)
+        {
+            if (!IsOracle)
+            {
+                Append("as");
+            }
+            sqlReferenceTableExpression.Alias?.Accept(this);
+        }
     }
     public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
@@ -946,7 +955,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlTableExpression.Alias != null)
         {
-            if (dbType != DbType.Oracle)
+            if (!IsOracle)
             {
                 Append("as");
             }
