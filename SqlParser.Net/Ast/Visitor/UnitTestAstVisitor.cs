@@ -120,6 +120,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlBinaryExpression.Right?.Accept(this);
             });
         }
+        if (sqlBinaryExpression.Collate != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Collate = ");
+                sqlBinaryExpression.Collate.Accept(this);
+            });
+        }
 
         AppendLine("},");
     }

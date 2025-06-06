@@ -1520,7 +1520,9 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
-            
+
+            AppendCollateExpression(left);
+
             right = null;
         }
 
@@ -1740,6 +1742,8 @@ public class SqlParser
                 Operator = @operator,
             };
 
+            AppendCollateExpression(left);
+
             if (isNot)
             {
                 isNot = false;
@@ -1815,6 +1819,7 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
+            AppendCollateExpression(left);
         }
 
         return left;
@@ -1864,6 +1869,7 @@ public class SqlParser
                 Right = right,
                 Operator = @operator
             };
+            AppendCollateExpression(left);
         }
 
         return left;
