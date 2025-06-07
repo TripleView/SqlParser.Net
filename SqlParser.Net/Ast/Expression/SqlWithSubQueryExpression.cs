@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlWithSubQueryExpression : SqlExpression
+public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
 {
     private SqlIdentifierExpression alias;
     private List<SqlIdentifierExpression> columns;

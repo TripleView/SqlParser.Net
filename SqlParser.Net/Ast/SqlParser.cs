@@ -542,6 +542,7 @@ public class SqlParser
 
             var table = new SqlTableExpression()
             {
+                DbType = dbType,
                 Name = new SqlIdentifierExpression()
                 {
                     LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
@@ -596,17 +597,70 @@ public class SqlParser
 
     }
 
-    private void AppendAliasExpression(IAliasExpression aliasExpression)
+    private void AppendAliasExpression(IAliasExpression aliasExpression, bool isSelectItem = false)
     {
         var alias = "";
+        var isHandle = false;
         if (Accept(Token.As))
         {
-            AcceptOrThrowException(Token.IdentifierString);
-            alias = GetCurrentTokenValue();
+            if (isSelectItem)
+            {
+                if (IsPgsql)
+                {
+                    if (!(Accept(Token.IdentifierString) || AcceptKeyword()))
+                    {
+                        ThrowSqlParsingErrorException();
+                    }
+                    else
+                    {
+                        isHandle = true;
+                        alias = GetCurrentTokenValue();
+                    }
+                }
+
+                if (IsSqlServer)
+                {
+                    //sql server兼容单引号包裹列别名，例如select city 'b' from Address 
+                    if (Accept(Token.StringConstant))
+                    {
+                        isHandle = true;
+                        alias = GetCurrentTokenValue();
+                        currentToken = new Token()
+                        {
+                            LeftQualifiers = "'",
+                            RightQualifiers = "'",
+                        };
+                    }
+                }
+
+            }
+
+            if (!isHandle)
+            {
+                AcceptOrThrowException(Token.IdentifierString);
+                alias = GetCurrentTokenValue();
+            }
         }
-        else if (Accept(Token.IdentifierString))
+        else
         {
-            alias = GetCurrentTokenValue();
+            if (IsSqlServer)
+            {
+                //sql server兼容单引号包裹列别名，例如select city 'b' from Address 
+                if (Accept(Token.StringConstant))
+                {
+                    isHandle = true;
+                    alias = GetCurrentTokenValue();
+                    currentToken = new Token()
+                    {
+                        LeftQualifiers = "'",
+                        RightQualifiers = "'",
+                    };
+                }
+            }
+            if (!isHandle && Accept(Token.IdentifierString))
+            {
+                alias = GetCurrentTokenValue();
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(alias))
@@ -1128,13 +1182,9 @@ public class SqlParser
                     DbType = dbType,
                 };
                 Accept(Token.Comma);
-                AcceptOrThrowException(Token.IdentifierString);
-                var alias = GetCurrentTokenValue();
-                subQueryExpression.Alias = new SqlIdentifierExpression()
-                {
-                    DbType = dbType,
-                    Value = alias
-                };
+
+                AppendAliasExpression(subQueryExpression);
+
                 if (Accept(Token.LeftParen))
                 {
                     subQueryExpression.Columns = new List<SqlIdentifierExpression>();
@@ -1254,18 +1304,7 @@ public class SqlParser
             }
 
             item.Body = AcceptNestedComplexExpression();
-
-            var asStr = AcceptAsToken(true);
-            if (!string.IsNullOrWhiteSpace(asStr))
-            {
-                item.Alias = new SqlIdentifierExpression()
-                {
-                    DbType = dbType,
-                    LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
-                    RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                    Value = asStr
-                };
-            }
+            AppendAliasExpression(item, true);
             result.Add(item);
         }
 
@@ -1655,7 +1694,7 @@ public class SqlParser
                 }
                 else if (CheckNextToken(Token.StringConstant))
                 {
-                   
+
                 }
                 else
                 {
@@ -2766,44 +2805,6 @@ public class SqlParser
         return null;
     }
 
-    private string AcceptAsToken(bool isSelectItem)
-    {
-        var asStr = "";
-        if (Accept(Token.As))
-        {
-            if (isSelectItem && IsPgsql)
-            {
-                if (!(Accept(Token.IdentifierString) || AcceptKeyword()))
-                {
-                    ThrowSqlParsingErrorException();
-                }
-            }
-            else
-            {
-                AcceptOrThrowException(Token.IdentifierString);
-            }
-
-            asStr = GetCurrentTokenValue();
-        }
-        else if (Accept(Token.IdentifierString))
-        {
-            asStr = GetCurrentTokenValue();
-        }
-
-        //sql server兼容单引号包裹列别名，例如select city 'b' from Address 
-        if (IsSqlServer && Accept(Token.StringConstant))
-        {
-            asStr = GetCurrentTokenValue();
-            currentToken = new Token()
-            {
-                LeftQualifiers = "'",
-                RightQualifiers = "'",
-            };
-        }
-
-        return asStr;
-    }
-
     private SqlExpression AcceptTableSourceExpression()
     {
         //单表或者多表关联
@@ -2884,14 +2885,9 @@ public class SqlParser
                     Value = alias
                 };
             }
-            if (IsOracle && Accept((Token.IdentifierString)))
+            if (IsOracle)
             {
-                var alias = GetCurrentTokenValue();
-                result.Alias = new SqlIdentifierExpression()
-                {
-                    DbType = dbType,
-                    Value = alias
-                };
+                AppendAliasExpression(result);
             }
 
             return result;

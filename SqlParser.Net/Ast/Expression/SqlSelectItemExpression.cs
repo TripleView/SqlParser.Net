@@ -2,7 +2,7 @@
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlSelectItemExpression : SqlExpression
+public class SqlSelectItemExpression : SqlExpression, IAliasExpression
 {
     private SqlExpression body;
     private SqlIdentifierExpression alias;

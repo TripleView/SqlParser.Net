@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlPivotTableExpression : SqlExpression
+public class SqlPivotTableExpression : SqlExpression, IAliasExpression
 {
     private SqlIdentifierExpression alias;
     private SqlExpression subQuery;
@@ -117,7 +117,7 @@ public class SqlPivotTableExpression : SqlExpression
         {
             return false;
         }
-        
+
         return true;
     }
 

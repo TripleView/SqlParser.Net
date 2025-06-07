@@ -718,11 +718,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
-        if (sb.Length == 0
+        if (sqlSelectExpression.Alias == null && (sb.Length == 0
             || sqlSelectExpression.Parent is SqlInsertExpression
             || IsSqlite
             || sqlSelectExpression.Query is SqlUnionQueryExpression
-            || sqlSelectExpression.Parent is SqlExistsExpression)
+            || sqlSelectExpression.Parent is SqlExistsExpression))
         {
             if (sqlSelectExpression.Query != null)
             {
@@ -737,7 +737,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 {
                     sqlSelectExpression.Query?.Accept(this);
                 }
-            }, isInUpdateSetContext);
+            }, isInUpdateSetContext || sqlSelectExpression.Alias != null);
         }
 
         if (sqlSelectExpression.Alias != null)
@@ -771,7 +771,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     private void EnableParen(Action action, bool isForce = false)
     {
-        if (sb.Length == 0)
+        if (sb.Length == 0 && !isForce)
         {
             action();
             return;
@@ -986,10 +986,18 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
-        EnableParen(() =>
+        if (sb.Length > 0 && sb[sb.Length - 1] == '(')
         {
             VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
-        });
+        }
+        else
+        {
+            EnableParen(() =>
+            {
+                VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
+            });
+        }
+
     }
 
     private void VisitSqlUnionQueryExpressionInternal(SqlUnionQueryExpression sqlUnionQueryExpression)

@@ -13334,11 +13334,13 @@ order by temp.InxNbr";
     /// 测试sqlserver中单引号包裹数据库列别名
     /// Test the single quotes in sqlserver to wrap the database column alias
     /// </summary>
-    [Fact]
-    public void TestWrapDatabaseColumnAliasesInSingleQuotesForSqlServer()
+    [Theory]
+    [InlineData("")]
+    [InlineData(" as ")]
+    public void TestWrapDatabaseColumnAliasesInSingleQuotesForSqlServer(string asStr)
     {
         var sql =
-            "select city 'b' from Address";
+            $"select city{asStr}'b' from Address";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -13462,6 +13464,22 @@ order by temp.InxNbr";
         Assert.Equal("''' '''", allColumns[0]);
         Assert.Equal("3", allColumns[1]);
         Assert.Equal("true", allColumns[2]);
+    }
+
+    [Fact]
+    public void TestToSql2()
+    {
+        var sql = "SELECT * FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY bill_code ORDER BY seq_date DESC) as rn FROM bill_sequence t) ranked WHERE rn <= 4 ORDER BY bill_code, seq_date DESC;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        if (sqlAst is SqlSelectExpression selectExpression &&
+            selectExpression.Query
+                is SqlSelectQueryExpression a && a.From is SqlSelectExpression b)
+        {
+            var fromSql = b.ToSql();
+            Assert.Equal("(select t.*, ROW_NUMBER() over(partition by bill_code order by seq_date desc) as rn from bill_sequence as t) as ranked", fromSql);
+        }
     }
 
     [Fact]
