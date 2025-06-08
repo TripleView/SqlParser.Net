@@ -82,14 +82,14 @@ public class SqlExpression : IAcceptVisitor
         return true;
     }
 
-    public string ToSql()
+    public string ToSql(DbType? dbType=null)
     {
-        
-        if (DbType == null)
+        var myDbType = dbType ?? DbType;
+        if (myDbType == null)
         {
             throw new Exception("dbType can not be null");
         }
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Value);
+        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(myDbType.Value);
         this.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         return generationSql;

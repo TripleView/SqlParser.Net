@@ -720,7 +720,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         if (sqlSelectExpression.Alias == null && (sb.Length == 0
             || sqlSelectExpression.Parent is SqlInsertExpression
-            || IsSqlite
+            || (IsSqlite && sqlSelectExpression.Parent is not SqlFunctionCallExpression)
             || sqlSelectExpression.Query is SqlUnionQueryExpression
             || sqlSelectExpression.Parent is SqlExistsExpression))
         {

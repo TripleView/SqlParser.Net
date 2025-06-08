@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -43,6 +44,11 @@ public class SqlParser
     /// </summary>
     private static HashSet<string> timeUnitSet = new HashSet<string>()
         { "year", "month", "day", "hour", "minute", "second" };
+
+    private static HashSet<string> sqlServerAggregateFunctions = new HashSet<string>()
+    {
+        "avg", "sum", "count", "count_big", "max", "min", "stdev", "stdevp", "var", "varp", "checksum_agg", "grouping", "grouping_id"
+    };
 
     /// <summary>
     /// Whether it is in the context of a merge result set operation
@@ -599,7 +605,8 @@ public class SqlParser
 
     private void AppendAliasExpression(IAliasExpression aliasExpression, bool isSelectItem = false)
     {
-        var alias = "";
+        var sb = new StringBuilder();
+
         var isHandle = false;
         if (Accept(Token.As))
         {
@@ -614,7 +621,7 @@ public class SqlParser
                     else
                     {
                         isHandle = true;
-                        alias = GetCurrentTokenValue();
+                        sb.Append(GetCurrentTokenValue());
                     }
                 }
 
@@ -624,7 +631,7 @@ public class SqlParser
                     if (Accept(Token.StringConstant))
                     {
                         isHandle = true;
-                        alias = GetCurrentTokenValue();
+                        sb.Append(GetCurrentTokenValue());
                         currentToken = new Token()
                         {
                             LeftQualifiers = "'",
@@ -638,7 +645,8 @@ public class SqlParser
             if (!isHandle)
             {
                 AcceptOrThrowException(Token.IdentifierString);
-                alias = GetCurrentTokenValue();
+                sb.Append(GetCurrentTokenValue());
+                isHandle = true;
             }
         }
         else
@@ -649,7 +657,7 @@ public class SqlParser
                 if (Accept(Token.StringConstant))
                 {
                     isHandle = true;
-                    alias = GetCurrentTokenValue();
+                    sb.Append(GetCurrentTokenValue());
                     currentToken = new Token()
                     {
                         LeftQualifiers = "'",
@@ -657,12 +665,41 @@ public class SqlParser
                     };
                 }
             }
-            if (!isHandle && Accept(Token.IdentifierString))
+            if (!isHandle)
             {
-                alias = GetCurrentTokenValue();
+                if (Accept(Token.IdentifierString))
+                {
+                    sb.Append(GetCurrentTokenValue());
+                    isHandle = true;
+                }
             }
         }
 
+        //SELECT n FROM generate_series(1, 5) AS t(n);
+        if (IsPgsql && isHandle && Accept(Token.LeftParen))
+        {
+            sb.Append(GetCurrentTokenValue());
+            var i = 0;
+            while (true)
+            {
+                i++;
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                if (Accept(Token.RightParen))
+                {
+                    sb.Append(GetCurrentTokenValue());
+                    break;
+                }
+                AcceptAnyOne();
+                sb.Append(GetCurrentTokenValue());
+            }
+
+        }
+
+        var alias = sb.ToString();
         if (!string.IsNullOrWhiteSpace(alias))
         {
             aliasExpression.Alias = new SqlIdentifierExpression()
@@ -2697,45 +2734,98 @@ public class SqlParser
             }
 
             Accept(Token.Comma);
-            var argument = AcceptNestedComplexExpression();
-            arguments.Add(argument);
-
-            //SELECT CAST('123' AS INTEGER);
-            if (Accept(Token.As))
+            //SELECT max((SELECT  d FROM test3 where a='a' )) FROM test3;
+            var isHandle = false;
+            var hasLeftParen = false;
+            if (CheckNextToken(Token.LeftParen))
             {
-                var targetTypeNameStringBuilder = new StringBuilder();
-                var j = 0;
+                hasLeftParen = true;
+                this.SavePoint();
+                var leftParenCount = 0;
                 while (true)
                 {
-                    if (j >= whileMaximumNumberOfLoops)
+                    if (Accept(Token.LeftParen))
                     {
-                        throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        leftParenCount++;
                     }
-
-                    j++;
-                    if (CheckNextToken(Token.RightParen) || nextToken == null)
+                    else
                     {
                         break;
                     }
-
-                    AcceptAnyOne();
-                    targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
-                    targetTypeNameStringBuilder.Append(" ");
                 }
 
-                var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
-                result.CaseAsTargetType = new SqlIdentifierExpression()
+                if (CheckNextToken(Token.Select))
                 {
-                    DbType = dbType,
-                    Value = targetTypeName
-                };
-                break;
+                    if (IsSqlServer)
+                    {
+                        if (sqlServerAggregateFunctions.Contains(functionName.ToLower()))
+                        {
+                            ThrowSqlParsingErrorException();
+                        }
+                    }
+
+                    var selectExpressionItem = AcceptSelectExpression();
+                    arguments.Add(selectExpressionItem);
+                    for (int j = leftParenCount; j > 0; j--)
+                    {
+                        if (!Accept(Token.RightParen))
+                        {
+                            ThrowSqlParsingErrorException();
+                        }
+                    }
+
+                    isHandle = true;
+                }
             }
-            // such as pgsql,EXTRACT(YEAR FROM order_date)
-            if ((IsPgsql || IsOracle || IsMySql) && Accept(Token.From) && functionName.ToLowerInvariant() == "extract")
+
+            if (hasLeftParen && !isHandle)
             {
-                var fromSource = AcceptNestedComplexExpression();
-                result.FromSource = fromSource;
+                this.RestoreSavePoint();
+            }
+
+            if (isHandle == false)
+            {
+
+                var argument = AcceptNestedComplexExpression();
+                arguments.Add(argument);
+
+                //SELECT CAST('123' AS INTEGER);
+                if (Accept(Token.As))
+                {
+                    var targetTypeNameStringBuilder = new StringBuilder();
+                    var j = 0;
+                    while (true)
+                    {
+                        if (j >= whileMaximumNumberOfLoops)
+                        {
+                            throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                        }
+
+                        j++;
+                        if (CheckNextToken(Token.RightParen) || nextToken == null)
+                        {
+                            break;
+                        }
+
+                        AcceptAnyOne();
+                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                        targetTypeNameStringBuilder.Append(" ");
+                    }
+
+                    var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();
+                    result.CaseAsTargetType = new SqlIdentifierExpression()
+                    {
+                        DbType = dbType,
+                        Value = targetTypeName
+                    };
+                    break;
+                }
+                // such as pgsql,EXTRACT(YEAR FROM order_date)
+                if ((IsPgsql || IsOracle || IsMySql) && Accept(Token.From) && functionName.ToLowerInvariant() == "extract")
+                {
+                    var fromSource = AcceptNestedComplexExpression();
+                    result.FromSource = fromSource;
+                }
             }
         }
 

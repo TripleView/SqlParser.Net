@@ -173,6 +173,65 @@ public class SelectTest
         Assert.Equal("select * from generate_series(1, 5) as t", generationSql);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(" as ")]
+    public void TestReferenceTable3(string asStr)
+    {
+        var sql = $"SELECT n FROM generate_series(1, 5){asStr}t(n)";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "n",
+                        },
+                    },
+                },
+                From = new SqlReferenceTableExpression()
+                {
+                    FunctionCall = new SqlFunctionCallExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "generate_series",
+                        },
+                        Arguments = new List<SqlExpression>()
+                        {
+                            new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                            new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "t(n)",
+                    },
+                }
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select n from generate_series(1, 5) as t(n)", generationSql);
+    }
+
     [Fact]
     public void TestIdentifierColumn()
     {
@@ -2484,6 +2543,260 @@ FROM
         Assert.Equal("select EXTRACT(DAY from  c.order_date) as b from orders as c", generationSql);
     }
 
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Oracle)]
+    public void TestFunctionCall9(DbType dbType)
+    {
+        var sql = $"SELECT max((SELECT  d FROM test3 where a='a' )) FROM test3;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "max",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlSelectExpression()
+                        {
+                            Query = new SqlSelectQueryExpression()
+                            {
+                                Columns = new List<SqlSelectItemExpression>()
+                                {
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlIdentifierExpression()
+                                        {
+                                            Value = "d",
+                                        },
+                                    },
+                                },
+                                From = new SqlTableExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "test3",
+                                    },
+                                },
+                                Where = new SqlBinaryExpression()
+                                {
+                                    Left = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                    Operator = SqlBinaryOperator.EqualTo,
+                                    Right = new SqlStringExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select max((select d from test3 where(a = 'a'))) from test3", generationSql);
+    }
+
+
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Pgsql)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Oracle)]
+    public void TestFunctionCall10(DbType dbType)
+    {
+        var sql = $"SELECT max((((SELECT  d FROM test3 where a='a' )))) FROM test3;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "max",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlSelectExpression()
+                        {
+                            Query = new SqlSelectQueryExpression()
+                            {
+                                Columns = new List<SqlSelectItemExpression>()
+                                {
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlIdentifierExpression()
+                                        {
+                                            Value = "d",
+                                        },
+                                    },
+                                },
+                                From = new SqlTableExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "test3",
+                                    },
+                                },
+                                Where = new SqlBinaryExpression()
+                                {
+                                    Left = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                    Operator = SqlBinaryOperator.EqualTo,
+                                    Right = new SqlStringExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select max((select d from test3 where(a = 'a'))) from test3", generationSql);
+    }
+
+    [Fact]
+    public void TestFunctionCall11()
+    {
+        var sql = @$"SELECT SQRT( (SELECT AVG(d) FROM test3) )";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "SQRT",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlSelectExpression()
+                        {
+                            Query = new SqlSelectQueryExpression()
+                            {
+                                Columns = new List<SqlSelectItemExpression>()
+                                {
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlFunctionCallExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "AVG",
+                                            },
+                                            Arguments = new List<SqlExpression>()
+                                            {
+                                                new SqlIdentifierExpression()
+                                                {
+                                                    Value = "d",
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                                From = new SqlTableExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "test3",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select SQRT((select AVG(d) from test3))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestFunctionCall12()
+    {
+        var sql = @$"SELECT SUM((SELECT  d FROM test3 where a='a' )) FROM test3";
+        var sqlAst = new SqlExpression();
+        Assert.Throws<SqlParsingErrorException>((() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+        }));
+    }
 
     [Fact]
     public void TestComplexColumn()

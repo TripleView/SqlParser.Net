@@ -8,18 +8,28 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var sql = "SELECT * FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY bill_code ORDER BY seq_date DESC) as rn FROM bill_sequence t) ranked WHERE rn <= 4 ORDER BY bill_code, seq_date DESC;";
-            //sql = "SELECT n FROM generate_series(1, 5) AS t(n);";
+            var sql = "SELECT ARRAY(SELECT generate_series(1, 10))";
+            sql = "SELECT DATEADD(DAY, (SELECT MAX(d) FROM test3), GETDATE())";
+            //SELECT ARRAY(SELECT generate_series(1, 10));
+
+            //SELECT ARRAY[[1, 2], [3, 4]] AS matrix;
+
+            //SELECT ARRAY[[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
+
+            //SELECT* FROM unnest(ARRAY[10, 20, 30])
+
+
+            //SELECT ARRAY(SELECT a FROM test3 t);
+
+
+            //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
             var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
-            if (sqlAst is SqlSelectExpression selectExpression &&
-                selectExpression.Query
-                    is SqlSelectQueryExpression a && a.From is SqlSelectExpression b && b.Query is SqlSelectQueryExpression c)
-            {
-                var d = b.ToSql();
-            }
+            
             var result = sqlAst.ToFormat();
             var newSql= sqlAst.ToSql();
+
+
         }
     }
 }
