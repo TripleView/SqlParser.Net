@@ -9,9 +9,9 @@ namespace Demo
         static void Main(string[] args)
         {
             var sql = "SELECT ARRAY(SELECT generate_series(1, 10))";
-            sql = "SELECT DATEADD(DAY, (SELECT MAX(d) FROM test3), GETDATE())";
-            //SELECT ARRAY(SELECT generate_series(1, 10));
+            sql = "update \"winter.staff\".\"WfTeacher\" set \"Name\" = \"winter.staff\".\"WfTeacher\".\"Name\"";
 
+            //SELECT ARRAY(SELECT generate_series(1, 10));
             //SELECT ARRAY[[1, 2], [3, 4]] AS matrix;
 
             //SELECT ARRAY[[[1, 2], [3, 4]], [[5, 6], [7, 8]]];

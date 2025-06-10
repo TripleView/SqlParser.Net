@@ -2799,6 +2799,87 @@ FROM
     }
 
     [Fact]
+    public void TestFunctionCall13()
+    {
+        var sql = @$"select test3.dbo.testfun(test3.dbo.test.d)  from test3.dbo.test ;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlFunctionCallExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3.dbo.testfun",
+                    },
+                    Arguments = new List<SqlExpression>()
+                    {
+                        new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "d",
+                            },
+                            Table = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "test",
+                                },
+                                Database = new SqlIdentifierExpression()
+                                {
+                                    Value = "test3",
+                                },
+                                Schema = new SqlIdentifierExpression()
+                                {
+                                    Value = "dbo",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test",
+                    },
+                    Database = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Schema = new SqlIdentifierExpression()
+                    {
+                        Value = "dbo",
+                    },
+                },
+            },
+        };
+
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select test3.dbo.testfun(test3.dbo.test.d) from test3.dbo.test",
+            generationSql);
+    }
+
+
+    [Fact]
     public void TestComplexColumn()
     {
         var sql = "select rd.Active*2+5  from RouteData rd";
@@ -14843,6 +14924,142 @@ order by temp.InxNbr";
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
             "select 1 as pn where(pn = 2)",
+            generationSql);
+    }
+
+    [Theory]
+    [InlineData("a")]
+    [InlineData("*")]
+    public void TestSelect6(string field)
+    {
+        var sql = $@"select test3.dbo.test.{field} from test3.dbo.test ;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = field,
+                            },
+                            Table = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "test",
+                                },
+                                Database = new SqlIdentifierExpression()
+                                {
+                                    Value = "test3",
+                                },
+                                Schema = new SqlIdentifierExpression()
+                                {
+                                    Value = "dbo",
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test",
+                    },
+                    Database = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Schema = new SqlIdentifierExpression()
+                    {
+                        Value = "dbo",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select test3.dbo.test.{field} from test3.dbo.test",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestSelect7()
+    {
+        var sql = @"select test3..test.d  from test3..test ;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "d",
+                            },
+                            Table = new SqlTableExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "test",
+                                },
+                                Database = new SqlIdentifierExpression()
+                                {
+                                    Value = "test3",
+                                },
+                                Schema = new SqlIdentifierExpression()
+                                {
+                                    Value = "dbo",
+                                },
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test",
+                    },
+                    Database = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Schema = new SqlIdentifierExpression()
+                    {
+                        Value = "dbo",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select test3.dbo.test.d from test3.dbo.test",
             generationSql);
     }
 

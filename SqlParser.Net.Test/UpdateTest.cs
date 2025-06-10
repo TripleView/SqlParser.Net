@@ -119,11 +119,87 @@ public class UpdateTest
                 },
             },
         };
-
+        Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
         Assert.Equal("update test set name = 4 where(name = 1)", newSql);
     }
+    [Fact]
+    public void TestUpdate3()
+    {
+        var sql = "update test3.dbo.test set a=test3.dbo.test.b where 1=2";
+        var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlUpdateExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "test",
+                },
+                Database = new SqlIdentifierExpression()
+                {
+                    Value = "test3",
+                },
+                Schema = new SqlIdentifierExpression()
+                {
+                    Value = "dbo",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlNumberExpression()
+                {
+                    Value = 1M,
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlNumberExpression()
+                {
+                    Value = 2M,
+                },
+            },
+            Items = new List<SqlExpression>()
+            {
+                new SqlBinaryExpression()
+                {
+                    Left = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                        Table = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "test",
+                            },
+                            Database = new SqlIdentifierExpression()
+                            {
+                                Value = "test3",
+                            },
+                            Schema = new SqlIdentifierExpression()
+                            {
+                                Value = "dbo",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("update test3.dbo.test set a = test3.dbo.test.b where(1 = 2)", newSql);
+    }
+
 
     [Fact]
     public void TestUpdateCheckIfParsingIsComplete()

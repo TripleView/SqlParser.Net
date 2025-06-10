@@ -584,14 +584,19 @@ public class SqlParser
                     };
                     nameTokenList.RemoveAt(0);
                 }
-                var schemaToken = nameTokenList.First();
-                table.Schema = new SqlIdentifierExpression()
+
+                if (nameTokenList.Any())
                 {
-                    LeftQualifiers = schemaToken.HasValue ? schemaToken.Value.LeftQualifiers : "",
-                    RightQualifiers = schemaToken.HasValue ? schemaToken.Value.RightQualifiers : "",
-                    Value = GetTokenValue(schemaToken),
-                    DbType = dbType
-                };
+                    var schemaToken = nameTokenList.First();
+                    table.Schema = new SqlIdentifierExpression()
+                    {
+                        LeftQualifiers = schemaToken.HasValue ? schemaToken.Value.LeftQualifiers : "",
+                        RightQualifiers = schemaToken.HasValue ? schemaToken.Value.RightQualifiers : "",
+                        Value = GetTokenValue(schemaToken),
+                        DbType = dbType
+                    };
+                }
+                  
             }
 
             AppendAliasExpression(table);
@@ -2470,78 +2475,188 @@ public class SqlParser
         {
             var name = GetCurrentTokenValue();
             var mainToken = currentToken;
-            if (Accept(Token.Dot))
+            Token? dbLinkToken = null;
+            var nameTokenList = new List<Token?>() { mainToken };
+            var i = 0;
+            while (true)
             {
-                if (Accept(Token.IdentifierString) || Accept(Token.Star))
+                if (i >= whileMaximumNumberOfLoops)
                 {
-                    var propertyName = GetCurrentTokenValue();
-                    if (CheckNextToken(Token.LeftParen))
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
+                //select * from [a.test]..[test]
+                var isSqlServerDotDot = IsSqlServer && Accept(Token.DotDot);
+
+                if (Accept(Token.Dot))
+                {
+                    var isId = false;
+                    var isStar = false;
+                    if (Accept(Token.IdentifierString))
                     {
-                        body = AcceptFunctionCall(name + "." + propertyName);
+                        isId = true;
+                    }
+                    else if (Accept(Token.Star))
+                    {
+                        isStar = true;
                     }
                     else
                     {
-                        var sqlPropertyExpression = new SqlPropertyExpression() { DbType = dbType, };
-                        var sqlIdentifierExpression = new SqlIdentifierExpression()
-                        {
-                            DbType = dbType,
-                            LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
-                            RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                            Value = name
-                        };
-                        var sqlPropertyNameIdentifierExpression = new SqlIdentifierExpression()
-                        {
-                            DbType = dbType,
-                            LeftQualifiers = currentToken.HasValue ? currentToken.Value.LeftQualifiers : "",
-                            RightQualifiers = currentToken.HasValue ? currentToken.Value.RightQualifiers : "",
-                            Value = propertyName
-                        };
-                        sqlPropertyExpression.Name = sqlPropertyNameIdentifierExpression;
-                        sqlPropertyExpression.Table = sqlIdentifierExpression;
-                        body = sqlPropertyExpression;
+                        ThrowSqlParsingErrorException();
                     }
+
+                    if (isId || isStar)
+                    {
+                        mainToken = currentToken;
+                        nameTokenList.Add(mainToken);
+                    }
+
+                    if (isStar)
+                    {
+                        break;
+                    }
+                    continue;
+                }
+                else if (isSqlServerDotDot)
+                {
+                    var dboToken = Token.IdentifierString;
+                    dboToken.Value = "dbo";
+                    nameTokenList.Add(dboToken);
+                    if (Accept(Token.IdentifierString))
+                    {
+                        mainToken = currentToken;
+                        nameTokenList.Add(mainToken);
+                    }
+                    else
+                    {
+                        ThrowSqlParsingErrorException();
+                    }
+                    continue;
+                }
+                if (CheckNextToken(Token.LeftParen))
+                {
+                    var names = nameTokenList.Where(x => x != null).Select(x => GetTokenValue(x));
+                    var functionName = string.Join(".", names);
+                    var result = AcceptFunctionCall(functionName);
+                    return result;
+                }
+                else if (name.ToLowerInvariant() == "n" && Accept(Token.StringConstant))
+                {
+                    //nchar
+                    var txt = GetCurrentTokenValue();
+                    body = new SqlStringExpression()
+                    {
+                        DbType = dbType,
+                        IsUniCode = true,
+                        Value = txt
+                    };
+                    return body;
+                }
+
+                if (i == 1)
+                {
+                    var sqlIdentifierExpression = new SqlIdentifierExpression()
+                    {
+                        DbType = dbType,
+                        LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
+                        RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
+                        Value = name
+                    };
+                    body = sqlIdentifierExpression;
+                    return body;
                 }
                 else
                 {
-                    ThrowSqlParsingErrorException();
+                    break;
                 }
             }
-            else if (CheckNextToken(Token.LeftParen))
-            {
-                var result = AcceptFunctionCall(name);
-                return result;
-                //if (functions.Any(it => it.ToLower() == txt.ToLower()))
-                //{
 
-                //}
-                //else
-                //{
-                //    throw new Exception($"无法识别函数{txt}");
-                //}
-
-            }
-            else if (name.ToLowerInvariant() == "n" && Accept(Token.StringConstant))
+            if (nameTokenList.Count >= 2)
             {
-                //nchar
-                var txt = GetCurrentTokenValue();
-                body = new SqlStringExpression()
+                var nameToken = nameTokenList[nameTokenList.Count-1];
+                var nameIdentifierExpression = new SqlIdentifierExpression()
                 {
                     DbType = dbType,
-                    IsUniCode = true,
-                    Value = txt
+                    LeftQualifiers = nameToken.HasValue ? nameToken.Value.LeftQualifiers : "",
+                    RightQualifiers = nameToken.HasValue ? nameToken.Value.RightQualifiers : "",
+                    Value = GetTokenValue(nameToken)
                 };
+
+                var sqlPropertyExpression = new SqlPropertyExpression()
+                {
+                    DbType = dbType,
+                    Name = nameIdentifierExpression
+                };
+
+                if (nameTokenList.Count == 2)
+                {
+                    var tableToken = nameTokenList[0];
+                    
+                    var sqlIdentifierExpression = new SqlIdentifierExpression()
+                    {
+                        DbType = dbType,
+                        LeftQualifiers = tableToken.HasValue ? tableToken.Value.LeftQualifiers : "",
+                        RightQualifiers = tableToken.HasValue ? tableToken.Value.RightQualifiers : "",
+                        Value = GetTokenValue(tableToken)
+                    };
+                    
+                    sqlPropertyExpression.Table = sqlIdentifierExpression;
+                }
+                else
+                {
+                    nameTokenList.RemoveAt(nameTokenList.Count - 1);
+                    var tableToken = nameTokenList[nameTokenList.Count - 1];
+                    var table = new SqlTableExpression()
+                    {
+                        DbType = dbType,
+                        Name = new SqlIdentifierExpression()
+                        {
+                            LeftQualifiers = tableToken.HasValue ? tableToken.Value.LeftQualifiers : "",
+                            RightQualifiers = tableToken.HasValue ? tableToken.Value.RightQualifiers : "",
+                            Value = GetTokenValue(tableToken),
+                            DbType = dbType
+                        }
+                    };
+
+                    if (nameTokenList.Count > 1)
+                    {
+                        nameTokenList.RemoveAt(nameTokenList.Count - 1);
+                        if (nameTokenList.Count == 2)
+                        {
+                            var databaseToken = nameTokenList.First();
+                            table.Database = new SqlIdentifierExpression()
+                            {
+                                LeftQualifiers = databaseToken.HasValue ? databaseToken.Value.LeftQualifiers : "",
+                                RightQualifiers = databaseToken.HasValue ? databaseToken.Value.RightQualifiers : "",
+                                Value = GetTokenValue(databaseToken),
+                                DbType = dbType
+                            };
+                            nameTokenList.RemoveAt(0);
+                        }
+
+                        if (nameTokenList.Any())
+                        {
+                            var schemaToken = nameTokenList.First();
+                            table.Schema = new SqlIdentifierExpression()
+                            {
+                                LeftQualifiers = schemaToken.HasValue ? schemaToken.Value.LeftQualifiers : "",
+                                RightQualifiers = schemaToken.HasValue ? schemaToken.Value.RightQualifiers : "",
+                                Value = GetTokenValue(schemaToken),
+                                DbType = dbType
+                            };
+                        }
+                        sqlPropertyExpression.Table = table;
+                    }
+                }
+
+                body = sqlPropertyExpression;
             }
             else
             {
-                var sqlIdentifierExpression = new SqlIdentifierExpression()
-                {
-                    DbType = dbType,
-                    LeftQualifiers = mainToken.HasValue ? mainToken.Value.LeftQualifiers : "",
-                    RightQualifiers = mainToken.HasValue ? mainToken.Value.RightQualifiers : "",
-                    Value = name
-                };
-                body = sqlIdentifierExpression;
+                ThrowSqlParsingErrorException();
             }
+
         }
         else if ((IsPgsql || IsOracle || IsMySql) && CheckNextToken(Token.Interval))
         {

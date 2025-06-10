@@ -5,7 +5,7 @@ namespace SqlParser.Net.Ast.Expression;
 public class SqlPropertyExpression : SqlExpression, ICollateExpression
 {
     private SqlIdentifierExpression name;
-    private SqlIdentifierExpression table;
+    private SqlExpression table;
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
     /// collate子句主要用于指定字符串比较和排序的规则
@@ -55,7 +55,7 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
         }
     }
 
-    public SqlIdentifierExpression Table
+    public SqlExpression Table
     {
         get => table;
         set
