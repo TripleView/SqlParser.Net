@@ -596,7 +596,7 @@ public class SqlParser
                         DbType = dbType
                     };
                 }
-                  
+
             }
 
             AppendAliasExpression(table);
@@ -2574,7 +2574,7 @@ public class SqlParser
 
             if (nameTokenList.Count >= 2)
             {
-                var nameToken = nameTokenList[nameTokenList.Count-1];
+                var nameToken = nameTokenList[nameTokenList.Count - 1];
                 var nameIdentifierExpression = new SqlIdentifierExpression()
                 {
                     DbType = dbType,
@@ -2592,7 +2592,7 @@ public class SqlParser
                 if (nameTokenList.Count == 2)
                 {
                     var tableToken = nameTokenList[0];
-                    
+
                     var sqlIdentifierExpression = new SqlIdentifierExpression()
                     {
                         DbType = dbType,
@@ -2600,7 +2600,7 @@ public class SqlParser
                         RightQualifiers = tableToken.HasValue ? tableToken.Value.RightQualifiers : "",
                         Value = GetTokenValue(tableToken)
                     };
-                    
+
                     sqlPropertyExpression.Table = sqlIdentifierExpression;
                 }
                 else
@@ -2909,6 +2909,7 @@ public class SqlParser
                 {
                     var targetTypeNameStringBuilder = new StringBuilder();
                     var j = 0;
+
                     while (true)
                     {
                         if (j >= whileMaximumNumberOfLoops)
@@ -2921,10 +2922,41 @@ public class SqlParser
                         {
                             break;
                         }
+                        //select Cast(a AS NVARCHAR(MAX)) from test
+                        if (Accept(Token.LeftParen))
+                        {
+                            targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                            var k = 0;
+                            while (true)
+                            {
+                                if (k >= whileMaximumNumberOfLoops)
+                                {
+                                    throw new Exception(
+                                        $"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                                }
 
-                        AcceptAnyOne();
-                        targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
-                        targetTypeNameStringBuilder.Append(" ");
+                                k++;
+                                if (Accept(Token.RightParen) || nextToken == null)
+                                {
+                                    targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                                    break;
+                                }
+                                else
+                                {
+                                    AcceptAnyOne();
+                                    targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                                }
+                            }
+                        }
+                        else
+                        {
+                            AcceptAnyOne();
+                            targetTypeNameStringBuilder.Append(GetCurrentTokenValue());
+                            if (!CheckNextToken(Token.LeftParen))
+                            {
+                                targetTypeNameStringBuilder.Append(" ");
+                            }
+                        }
                     }
 
                     var targetTypeName = targetTypeNameStringBuilder.ToString().TrimEnd();

@@ -2196,6 +2196,64 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
     }
 
     [Fact]
+    public void TestFunctionCall3ForCaseAs16()
+    {
+        var sql =
+            @"select Cast(a AS NVARCHAR(MAX)) from test;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "NVARCHAR(MAX)",
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test",
+                    },
+                },
+            },
+        };
+
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select Cast(a as NVARCHAR(MAX)) from test", generationSql);
+    }
+
+    [Fact]
     public void TestFunctionCall4()
     {
         var sql = "select DBMS_LOB.GETLENGTH(NAME) from TEST5";
