@@ -3476,6 +3476,55 @@ FROM
     }
 
     [Fact]
+    public void TestWhere4()
+    {
+        var sql = "select * from test where :f is null";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlVariableExpression()
+                    {
+                        Name = "f",
+                        Prefix = ":",
+                    },
+                    Operator = SqlBinaryOperator.Is,
+                    Right = new SqlNullExpression()
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select * from test where(:f is null)", generationSql);
+    }
+
+
+    [Fact]
     public void TestBetweenAnd()
     {
         var sql = "select * from FlowActivity fa where fa.CreateOn BETWEEN '2024-01-01' and '2024-10-10'";

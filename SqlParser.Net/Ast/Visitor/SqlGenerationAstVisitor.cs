@@ -88,9 +88,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 sqlBinaryExpression.Left.Accept(this);
             }
-
+            
             if (sqlBinaryExpression.Operator != null)
             {
+                if (sqlBinaryExpression.Left is SqlVariableExpression)
+                {
+                    AppendSpace();
+                }
                 Append(sqlBinaryExpression.Operator.Value.ToString().ToLowerInvariant());
                 if (sqlBinaryExpression.Right is SqlVariableExpression)
                 {

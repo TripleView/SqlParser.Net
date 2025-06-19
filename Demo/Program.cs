@@ -10,7 +10,8 @@ namespace Demo
         {
             var sql = "SELECT ARRAY(SELECT generate_series(1, 10))";
             
-            sql = "select Cast(a AS NVARCHAR(MAX)) from test;";
+            sql = "select * from test where :f is null";
+            sql = "select * from test3 c WHERE a='a' AND CASE WHEN to_char(c.b) ='b' THEN TO_NUMBER( c.c ) END >=240";
             //SELECT ARRAY(SELECT generate_series(1, 10));
             //SELECT ARRAY[[1, 2], [3, 4]] AS matrix;
 
@@ -23,7 +24,7 @@ namespace Demo
 
             //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
-            var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+            var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
             
             var result = sqlAst.ToFormat();
             var newSql= sqlAst.ToSql();
