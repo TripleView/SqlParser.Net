@@ -481,7 +481,7 @@ public class SqlLexer
     }
     private bool AcceptIdentifierOrKeyword()
     {
-        if (AcceptLetters())
+        if (AcceptLetters() || ((IsMySql || IsPgsql || IsSqlServer || IsSqlite) && Accept('_')))
         {
             var startIndex = pos - 1;
             var sb = new StringBuilder();

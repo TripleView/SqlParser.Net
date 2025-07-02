@@ -15170,6 +15170,63 @@ order by temp.InxNbr";
             generationSql);
     }
 
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Pgsql)]
+    public void TestSelect8(DbType dbType)
+    {
+        var sql = "SELECT __t.* FROM test3 __t ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "*",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "__t",
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "test3",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "__t",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select __t.* from test3 as __t",
+            generationSql);
+    }
+
+
     [Fact]
     public void TestLogical()
     {

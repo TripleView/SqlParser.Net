@@ -24,7 +24,8 @@ namespace Demo
 
             //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
-            var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+            sql = "SELECT __t.* FROM test3 __t ";
+            var sqlAst = DbUtils.Parse(sql, DbType.MySql);
             
             var result = sqlAst.ToFormat();
             var newSql= sqlAst.ToSql();
