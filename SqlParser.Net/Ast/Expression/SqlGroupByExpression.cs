@@ -15,6 +15,7 @@ public class SqlGroupByExpression : SqlExpression
     public SqlGroupByExpression()
     {
         this.Type = SqlExpressionType.GroupBy;
+        this.Items = new List<SqlExpression>();
     }
 
     public List<SqlExpression> Items

@@ -88,7 +88,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 sqlBinaryExpression.Left.Accept(this);
             }
-            
+
             if (sqlBinaryExpression.Operator != null)
             {
                 if (sqlBinaryExpression.Left is SqlVariableExpression)
@@ -275,6 +275,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
+        if (!(sqlGroupByExpression.Items != null && sqlGroupByExpression.Items.Count > 0))
+        {
+            return;
+        }
         Append("group by");
         if (sqlGroupByExpression.Items != null)
         {
@@ -536,6 +540,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
+        if (!(sqlOrderByExpression.Items != null && sqlOrderByExpression.Items.Count > 0))
+        {
+            return;
+        }
         if (sqlOrderByExpression.IsSiblings)
         {
             Append("order siblings by");
@@ -620,6 +628,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
     {
+        if (!(sqlPartitionByExpression.Items != null && sqlPartitionByExpression.Items.Count > 0))
+        {
+            return;
+        }
         Append("partition by");
 
         if (sqlPartitionByExpression.Items != null)

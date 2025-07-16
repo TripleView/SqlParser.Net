@@ -14,6 +14,7 @@ public class SqlOrderByExpression : SqlExpression
     public SqlOrderByExpression()
     {
         this.Type = SqlExpressionType.OrderBy;
+        this.Items = new List<SqlOrderByItemExpression>();
     }
 
     public List<SqlOrderByItemExpression> Items

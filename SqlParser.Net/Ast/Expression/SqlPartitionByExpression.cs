@@ -14,6 +14,7 @@ public class SqlPartitionByExpression : SqlExpression
     public SqlPartitionByExpression()
     {
         this.Type = SqlExpressionType.PartitionBy;
+        this.Items = new List<SqlExpression>();
     }
 
     public List<SqlExpression> Items

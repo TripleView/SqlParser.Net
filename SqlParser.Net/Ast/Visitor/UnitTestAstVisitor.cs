@@ -323,7 +323,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine($"IsDistinct = true,");
             });
         }
-        if (sqlFunctionCallExpression.CaseAsTargetType!=null)
+        if (sqlFunctionCallExpression.CaseAsTargetType != null)
         {
             AdvanceNext(() =>
             {
@@ -343,6 +343,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
+        if (!(sqlGroupByExpression.Items != null && sqlGroupByExpression.Items.Count > 0))
+        {
+            return;
+        }
         AppendLine("new SqlGroupByExpression()");
         AppendLine("{");
         if (sqlGroupByExpression.Items != null)
@@ -640,6 +644,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
+        if (!(sqlOrderByExpression.Items != null && sqlOrderByExpression.Items.Count > 0))
+        {
+            return;
+        }
         AppendLine("new SqlOrderByExpression()");
         AppendLine("{");
         if (sqlOrderByExpression.Items != null)
@@ -758,7 +766,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
             });
         }
-      
+
         AppendLine("},");
     }
     public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
@@ -787,6 +795,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
     {
+        if (!(sqlPartitionByExpression.Items != null && sqlPartitionByExpression.Items.Count > 0))
+        {
+            return;
+        }
         AppendLine("new SqlPartitionByExpression()");
         AppendLine("{");
 
@@ -1251,7 +1263,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlTableExpression.Hints != null&& sqlTableExpression.Hints.Any())
+        if (sqlTableExpression.Hints != null && sqlTableExpression.Hints.Any())
         {
             AdvanceNext(() =>
             {
@@ -1263,7 +1275,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                     {
                         hint.Accept(this);
                     });
-                  
+
                 }
                 AppendLine("},");
             });
@@ -1550,7 +1562,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlTimeUnitExpression()");
         AppendLine("{");
 
-        if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit) )
+        if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit))
         {
             AdvanceNext(() =>
             {
@@ -1610,7 +1622,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        
+
         AdvanceNext(() =>
         {
             var boolStr = sqlRegexExpression.IsCaseSensitive ? "true" : "false";
