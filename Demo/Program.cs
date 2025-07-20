@@ -1,4 +1,4 @@
-﻿using SqlParser.Net;
+using SqlParser.Net;
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Ast.Visitor;
 
@@ -24,10 +24,14 @@ namespace Demo
 
             //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
-            sql = "select [p0].[Age] as [Age], 'fujian' as [Address] from [Person] as [p0] where([p0].[Name] = 'hzp') ";
+            sql = "select * from a where a.b between @p1 and @p2";
             var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-            
+            if (sqlAst is SqlSelectExpression { Query: SqlSelectQueryExpression sqlExpression })
+            {
+               var d= sqlExpression.Where.ToSql();
+            }
             var result = sqlAst.ToFormat();
+
             var newSql= sqlAst.ToSql();
 
 

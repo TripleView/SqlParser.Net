@@ -16820,4 +16820,25 @@ order by temp.InxNbr";
             $"select * from test3 where a regexp 'a' collate utf8mb4_general_ci",
             generationSql);
     }
+
+
+    [Fact]
+    public void TestSqlPamameter1()
+    {
+        var sql =  "select * from a where a.b between @p1 and @p2";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        
+        if (sqlAst is SqlSelectExpression { Query: SqlSelectQueryExpression sqlExpression })
+        {
+            var generationSql = sqlExpression.Where.ToSql();
+            Assert.Equal("a.b between @p1 and @p2", generationSql);
+        }
+        else
+        {
+            throw new NotSupportedException();
+        }
+       
+    }
 }

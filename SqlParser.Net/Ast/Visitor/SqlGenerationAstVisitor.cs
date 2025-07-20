@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -1107,6 +1107,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
     {
+        if (sb.Length > 0)
+        {
+            var lastChar = sb[sb.Length - 1];
+            if (lastChar != ' ' && lastChar != '(' && lastChar != ',')
+            {
+                sb.Append(" ");
+            }
+        }
         if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Prefix))
         {
             sb.Append(sqlVariableExpression.Prefix);
