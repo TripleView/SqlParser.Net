@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlBoolExpression : SqlExpression
+public class SqlBoolExpression : SqlExpression, ICloneableExpression<SqlBoolExpression>
 {
     public override void Accept(IAstVisitor visitor)
     {
@@ -36,7 +36,10 @@ public class SqlBoolExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
-
+    public SqlBoolExpression Clone()
+    {
+        throw new System.NotImplementedException();
+    }
 }
 
 public class SqlBoolExpressionTokenContext

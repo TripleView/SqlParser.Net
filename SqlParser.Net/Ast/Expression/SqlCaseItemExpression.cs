@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlCaseItemExpression : SqlExpression
+public class SqlCaseItemExpression : SqlExpression, ICloneableExpression<SqlCaseItemExpression>
 {
     private SqlExpression condition;
     private SqlExpression value;
@@ -75,6 +75,11 @@ public class SqlCaseItemExpression : SqlExpression
         {
             return (Condition.GetHashCode() * 397) ^ Value.GetHashCode();
         }
+    }
+
+    public SqlCaseItemExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAllExpression : SqlExpression
+public class SqlAllExpression : SqlExpression, ICloneableExpression<SqlAllExpression>
 {
 
     private SqlSelectExpression body;
@@ -47,6 +47,11 @@ public class SqlAllExpression : SqlExpression
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlAllExpression(this);
+    }
+
+    public SqlAllExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

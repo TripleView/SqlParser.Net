@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlInExpression : SqlExpression
+public class SqlInExpression : SqlExpression, ICloneableExpression<SqlInExpression>
 {
     private SqlExpression body;
     private List<SqlExpression> targetList;
@@ -109,5 +109,10 @@ public class SqlInExpression : SqlExpression
         {
             return (Body.GetHashCode() * 397) ^ TargetList.GetHashCode();
         }
+    }
+
+    public SqlInExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }

@@ -1,9 +1,9 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
+public class SqlFunctionCallExpression : SqlExpression, ICollateExpression, ICloneableExpression<SqlFunctionCallExpression>
 {
     private List<SqlExpression> arguments;
     private SqlIdentifierExpression name;
@@ -13,7 +13,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
     private SqlWithinGroupExpression withinGroup;
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
 
     private SqlCollateExpression collate;
@@ -61,7 +61,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     public SqlCollateExpression Collate
     {
@@ -78,7 +78,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 
     /// <summary>
     /// Only for case as functions,such as sql:SELECT CAST('123' AS INT)
-    /// åªä¸ºcase aså‡½æ•°,æ¯”å¦‚sqlï¼šSELECT CAST('123' AS INT)
+    /// Ö»Îªcase asº¯Êı,±ÈÈçsql£ºSELECT CAST('123' AS INT)
     /// </summary>
     public SqlIdentifierExpression CaseAsTargetType
     {
@@ -95,7 +95,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 
     /// <summary>
     /// Only for EXTRACT functions,such as sql:EXTRACT(YEAR FROM order_date)
-    /// åªä¸ºEXTRACTå‡½æ•°,æ¯”å¦‚sqlï¼šEXTRACT(YEAR FROM order_date)
+    /// Ö»ÎªEXTRACTº¯Êı,±ÈÈçsql£ºEXTRACT(YEAR FROM order_date)
     /// </summary>
     public SqlExpression FromSource
     {
@@ -111,7 +111,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
     }
 
     /// <summary>
-    /// æ˜¯å¦ä¸é‡å¤
+    /// ÊÇ·ñ²»ÖØ¸´
     /// </summary>
     public bool IsDistinct { get; set; }
 
@@ -201,5 +201,10 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
             hashCode = (hashCode * 397) ^ Over.GetHashCode();
             return hashCode;
         }
+    }
+
+    public SqlFunctionCallExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }

@@ -1,12 +1,12 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICollateExpression
+public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICollateExpression, ICloneableExpression<SqlIdentifierExpression>
 {
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
 
     private SqlCollateExpression collate;
@@ -21,19 +21,19 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
     }
     /// <summary>
     /// Left Qualifiers
-    /// å·¦é™å®šç¬¦
+    /// ×óÏŞ¶¨·û
     /// </summary>
     public string LeftQualifiers { get; set; }
     /// <summary>
     /// right Qualifiers
-    /// å³é™å®šç¬¦
+    /// ÓÒÏŞ¶¨·û
     /// </summary>
     public string RightQualifiers { get; set; }
     public string Value { get; set; }
 
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     public SqlCollateExpression Collate
     {
@@ -76,4 +76,8 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
         return Value.GetHashCode();
     }
 
+    public SqlIdentifierExpression Clone()
+    {
+        throw new System.NotImplementedException();
+    }
 }

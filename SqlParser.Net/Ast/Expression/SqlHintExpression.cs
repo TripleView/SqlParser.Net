@@ -1,12 +1,12 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
 /// <summary>
 /// Hints are instructions for the query optimizer on how to execute a query.
-/// Hints æ˜¯ç”¨äºŽæŒ‡å¯¼æŸ¥è¯¢ä¼˜åŒ–å™¨å¦‚ä½•æ‰§è¡ŒæŸ¥è¯¢çš„æŒ‡ä»¤
+/// Hints ÊÇÓÃÓÚÖ¸µ¼²éÑ¯ÓÅ»¯Æ÷ÈçºÎÖ´ÐÐ²éÑ¯µÄÖ¸Áî
 /// </summary>
-public class SqlHintExpression : SqlExpression
+public class SqlHintExpression : SqlExpression, ICloneableExpression<SqlHintExpression>
 {
     private SqlExpression body;
 
@@ -48,5 +48,10 @@ public class SqlHintExpression : SqlExpression
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlHintExpression(this);
+    }
+
+    public SqlHintExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }

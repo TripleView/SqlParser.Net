@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAnyExpression : SqlExpression
+public class SqlAnyExpression : SqlExpression, ICloneableExpression<SqlAllColumnExpression>
 {
     private SqlSelectExpression body;
 
@@ -48,6 +48,11 @@ public class SqlAnyExpression : SqlExpression
     public override int GetHashCode()
     {
         return Body.GetHashCode();
+    }
+
+    public SqlAllColumnExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

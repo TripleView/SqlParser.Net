@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlGroupByExpression : SqlExpression
+public class SqlGroupByExpression : SqlExpression, ICloneableExpression<SqlGroupByExpression>
 {
     private List<SqlExpression> items;
     private SqlExpression having;
@@ -77,6 +77,11 @@ public class SqlGroupByExpression : SqlExpression
         {
             return (Items.GetHashCode() * 397) ^ Having.GetHashCode();
         }
+    }
+
+    public SqlGroupByExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

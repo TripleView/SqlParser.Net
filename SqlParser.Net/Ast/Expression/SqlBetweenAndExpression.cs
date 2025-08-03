@@ -1,9 +1,9 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlBetweenAndExpression : SqlExpression
+public class SqlBetweenAndExpression : SqlExpression, ICloneableExpression<SqlBetweenAndExpression>
 {
     private SqlExpression body;
     private SqlExpression begin;
@@ -106,6 +106,11 @@ public class SqlBetweenAndExpression : SqlExpression
             hashCode = (hashCode * 397) ^ End.GetHashCode();
             return hashCode;
         }
+    }
+
+    public SqlBetweenAndExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

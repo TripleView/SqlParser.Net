@@ -1,8 +1,8 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAtTimeZoneExpression : SqlExpression
+public class SqlAtTimeZoneExpression : SqlExpression, ICloneableExpression<SqlAtTimeZoneExpression>
 {
     private SqlExpression body;
     private SqlStringExpression timeZone;
@@ -17,7 +17,7 @@ public class SqlAtTimeZoneExpression : SqlExpression
     }
 
     /// <summary>
-    /// Time Zoneï¼Œsuch as 'Asia/ShangHai';æ—¶åŒºï¼Œæ¯”å¦‚'Asia/ShangHai'
+    /// Time Zone£¬such as 'Asia/ShangHai';Ê±Çø£¬±ÈÈç'Asia/ShangHai'
     /// </summary>
     public SqlStringExpression TimeZone
     {
@@ -68,5 +68,8 @@ public class SqlAtTimeZoneExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
-
+    public SqlAtTimeZoneExpression Clone()
+    {
+        throw new System.NotImplementedException();
+    }
 }

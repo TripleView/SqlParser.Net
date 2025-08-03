@@ -1,8 +1,8 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAllColumnExpression : SqlExpression
+public class SqlAllColumnExpression : SqlExpression,ICloneableExpression<SqlAllColumnExpression>
 {
     public override void Accept(IAstVisitor visitor)
     {
@@ -31,5 +31,8 @@ public class SqlAllColumnExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
-
+    public SqlAllColumnExpression Clone()
+    {
+        throw new System.NotImplementedException();
+    }
 }

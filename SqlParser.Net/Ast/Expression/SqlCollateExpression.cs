@@ -1,12 +1,12 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 /// <summary>
 /// The collate clause is mainly used to specify string comparison and sorting rules.
-/// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+/// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
 /// </summary>
-public class SqlCollateExpression : SqlExpression
+public class SqlCollateExpression : SqlExpression, ICloneableExpression<SqlCollateExpression>
 {
     private SqlExpression body;
     public SqlCollateExpression()
@@ -47,5 +47,10 @@ public class SqlCollateExpression : SqlExpression
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlCollateExpression(this);
+    }
+
+    public SqlCollateExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }

@@ -1,9 +1,9 @@
-锘縰sing SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlDeleteExpression : SqlExpression
+public class SqlDeleteExpression : SqlExpression, ICloneableExpression<SqlDeleteExpression>
 {
     private SqlExpression body;
     private SqlExpression table;
@@ -20,7 +20,7 @@ public class SqlDeleteExpression : SqlExpression
 
     /// <summary>
     /// The subject of the deletion, such as t in DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'
-    /// 鍒犻櫎鐨勪富浣擄紝姣斿DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'涓殑t
+    /// 删除的主体，比如DELETE t from T3 t join T4 t4 on t.id=t4.Pid where t.id='abc'中的t
     /// </summary>
     public SqlExpression Body
     {
@@ -97,6 +97,11 @@ public class SqlDeleteExpression : SqlExpression
         {
             return (Table.GetHashCode() * 397) ^ Where.GetHashCode();
         }
+    }
+
+    public SqlDeleteExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

@@ -1,10 +1,10 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlConnectByExpression : SqlExpression
+public class SqlConnectByExpression : SqlExpression, ICloneableExpression<SqlConnectByExpression>
 {
     private SqlExpression startWith;
     private SqlExpression body;
@@ -100,6 +100,10 @@ public class SqlConnectByExpression : SqlExpression
         return Equals((SqlConnectByExpression)obj);
     }
 
+    public SqlConnectByExpression Clone()
+    {
+        throw new System.NotImplementedException();
+    }
 }
 
 public class SqlConnectByExpressionTokenContext

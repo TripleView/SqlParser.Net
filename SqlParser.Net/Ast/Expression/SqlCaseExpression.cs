@@ -1,11 +1,11 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlCaseExpression : SqlExpression
+public class SqlCaseExpression : SqlExpression, ICloneableExpression<SqlCaseExpression>
 {
     private List<SqlCaseItemExpression> items;
     private SqlExpression elseValue;
@@ -100,6 +100,11 @@ public class SqlCaseExpression : SqlExpression
         {
             return (Items.GetHashCode() * 397) ^ Else.GetHashCode();
         }
+    }
+
+    public SqlCaseExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
 

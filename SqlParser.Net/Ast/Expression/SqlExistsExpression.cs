@@ -1,8 +1,8 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlExistsExpression : SqlExpression
+public class SqlExistsExpression : SqlExpression, ICloneableExpression<SqlExistsExpression>
 {
     private SqlSelectExpression body;
 
@@ -54,5 +54,10 @@ public class SqlExistsExpression : SqlExpression
     public override int GetHashCode()
     {
         return Body.GetHashCode();
+    }
+
+    public SqlExistsExpression Clone()
+    {
+        throw new System.NotImplementedException();
     }
 }
