@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using SqlParser.Net.Ast.Visitor;
 
@@ -13,12 +13,12 @@ public class SqlExpression : IAcceptVisitor
     public virtual SqlExpressionType Type { get; protected set; }
     /// <summary>
     /// Parent Expression
-    /// çˆ¶çº§è¡¨è¾¾å¼
+    /// ¸¸¼¶±í´ïÊ½
     /// </summary>
     public SqlExpression Parent { get; set; }
     /// <summary>
     /// Database Type
-    /// æ•°æ®åº“ç±»å‹
+    /// Êı¾İ¿âÀàĞÍ
     /// </summary>
     public DbType? DbType { set; get; }
     
@@ -28,7 +28,7 @@ public class SqlExpression : IAcceptVisitor
     }
     /// <summary>
     /// Compare 2 SqlExpressions for equality
-    /// æ¯”è¾ƒ2ä¸ªSqlExpressionæ˜¯å¦ç›¸ç­‰
+    /// ±È½Ï2¸öSqlExpressionÊÇ·ñÏàµÈ
     /// </summary>
     /// <param name="exp1"></param>
     /// <param name="exp2"></param>
@@ -50,7 +50,7 @@ public class SqlExpression : IAcceptVisitor
 
     /// <summary>
     /// Compare 2 SqlExpression lists for equality
-    /// æ¯”è¾ƒ2ä¸ªSqlExpressionåˆ—è¡¨æ˜¯å¦ç›¸ç­‰
+    /// ±È½Ï2¸öSqlExpressionÁĞ±íÊÇ·ñÏàµÈ
     /// </summary>
     /// <param name="exp1"></param>
     /// <param name="exp2"></param>
@@ -97,7 +97,7 @@ public class SqlExpression : IAcceptVisitor
 
     /// <summary>
     /// Display the formatted abstract syntax tree
-    /// æ˜¾ç¤ºæ ¼å¼åŒ–åçš„æŠ½è±¡è¯­æ³•æ ‘
+    /// ÏÔÊ¾¸ñÊ½»¯ºóµÄ³éÏóÓï·¨Ê÷
     /// </summary>
     /// <returns></returns>
     public string ToFormat()

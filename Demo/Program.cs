@@ -24,12 +24,9 @@ namespace Demo
 
             //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
-            sql = "select * from a where a.b between @p1 and @p2";
+            sql = "select * from [Person] as [p0] order by 1  OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY";
             var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-            if (sqlAst is SqlSelectExpression { Query: SqlSelectQueryExpression sqlExpression })
-            {
-               var d= sqlExpression.Where.ToSql();
-            }
+           
             var result = sqlAst.ToFormat();
 
             var newSql= sqlAst.ToSql();
