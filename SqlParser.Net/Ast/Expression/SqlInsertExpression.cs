@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
@@ -174,5 +175,19 @@ public class SqlInsertExpression : SqlExpression
             hashCode = (hashCode * 397) ^ FromSelect.GetHashCode();
             return hashCode;
         }
+    }
+
+    public override SqlExpression Clone()
+    {
+        
+        var result = new SqlInsertExpression()
+        {
+            DbType = this.DbType,
+            Columns = this.Columns.Select(x => x.Clone()).ToList(),
+            Table = this.Table.Clone(),
+            FromSelect =(SqlSelectExpression) this.FromSelect.Clone(),
+            ValuesList = this.ValuesList.Select(x => x.Select(y => y.Clone()).ToList()).ToList()
+        };
+        return result;
     }
 }

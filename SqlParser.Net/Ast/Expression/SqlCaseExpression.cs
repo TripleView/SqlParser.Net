@@ -1,11 +1,12 @@
 using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlCaseExpression : SqlExpression, ICloneableExpression<SqlCaseExpression>
+public class SqlCaseExpression : SqlExpression
 {
     private List<SqlCaseItemExpression> items;
     private SqlExpression elseValue;
@@ -102,9 +103,16 @@ public class SqlCaseExpression : SqlExpression, ICloneableExpression<SqlCaseExpr
         }
     }
 
-    public SqlCaseExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlCaseExpression()
+        {
+            DbType = this.DbType,
+            Items = this.Items.Select(x=>(SqlCaseItemExpression)x.Clone()).ToList(),
+            Else = this.Else.Clone(),
+            Value = this.Value.Clone(),
+        };
+        return result;
     }
 }
 

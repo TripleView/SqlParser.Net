@@ -46,4 +46,14 @@ public class SqlNotExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlNotExpression()
+        {
+            DbType = this.DbType,
+            Body = this.Body.Clone(),
+        };
+        return result;
+    }
 }

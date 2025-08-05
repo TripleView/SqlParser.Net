@@ -20,6 +20,7 @@ SqlParser.Net是一个免费，功能全面且高性能的sql解析引擎类库�
 	  <PackageReleaseNotes>SqlParser.Net is a free, comprehensive and high-performance SQL parsing engine library that can help you parse and process SQL simply, quickly and efficiently.
 SqlParser.Net是一个免费，功能全面且高性能的sql解析引擎类库，它可以帮助你简单快速高效的解析和处理sql。</PackageReleaseNotes>
 	  <PackageIcon>logo.png</PackageIcon>
+	  <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlExistsExpression : SqlExpression, ICloneableExpression<SqlExistsExpression>
+public class SqlExistsExpression : SqlExpression
 {
     private SqlSelectExpression body;
 
@@ -56,8 +56,14 @@ public class SqlExistsExpression : SqlExpression, ICloneableExpression<SqlExists
         return Body.GetHashCode();
     }
 
-    public SqlExistsExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlExistsExpression()
+        {
+            DbType = this.DbType,
+            IsNot = this.IsNot,
+            Body = (SqlSelectExpression)this.Body.Clone(),
+        };
+        return result;
     }
 }

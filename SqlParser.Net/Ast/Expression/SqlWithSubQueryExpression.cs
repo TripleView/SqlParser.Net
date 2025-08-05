@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
@@ -79,7 +80,7 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
         {
             return false;
         }
-        
+
         return true;
 
     }
@@ -101,5 +102,17 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
             hashCode = (hashCode * 397) ^ FromSelect.GetHashCode();
             return hashCode;
         }
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlWithSubQueryExpression()
+        {
+            DbType = this.DbType,
+            Columns = this.Columns.Select(x => (SqlIdentifierExpression)x.Clone()).ToList(),
+            FromSelect = (SqlSelectExpression)this.FromSelect.Clone(),
+            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+        };
+        return result;
     }
 }

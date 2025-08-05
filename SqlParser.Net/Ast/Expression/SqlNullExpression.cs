@@ -30,4 +30,12 @@ public class SqlNullExpression : SqlExpression
     {
         throw new System.NotImplementedException();
     }
+    public override SqlExpression Clone()
+    {
+        var result = new SqlNullExpression()
+        {
+            DbType = this.DbType,
+        };
+        return result;
+    }
 }

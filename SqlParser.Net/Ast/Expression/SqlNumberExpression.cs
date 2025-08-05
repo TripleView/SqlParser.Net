@@ -47,4 +47,16 @@ public class SqlNumberExpression : SqlExpression, IQualifierExpression
     {
         return Value.GetHashCode();
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlNumberExpression()
+        {
+            DbType = this.DbType,
+            LeftQualifiers = LeftQualifiers,
+            RightQualifiers = RightQualifiers,
+            Value = Value
+        };
+        return result;
+    }
 }

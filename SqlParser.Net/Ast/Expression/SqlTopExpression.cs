@@ -50,4 +50,14 @@ public class SqlTopExpression : SqlExpression
     {
         visitor.VisitSqlTopExpression(this);
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlTopExpression()
+        {
+            DbType = this.DbType,
+            Body = (SqlNumberExpression)this.Body.Clone(),
+        };
+        return result;
+    }
 }

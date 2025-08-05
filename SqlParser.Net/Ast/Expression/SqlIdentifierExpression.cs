@@ -2,7 +2,7 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICollateExpression, ICloneableExpression<SqlIdentifierExpression>
+public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICollateExpression
 {
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
@@ -76,8 +76,16 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
         return Value.GetHashCode();
     }
 
-    public SqlIdentifierExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlIdentifierExpression()
+        {
+            DbType = this.DbType,
+            Collate =(SqlCollateExpression) this.Collate.Clone(),
+            Value = Value,
+            LeftQualifiers = LeftQualifiers,
+            RightQualifiers = RightQualifiers
+        };
+        return result;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -132,5 +133,19 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
     public override int GetHashCode()
     {
         throw new System.NotImplementedException();
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlPivotTableExpression()
+        {
+            DbType = this.DbType,
+            In = this.In.Select(x => x.Clone()).ToList(),
+            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+            SubQuery = this.SubQuery.Clone(),
+            FunctionCall = (SqlFunctionCallExpression)this.FunctionCall.Clone(),
+            For = this.For.Clone(),
+        };
+        return result;
     }
 }

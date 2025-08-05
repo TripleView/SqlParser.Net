@@ -50,4 +50,15 @@ public class SqlWithinGroupExpression : SqlExpression
     {
         throw new System.NotImplementedException();
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlWithinGroupExpression()
+        {
+            DbType = this.DbType,
+            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
+
+        };
+        return result;
+    }
 }

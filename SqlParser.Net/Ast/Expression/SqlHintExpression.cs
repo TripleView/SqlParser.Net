@@ -6,7 +6,7 @@ namespace SqlParser.Net.Ast.Expression;
 /// Hints are instructions for the query optimizer on how to execute a query.
 /// Hints 是用于指导查询优化器如何执行查询的指令
 /// </summary>
-public class SqlHintExpression : SqlExpression, ICloneableExpression<SqlHintExpression>
+public class SqlHintExpression : SqlExpression
 {
     private SqlExpression body;
 
@@ -50,8 +50,13 @@ public class SqlHintExpression : SqlExpression, ICloneableExpression<SqlHintExpr
         visitor.VisitSqlHintExpression(this);
     }
 
-    public SqlHintExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlHintExpression()
+        {
+            DbType = this.DbType,
+            Body = this.Body.Clone()
+        };
+        return result;
     }
 }

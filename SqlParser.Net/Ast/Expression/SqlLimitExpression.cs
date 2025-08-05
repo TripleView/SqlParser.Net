@@ -72,4 +72,15 @@ public class SqlLimitExpression : SqlExpression
             return (Offset.GetHashCode() * 397) ^ RowCount.GetHashCode();
         }
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlLimitExpression()
+        {
+            DbType = this.DbType,
+            Offset = this.Offset.Clone(),
+            RowCount = this.RowCount.Clone(),
+        };
+        return result;
+    }
 }

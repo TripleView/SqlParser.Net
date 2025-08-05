@@ -57,4 +57,9 @@ public class SqlBinaryOperator
             return (Name.GetHashCode() * 397) ^ Value.GetHashCode();
         }
     }
+
+    public SqlBinaryOperator Clone()
+    {
+        return new SqlBinaryOperator(this.Name, this.Value);
+    }
 }

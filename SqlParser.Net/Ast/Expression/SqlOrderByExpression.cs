@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -66,5 +67,16 @@ public class SqlOrderByExpression : SqlExpression
     public override int GetHashCode()
     {
         return Items.GetHashCode();
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlOrderByExpression()
+        {
+            DbType = this.DbType,
+            Items = this.Items.Select(x => (SqlOrderByItemExpression)x.Clone()).ToList(),
+            IsSiblings = IsSiblings
+        };
+        return result;
     }
 }

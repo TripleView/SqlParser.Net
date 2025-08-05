@@ -71,4 +71,15 @@ public class SqlOverExpression : SqlExpression
             return (OrderBy.GetHashCode() * 397) ^ PartitionBy.GetHashCode();
         }
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlOverExpression()
+        {
+            DbType = this.DbType,
+            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
+            PartitionBy = (SqlPartitionByExpression)this.PartitionBy.Clone(),
+        };
+        return result;
+    }
 }

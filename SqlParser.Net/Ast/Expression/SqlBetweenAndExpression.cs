@@ -3,7 +3,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlBetweenAndExpression : SqlExpression, ICloneableExpression<SqlBetweenAndExpression>
+public class SqlBetweenAndExpression : SqlExpression
 {
     private SqlExpression body;
     private SqlExpression begin;
@@ -108,9 +108,17 @@ public class SqlBetweenAndExpression : SqlExpression, ICloneableExpression<SqlBe
         }
     }
 
-    public SqlBetweenAndExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlBetweenAndExpression()
+        {
+            DbType = this.DbType,
+            Body = this.Body.Clone(),
+            Begin = this.Begin.Clone(),
+            End = this.End.Clone(),
+            IsNot = IsNot
+        };
+        return result;
     }
 }
 

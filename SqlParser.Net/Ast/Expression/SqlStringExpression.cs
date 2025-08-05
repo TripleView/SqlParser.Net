@@ -59,4 +59,16 @@ public class SqlStringExpression : SqlExpression, ICollateExpression
     {
         return Value.GetHashCode();
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlStringExpression()
+        {
+            DbType = this.DbType,
+            Collate = (SqlCollateExpression)this.Collate.Clone(),
+            IsUniCode = IsUniCode,
+            Value= Value
+        };
+        return result;
+    }
 }

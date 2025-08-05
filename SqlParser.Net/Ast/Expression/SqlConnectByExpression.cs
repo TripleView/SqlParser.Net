@@ -4,7 +4,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlConnectByExpression : SqlExpression, ICloneableExpression<SqlConnectByExpression>
+public class SqlConnectByExpression : SqlExpression
 {
     private SqlExpression startWith;
     private SqlExpression body;
@@ -88,7 +88,7 @@ public class SqlConnectByExpression : SqlExpression, ICloneableExpression<SqlCon
         {
             return false;
         }
-        
+
         return true;
     }
 
@@ -100,9 +100,18 @@ public class SqlConnectByExpression : SqlExpression, ICloneableExpression<SqlCon
         return Equals((SqlConnectByExpression)obj);
     }
 
-    public SqlConnectByExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlConnectByExpression()
+        {
+            DbType = this.DbType,
+            StartWith = this.StartWith.Clone(),
+            Body = this.Body.Clone(),
+            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
+            IsNocycle = IsNocycle,
+            IsPrior = IsPrior
+        };
+        return result;
     }
 }
 

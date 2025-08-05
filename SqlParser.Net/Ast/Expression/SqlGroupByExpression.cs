@@ -1,9 +1,10 @@
 using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlGroupByExpression : SqlExpression, ICloneableExpression<SqlGroupByExpression>
+public class SqlGroupByExpression : SqlExpression
 {
     private List<SqlExpression> items;
     private SqlExpression having;
@@ -79,9 +80,16 @@ public class SqlGroupByExpression : SqlExpression, ICloneableExpression<SqlGroup
         }
     }
 
-    public SqlGroupByExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlGroupByExpression()
+        {
+            DbType = this.DbType,
+            Items = this.Items.Select(x => x.Clone()).ToList(),
+            Having = this.Having.Clone(),
+           
+        };
+        return result;
     }
 }
 

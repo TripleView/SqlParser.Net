@@ -6,7 +6,7 @@ namespace SqlParser.Net.Ast.Expression;
 /// The collate clause is mainly used to specify string comparison and sorting rules.
 /// collate子句主要用于指定字符串比较和排序的规则
 /// </summary>
-public class SqlCollateExpression : SqlExpression, ICloneableExpression<SqlCollateExpression>
+public class SqlCollateExpression : SqlExpression
 {
     private SqlExpression body;
     public SqlCollateExpression()
@@ -49,8 +49,13 @@ public class SqlCollateExpression : SqlExpression, ICloneableExpression<SqlColla
         visitor.VisitSqlCollateExpression(this);
     }
 
-    public SqlCollateExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlCollateExpression()
+        {
+            DbType = this.DbType,
+            Body = this.Body.Clone(),
+        };
+        return result;
     }
 }

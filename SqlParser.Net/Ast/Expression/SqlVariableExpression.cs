@@ -65,4 +65,16 @@ public class SqlVariableExpression : SqlExpression, ICollateExpression
             return (Prefix.GetHashCode() * 397) ^ Name.GetHashCode();
         }
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlVariableExpression()
+        {
+            DbType = this.DbType,
+            Collate = (SqlCollateExpression)this.Collate.Clone(),
+            Prefix = Prefix,
+            Name = Name
+        };
+        return result;
+    }
 }

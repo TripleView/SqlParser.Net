@@ -30,4 +30,14 @@ public class SqlTimeUnitExpression : SqlExpression
     {
         visitor.VisitSqlTimeUnitExpression(this);
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlTimeUnitExpression()
+        {
+            DbType = this.DbType,
+            Unit = Unit
+        };
+        return result;
+    }
 }

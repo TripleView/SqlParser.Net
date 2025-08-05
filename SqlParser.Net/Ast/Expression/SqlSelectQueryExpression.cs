@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
@@ -117,7 +118,7 @@ public class SqlSelectQueryExpression : SqlExpression
             {
                 value.Parent = this;
             }
-            
+
             top = value;
         }
     }
@@ -301,6 +302,27 @@ public class SqlSelectQueryExpression : SqlExpression
             return hashCode;
         }
 
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlSelectQueryExpression()
+        {
+            DbType = this.DbType,
+            Into = this.Into.Clone(),
+            WithSubQuerys = this.WithSubQuerys.Select(x => (SqlWithSubQueryExpression)x.Clone()).ToList(),
+            Columns = this.Columns.Select(x => (SqlSelectItemExpression)x.Clone()).ToList(),
+            ResultSetReturnOption = this.ResultSetReturnOption,
+            Top = (SqlTopExpression)this.Top.Clone(),
+            From = this.From.Clone(),
+            Where = this.Where.Clone(),
+            GroupBy = (SqlGroupByExpression)this.GroupBy.Clone(),
+            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
+            Limit = (SqlLimitExpression)this.Limit.Clone(),
+            ConnectBy = (SqlConnectByExpression)this.ConnectBy.Clone(),
+            Hints = this.Hints.Select(x => (SqlHintExpression)x.Clone()).ToList(),
+        };
+        return result;
     }
 
 }

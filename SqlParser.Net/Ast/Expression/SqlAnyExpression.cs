@@ -3,7 +3,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAnyExpression : SqlExpression, ICloneableExpression<SqlAllColumnExpression>
+public class SqlAnyExpression : SqlExpression
 {
     private SqlSelectExpression body;
 
@@ -50,9 +50,14 @@ public class SqlAnyExpression : SqlExpression, ICloneableExpression<SqlAllColumn
         return Body.GetHashCode();
     }
 
-    public SqlAllColumnExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlAnyExpression()
+        {
+            DbType = this.DbType,
+            Body = (SqlSelectExpression)this.Body.Clone()
+        };
+        return result;
     }
 }
 

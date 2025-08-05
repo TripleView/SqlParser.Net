@@ -2,7 +2,7 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAtTimeZoneExpression : SqlExpression, ICloneableExpression<SqlAtTimeZoneExpression>
+public class SqlAtTimeZoneExpression : SqlExpression
 {
     private SqlExpression body;
     private SqlStringExpression timeZone;
@@ -68,8 +68,14 @@ public class SqlAtTimeZoneExpression : SqlExpression, ICloneableExpression<SqlAt
         throw new System.NotImplementedException();
     }
 
-    public SqlAtTimeZoneExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlAtTimeZoneExpression()
+        {
+            DbType = this.DbType,
+            Body = this.Body.Clone(),
+            TimeZone = (SqlStringExpression)this.TimeZone.Clone()
+        };
+        return result;
     }
 }

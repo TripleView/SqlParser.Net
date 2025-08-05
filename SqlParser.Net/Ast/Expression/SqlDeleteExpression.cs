@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlDeleteExpression : SqlExpression, ICloneableExpression<SqlDeleteExpression>
+public class SqlDeleteExpression : SqlExpression
 {
     private SqlExpression body;
     private SqlExpression table;
@@ -99,9 +99,16 @@ public class SqlDeleteExpression : SqlExpression, ICloneableExpression<SqlDelete
         }
     }
 
-    public SqlDeleteExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlDeleteExpression()
+        {
+            DbType = this.DbType,
+            Table = this.Table.Clone(),
+            Body = this.Body.Clone(),
+            Where = this.Where.Clone(),
+        };
+        return result;
     }
 }
 

@@ -2,7 +2,7 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAllColumnExpression : SqlExpression,ICloneableExpression<SqlAllColumnExpression>
+public class SqlAllColumnExpression : SqlExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
@@ -31,8 +31,12 @@ public class SqlAllColumnExpression : SqlExpression,ICloneableExpression<SqlAllC
         throw new System.NotImplementedException();
     }
 
-    public SqlAllColumnExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlAllColumnExpression()
+        {
+            DbType = this.DbType
+        };
+        return result;
     }
 }

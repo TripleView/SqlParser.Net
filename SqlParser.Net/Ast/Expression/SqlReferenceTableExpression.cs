@@ -67,4 +67,14 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
     {
         throw new System.NotImplementedException();
     }
+    public override SqlExpression Clone()
+    {
+        var result = new SqlReferenceTableExpression()
+        {
+            DbType = this.DbType,
+            FunctionCall = (SqlFunctionCallExpression)this.FunctionCall.Clone(),
+            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+        };
+        return result;
+    }
 }

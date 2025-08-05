@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
@@ -117,7 +118,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
                     }
                 }
             }
-           
+
             hints = value;
         }
     }
@@ -170,5 +171,20 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         {
             return (Alias.GetHashCode() * 397) ^ Name.GetHashCode();
         }
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlTableExpression()
+        {
+            DbType = this.DbType,
+            DbLink = (SqlIdentifierExpression)this.DbLink.Clone(),
+            Database = (SqlIdentifierExpression)this.Database.Clone(),
+            Schema = (SqlIdentifierExpression)this.Schema.Clone(),
+            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+            Name = (SqlIdentifierExpression)this.Name.Clone(),
+            Hints = this.Hints.Select(x => (SqlHintExpression)x.Clone()).ToList(),
+        };
+        return result;
     }
 }

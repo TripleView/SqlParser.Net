@@ -1,9 +1,10 @@
 using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlInExpression : SqlExpression, ICloneableExpression<SqlInExpression>
+public class SqlInExpression : SqlExpression
 {
     private SqlExpression body;
     private List<SqlExpression> targetList;
@@ -111,8 +112,16 @@ public class SqlInExpression : SqlExpression, ICloneableExpression<SqlInExpressi
         }
     }
 
-    public SqlInExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlInExpression()
+        {
+            DbType = this.DbType,
+            TargetList = this.TargetList.Select(x =>x.Clone()).ToList(),
+            Body = this.Body.Clone(),
+            SubQuery = (SqlSelectExpression)this.SubQuery.Clone(),
+            IsNot = IsNot
+        };
+        return result;
     }
 }

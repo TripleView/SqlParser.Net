@@ -102,4 +102,17 @@ public class SqlJoinTableExpression : SqlExpression
             return hashCode;
         }
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlJoinTableExpression()
+        {
+            DbType = this.DbType,
+            Conditions = this.Conditions.Clone(),
+            Left = this.Left.Clone(),
+            Right = this.Right.Clone(),
+            JoinType = JoinType
+        };
+        return result;
+    }
 }

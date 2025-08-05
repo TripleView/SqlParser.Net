@@ -3,7 +3,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlBoolExpression : SqlExpression, ICloneableExpression<SqlBoolExpression>
+public class SqlBoolExpression : SqlExpression
 {
     public override void Accept(IAstVisitor visitor)
     {
@@ -36,9 +36,14 @@ public class SqlBoolExpression : SqlExpression, ICloneableExpression<SqlBoolExpr
         throw new System.NotImplementedException();
     }
 
-    public SqlBoolExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlBoolExpression()
+        {
+            DbType = this.DbType,
+            Value = Value
+        };
+        return result;
     }
 }
 

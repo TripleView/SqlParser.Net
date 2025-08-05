@@ -104,4 +104,16 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
             return (Name.GetHashCode() * 397) ^ Table.GetHashCode();
         }
     }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlPropertyExpression()
+        {
+            DbType = this.DbType,
+            Name = (SqlIdentifierExpression)this.Name.Clone(),
+            Table= (SqlIdentifierExpression)this.Table.Clone(),
+            Collate= (SqlCollateExpression)this.Collate.Clone(),
+        };
+        return result;
+    }
 }

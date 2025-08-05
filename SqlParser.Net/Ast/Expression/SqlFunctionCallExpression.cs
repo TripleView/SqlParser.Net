@@ -1,9 +1,10 @@
 using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlFunctionCallExpression : SqlExpression, ICollateExpression, ICloneableExpression<SqlFunctionCallExpression>
+public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 {
     private List<SqlExpression> arguments;
     private SqlIdentifierExpression name;
@@ -203,8 +204,20 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression, IClo
         }
     }
 
-    public SqlFunctionCallExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlFunctionCallExpression()
+        {
+            DbType = this.DbType,
+            Arguments = this.Arguments.Select(x =>x.Clone()).ToList(),
+            Name = this.Name.Clone(),
+            Over = (SqlOverExpression)this.Over.Clone(),
+            IsDistinct = this.IsDistinct,
+            CaseAsTargetType = this.CaseAsTargetType.Clone(),
+            Collate = (SqlCollateExpression)this.Collate.Clone(),
+            WithinGroup =(SqlWithinGroupExpression) this.WithinGroup.Clone(),
+            FromSource = this.FromSource.Clone()
+        };
+        return result;
     }
 }

@@ -1,8 +1,9 @@
 using SqlParser.Net.Ast.Visitor;
+using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlBinaryExpression : SqlExpression, ICollateExpression, ICloneableExpression<SqlBinaryExpression>
+public class SqlBinaryExpression : SqlExpression, ICollateExpression
 {
     private SqlExpression left;
     private SqlExpression right;
@@ -114,9 +115,17 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression, ICloneable
         }
     }
 
-    public SqlBinaryExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlBinaryExpression()
+        {
+            DbType = this.DbType,
+            Left = this.Left.Clone(),
+            Right = this.Right.Clone(),
+            Operator = this.Operator.Clone(),
+            Collate = Collate.Clone()
+        };
+        return result;
     }
 }
 

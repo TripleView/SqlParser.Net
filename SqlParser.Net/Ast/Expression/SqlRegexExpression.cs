@@ -101,5 +101,16 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
         throw new System.NotImplementedException();
     }
 
-
+    public override SqlExpression Clone()
+    {
+        var result = new SqlRegexExpression()
+        {
+            DbType = this.DbType,
+            Collate = (SqlCollateExpression)this.Collate.Clone(),
+            RegEx = (SqlStringExpression)this.RegEx.Clone(),
+            Body = this.Body.Clone(),
+            IsCaseSensitive = IsCaseSensitive
+        };
+        return result;
+    }
 }

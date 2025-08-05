@@ -3,7 +3,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlCaseItemExpression : SqlExpression, ICloneableExpression<SqlCaseItemExpression>
+public class SqlCaseItemExpression : SqlExpression
 {
     private SqlExpression condition;
     private SqlExpression value;
@@ -77,9 +77,15 @@ public class SqlCaseItemExpression : SqlExpression, ICloneableExpression<SqlCase
         }
     }
 
-    public SqlCaseItemExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlCaseItemExpression()
+        {
+            DbType = this.DbType,
+            Condition = this.Condition.Clone(),
+            Value = this.Value.Clone(),
+        };
+        return result;
     }
 }
 

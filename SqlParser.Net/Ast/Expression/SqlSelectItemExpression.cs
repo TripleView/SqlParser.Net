@@ -71,4 +71,14 @@ public class SqlSelectItemExpression : SqlExpression, IAliasExpression
             return (Body.GetHashCode() * 397) ^ Alias.GetHashCode();
         }
     }
+    public override SqlExpression Clone()
+    {
+        var result = new SqlSelectItemExpression()
+        {
+            DbType = this.DbType,
+            Body = this.Body.Clone(),
+            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+        };
+        return result;
+    }
 }

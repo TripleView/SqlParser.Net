@@ -1,5 +1,6 @@
 ﻿using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -129,6 +130,19 @@ public class SqlUpdateExpression : SqlExpression
             hashCode = (hashCode * 397) ^ Comments.GetHashCode();
             return hashCode;
         }
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlUpdateExpression()
+        {
+            DbType = this.DbType,
+            Items = this.Items.Select(x => (SqlExpression)x.Clone()).ToList(),
+            Where = this.Where.Clone(),
+            Table = this.Table.Clone(),
+            From = this.From.Clone(),
+        };
+        return result;
     }
 }
 

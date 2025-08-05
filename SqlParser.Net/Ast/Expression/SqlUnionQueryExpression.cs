@@ -55,7 +55,7 @@ public class SqlUnionQueryExpression : SqlExpression
         {
             return false;
         }
-        
+
         if (!UnionType.Equals(other.UnionType))
         {
             return false;
@@ -80,5 +80,17 @@ public class SqlUnionQueryExpression : SqlExpression
             hashCode = (hashCode * 397) ^ Right.GetHashCode();
             return hashCode;
         }
+    }
+
+    public override SqlExpression Clone()
+    {
+        var result = new SqlUnionQueryExpression()
+        {
+            DbType = this.DbType,
+            Left = this.Left.Clone(),
+            Right = this.Right.Clone(),
+            UnionType = UnionType
+        };
+        return result;
     }
 }

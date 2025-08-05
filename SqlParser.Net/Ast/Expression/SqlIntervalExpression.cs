@@ -70,5 +70,15 @@ public class SqlIntervalExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
+    public override SqlExpression Clone()
+    {
+        var result = new SqlIntervalExpression()
+        {
+            DbType = this.DbType,
+            Unit =(SqlTimeUnitExpression) this.Unit.Clone(),
+            Body = this.Body.Clone(),
+        };
+        return result;
+    }
 
 }

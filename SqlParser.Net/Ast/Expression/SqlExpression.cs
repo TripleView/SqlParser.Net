@@ -4,7 +4,7 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlExpression : IAcceptVisitor
+public class SqlExpression : IAcceptVisitor,ICloneableExpression
 {
     public virtual void Accept(IAstVisitor visitor)
     {
@@ -106,5 +106,10 @@ public class SqlExpression : IAcceptVisitor
         this.Accept(unitTestAstVisitor);
         var result = unitTestAstVisitor.GetResult();
         return result;
+    }
+
+    public virtual SqlExpression Clone()
+    {
+        return new SqlExpression();
     }
 }

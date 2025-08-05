@@ -3,7 +3,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlAllExpression : SqlExpression, ICloneableExpression<SqlAllExpression>
+public class SqlAllExpression : SqlExpression
 {
 
     private SqlSelectExpression body;
@@ -49,9 +49,14 @@ public class SqlAllExpression : SqlExpression, ICloneableExpression<SqlAllExpres
         visitor.VisitSqlAllExpression(this);
     }
 
-    public SqlAllExpression Clone()
+    public override SqlExpression Clone()
     {
-        throw new System.NotImplementedException();
+        var result = new SqlAllExpression()
+        {
+            DbType = this.DbType,
+            Body = (SqlSelectExpression)this.Body.Clone()
+        };
+        return result;
     }
 }
 
