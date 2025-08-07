@@ -48,7 +48,7 @@ public class SqlNumberExpression : SqlExpression, IQualifierExpression
         return Value.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlNumberExpression()
         {

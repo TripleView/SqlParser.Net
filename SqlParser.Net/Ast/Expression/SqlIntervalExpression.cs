@@ -54,7 +54,7 @@ public class SqlIntervalExpression : SqlExpression
         {
             return false;
         }
-        return CompareTwoSqlExpression(Body,other.Body);
+        return CompareTwoSqlExpression(Body, other.Body);
     }
 
     public override bool Equals(object? obj)
@@ -70,12 +70,12 @@ public class SqlIntervalExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlIntervalExpression()
         {
             DbType = this.DbType,
-            Unit =(SqlTimeUnitExpression) this.Unit.Clone(),
+            Unit = this.Unit.Clone(),
             Body = this.Body.Clone(),
         };
         return result;

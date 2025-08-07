@@ -49,7 +49,7 @@ public class SqlCollateExpression : SqlExpression
         visitor.VisitSqlCollateExpression(this);
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlCollateExpression()
         {

@@ -66,12 +66,12 @@ public class SqlVariableExpression : SqlExpression, ICollateExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlVariableExpression()
         {
             DbType = this.DbType,
-            Collate = (SqlCollateExpression)this.Collate.Clone(),
+            Collate = this.Collate.Clone(),
             Prefix = Prefix,
             Name = Name
         };

@@ -105,14 +105,14 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlPropertyExpression()
         {
             DbType = this.DbType,
-            Name = (SqlIdentifierExpression)this.Name.Clone(),
-            Table= (SqlIdentifierExpression)this.Table.Clone(),
-            Collate= (SqlCollateExpression)this.Collate.Clone(),
+            Name = this.Name.Clone(),
+            Table= this.Table.Clone(),
+            Collate= this.Collate.Clone(),
         };
         return result;
     }

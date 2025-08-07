@@ -100,14 +100,14 @@ public class SqlConnectByExpression : SqlExpression
         return Equals((SqlConnectByExpression)obj);
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlConnectByExpression()
         {
             DbType = this.DbType,
             StartWith = this.StartWith.Clone(),
             Body = this.Body.Clone(),
-            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
+            OrderBy = this.OrderBy.Clone(),
             IsNocycle = IsNocycle,
             IsPrior = IsPrior
         };

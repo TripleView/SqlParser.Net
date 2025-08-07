@@ -1,6 +1,7 @@
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Ast.Visitor;
 using System.Xml.Linq;
+using SqlParser.Net.Ast;
 
 namespace SqlParser.Net.Test;
 
@@ -63,6 +64,11 @@ public class InsertTest
 
 
         Assert.True(sqlAst.Equals(expect));
+
+        var cloneObj = expect.Clone();
+        expect.ValuesList.RemoveAll(x => true);
+        Assert.True(sqlAst.Equals(cloneObj));
+        Assert.Equal(2, cloneObj.ValuesList.Count);
     }
 
     [Fact]

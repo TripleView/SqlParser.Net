@@ -20,6 +20,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
     public SqlTableExpression()
     {
         this.Type = SqlExpressionType.Table;
+        this.Hints = new List<SqlHintExpression>();
     }
 
     public SqlIdentifierExpression Alias
@@ -173,16 +174,16 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlTableExpression()
         {
             DbType = this.DbType,
-            DbLink = (SqlIdentifierExpression)this.DbLink.Clone(),
-            Database = (SqlIdentifierExpression)this.Database.Clone(),
-            Schema = (SqlIdentifierExpression)this.Schema.Clone(),
-            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
-            Name = (SqlIdentifierExpression)this.Name.Clone(),
+            DbLink = this.DbLink.Clone(),
+            Database = this.Database.Clone(),
+            Schema = this.Schema.Clone(),
+            Alias = this.Alias.Clone(),
+            Name = this.Name.Clone(),
             Hints = this.Hints.Select(x => (SqlHintExpression)x.Clone()).ToList(),
         };
         return result;

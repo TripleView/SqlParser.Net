@@ -72,7 +72,7 @@ public class SqlOrderByItemExpression : SqlExpression
             return (Body.GetHashCode() * 397) ^ OrderByType.GetHashCode();
         }
     }
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlOrderByItemExpression()
         {

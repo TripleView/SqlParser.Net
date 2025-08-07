@@ -60,12 +60,12 @@ public class SqlStringExpression : SqlExpression, ICollateExpression
         return Value.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlStringExpression()
         {
             DbType = this.DbType,
-            Collate = (SqlCollateExpression)this.Collate.Clone(),
+            Collate = this.Collate.Clone(),
             IsUniCode = IsUniCode,
             Value= Value
         };

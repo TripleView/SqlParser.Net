@@ -49,12 +49,12 @@ public class SqlAllExpression : SqlExpression
         visitor.VisitSqlAllExpression(this);
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlAllExpression()
         {
             DbType = this.DbType,
-            Body = (SqlSelectExpression)this.Body.Clone()
+            Body = this.Body.Clone()
         };
         return result;
     }

@@ -67,13 +67,13 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
     {
         throw new System.NotImplementedException();
     }
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlReferenceTableExpression()
         {
             DbType = this.DbType,
-            FunctionCall = (SqlFunctionCallExpression)this.FunctionCall.Clone(),
-            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+            FunctionCall = this.FunctionCall.Clone(),
+            Alias = this.Alias.Clone(),
         };
         return result;
     }

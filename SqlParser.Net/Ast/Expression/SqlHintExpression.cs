@@ -50,7 +50,7 @@ public class SqlHintExpression : SqlExpression
         visitor.VisitSqlHintExpression(this);
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlHintExpression()
         {

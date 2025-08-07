@@ -30,7 +30,7 @@ public class SqlNullExpression : SqlExpression
     {
         throw new System.NotImplementedException();
     }
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlNullExpression()
         {

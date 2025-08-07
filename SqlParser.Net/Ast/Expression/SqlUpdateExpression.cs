@@ -19,6 +19,7 @@ public class SqlUpdateExpression : SqlExpression
     public SqlUpdateExpression()
     {
         this.Type = SqlExpressionType.Update;
+        this.Items = new List<SqlExpression>();
     }
 
     public SqlExpression Table
@@ -132,12 +133,12 @@ public class SqlUpdateExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlUpdateExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => (SqlExpression)x.Clone()).ToList(),
+            Items = this.Items.Select(x => x.Clone()).ToList(),
             Where = this.Where.Clone(),
             Table = this.Table.Clone(),
             From = this.From.Clone(),

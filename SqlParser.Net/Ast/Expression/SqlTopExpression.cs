@@ -51,12 +51,12 @@ public class SqlTopExpression : SqlExpression
         visitor.VisitSqlTopExpression(this);
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlTopExpression()
         {
             DbType = this.DbType,
-            Body = (SqlNumberExpression)this.Body.Clone(),
+            Body = this.Body.Clone(),
         };
         return result;
     }

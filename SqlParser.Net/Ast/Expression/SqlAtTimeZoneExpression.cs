@@ -68,13 +68,13 @@ public class SqlAtTimeZoneExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlAtTimeZoneExpression()
         {
             DbType = this.DbType,
             Body = this.Body.Clone(),
-            TimeZone = (SqlStringExpression)this.TimeZone.Clone()
+            TimeZone = this.TimeZone.Clone()
         };
         return result;
     }

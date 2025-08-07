@@ -136,7 +136,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlCaseExpression()");
         AppendLine("{");
 
-        if (sqlCaseExpression.Items != null)
+        if (sqlCaseExpression.Items.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -349,7 +349,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
         AppendLine("new SqlGroupByExpression()");
         AppendLine("{");
-        if (sqlGroupByExpression.Items != null)
+        if (sqlGroupByExpression.Items.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -417,7 +417,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
 
-        if (sqlInExpression.TargetList != null)
+        if (sqlInExpression.TargetList.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -455,7 +455,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
         AppendLine("new SqlInsertExpression()");
         AppendLine("{");
-        if (sqlInsertExpression.Columns != null)
+        if (sqlInsertExpression.Columns.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -472,7 +472,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine("},");
             });
         }
-        if (sqlInsertExpression.ValuesList != null)
+        if (sqlInsertExpression.ValuesList.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -650,7 +650,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
         AppendLine("new SqlOrderByExpression()");
         AppendLine("{");
-        if (sqlOrderByExpression.Items != null)
+        if (sqlOrderByExpression.Items.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -803,7 +803,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("{");
 
 
-        if (sqlPartitionByExpression.Items != null)
+        if (sqlPartitionByExpression.Items.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1020,7 +1020,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlSelectQueryExpression()");
         AppendLine("{");
 
-        if (sqlSelectQueryExpression.WithSubQuerys != null)
+        if (sqlSelectQueryExpression.WithSubQuerys.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1037,7 +1037,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine("},");
             });
         }
-        if (sqlSelectQueryExpression.Columns != null)
+        if (sqlSelectQueryExpression.Columns.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1129,7 +1129,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlSelectQueryExpression.Hints != null && sqlSelectQueryExpression.Hints.Any())
+        if (sqlSelectQueryExpression.Hints.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1263,7 +1263,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlTableExpression.Hints != null && sqlTableExpression.Hints.Any())
+        if (sqlTableExpression.Hints.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1351,7 +1351,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlUpdateExpression.Where.Accept(this);
             });
         }
-        if (sqlUpdateExpression.Items != null)
+        if (sqlUpdateExpression.Items.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1450,7 +1450,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlWithSubQueryExpression.Columns != null)
+        if (sqlWithSubQueryExpression.Columns.HasValue())
         {
             AdvanceNext(() =>
             {

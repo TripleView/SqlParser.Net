@@ -56,13 +56,13 @@ public class SqlExistsExpression : SqlExpression
         return Body.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlExistsExpression()
         {
             DbType = this.DbType,
             IsNot = this.IsNot,
-            Body = (SqlSelectExpression)this.Body.Clone(),
+            Body = this.Body.Clone(),
         };
         return result;
     }

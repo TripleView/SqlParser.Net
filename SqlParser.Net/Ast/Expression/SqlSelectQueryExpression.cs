@@ -26,6 +26,9 @@ public class SqlSelectQueryExpression : SqlExpression
     public SqlSelectQueryExpression()
     {
         this.Type = SqlExpressionType.SelectQuery;
+        this.WithSubQuerys = new List<SqlWithSubQueryExpression>();
+        this.Columns = new List<SqlSelectItemExpression>();
+        this.Hints = new List<SqlHintExpression>();
     }
 
     /// <summary>
@@ -304,23 +307,23 @@ public class SqlSelectQueryExpression : SqlExpression
 
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlSelectQueryExpression()
         {
             DbType = this.DbType,
             Into = this.Into.Clone(),
-            WithSubQuerys = this.WithSubQuerys.Select(x => (SqlWithSubQueryExpression)x.Clone()).ToList(),
-            Columns = this.Columns.Select(x => (SqlSelectItemExpression)x.Clone()).ToList(),
+            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
+            Columns = this.Columns.Select(x => x.Clone()).ToList(),
             ResultSetReturnOption = this.ResultSetReturnOption,
-            Top = (SqlTopExpression)this.Top.Clone(),
+            Top = this.Top.Clone(),
             From = this.From.Clone(),
             Where = this.Where.Clone(),
-            GroupBy = (SqlGroupByExpression)this.GroupBy.Clone(),
-            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
-            Limit = (SqlLimitExpression)this.Limit.Clone(),
-            ConnectBy = (SqlConnectByExpression)this.ConnectBy.Clone(),
-            Hints = this.Hints.Select(x => (SqlHintExpression)x.Clone()).ToList(),
+            GroupBy = this.GroupBy.Clone(),
+            OrderBy = this.OrderBy.Clone(),
+            Limit = this.Limit.Clone(),
+            ConnectBy = this.ConnectBy.Clone(),
+            Hints = this.Hints.Select(x => x.Clone()).ToList(),
         };
         return result;
     }

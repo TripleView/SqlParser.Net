@@ -19,6 +19,7 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
     public SqlPivotTableExpression()
     {
         this.Type = SqlExpressionType.PivotTable;
+        this.In = new List<SqlExpression>();
     }
 
     public SqlIdentifierExpression Alias
@@ -135,15 +136,15 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         throw new System.NotImplementedException();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlPivotTableExpression()
         {
             DbType = this.DbType,
             In = this.In.Select(x => x.Clone()).ToList(),
-            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+            Alias = this.Alias.Clone(),
             SubQuery = this.SubQuery.Clone(),
-            FunctionCall = (SqlFunctionCallExpression)this.FunctionCall.Clone(),
+            FunctionCall = this.FunctionCall.Clone(),
             For = this.For.Clone(),
         };
         return result;

@@ -19,6 +19,7 @@ public class SqlCaseExpression : SqlExpression
     public SqlCaseExpression()
     {
         this.Type = SqlExpressionType.Case;
+        this.Items = new List<SqlCaseItemExpression>();
     }
 
     public SqlCaseExpressionTokenContext TokenContext { get; set; }
@@ -103,7 +104,7 @@ public class SqlCaseExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlCaseExpression()
         {

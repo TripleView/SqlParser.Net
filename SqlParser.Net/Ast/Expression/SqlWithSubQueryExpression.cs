@@ -18,6 +18,7 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
     public SqlWithSubQueryExpression()
     {
         this.Type = SqlExpressionType.WithSubQuery;
+        this.Columns = new List<SqlIdentifierExpression>();
     }
 
     public SqlIdentifierExpression Alias
@@ -104,14 +105,14 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlWithSubQueryExpression()
         {
             DbType = this.DbType,
-            Columns = this.Columns.Select(x => (SqlIdentifierExpression)x.Clone()).ToList(),
-            FromSelect = (SqlSelectExpression)this.FromSelect.Clone(),
-            Alias = (SqlIdentifierExpression)this.Alias.Clone(),
+            Columns = this.Columns.Select(x => x.Clone()).ToList(),
+            FromSelect = this.FromSelect.Clone(),
+            Alias = this.Alias.Clone(),
         };
         return result;
     }

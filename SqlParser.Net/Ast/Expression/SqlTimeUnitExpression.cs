@@ -31,7 +31,7 @@ public class SqlTimeUnitExpression : SqlExpression
         visitor.VisitSqlTimeUnitExpression(this);
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlTimeUnitExpression()
         {

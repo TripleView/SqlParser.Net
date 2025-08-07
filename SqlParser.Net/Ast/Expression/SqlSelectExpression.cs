@@ -112,14 +112,14 @@ public class SqlSelectExpression : SqlExpression
         return Query.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlSelectExpression()
         {
             DbType = this.DbType,
-            Limit = (SqlLimitExpression)this.Limit.Clone(),
-            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
-            Alias= (SqlIdentifierExpression)this.Alias.Clone(),
+            Limit = this.Limit.Clone(),
+            OrderBy = this.OrderBy.Clone(),
+            Alias= this.Alias.Clone(),
             Query = this.Query.Clone()
         };
         return result;

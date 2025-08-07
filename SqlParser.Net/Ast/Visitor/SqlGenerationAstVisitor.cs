@@ -140,7 +140,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlCaseExpression.Value.Accept(this);
         }
 
-        if (sqlCaseExpression.Items != null)
+        if (sqlCaseExpression.Items.HasValue())
         {
             foreach (var item in sqlCaseExpression.Items)
             {
@@ -280,7 +280,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             return;
         }
         Append("group by");
-        if (sqlGroupByExpression.Items != null)
+        if (sqlGroupByExpression.Items.HasValue())
         {
             for (var i = 0; i < sqlGroupByExpression.Items.Count; i++)
             {
@@ -329,7 +329,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         Append("in");
 
-        if (sqlInExpression.TargetList != null)
+        if (sqlInExpression.TargetList.HasValue())
         {
             EnableParen(() =>
             {
@@ -359,7 +359,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlInsertExpression.Table?.Accept(this);
         }
 
-        if (sqlInsertExpression.Columns != null)
+        if (sqlInsertExpression.Columns.HasValue())
         {
             EnableParen(() =>
             {
@@ -374,7 +374,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 }
             });
         }
-        if (sqlInsertExpression.ValuesList != null)
+        if (sqlInsertExpression.ValuesList.HasValue())
         {
             Append("values");
             for (var i = 0; i < sqlInsertExpression.ValuesList.Count; i++)
@@ -553,7 +553,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             Append("order by");
         }
 
-        if (sqlOrderByExpression.Items != null)
+        if (sqlOrderByExpression.Items.HasValue())
         {
             for (var i = 0; i < sqlOrderByExpression.Items.Count; i++)
             {
@@ -634,7 +634,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         Append("partition by");
 
-        if (sqlPartitionByExpression.Items != null)
+        if (sqlPartitionByExpression.Items.HasValue())
         {
             for (var i = 0; i < sqlPartitionByExpression.Items.Count; i++)
             {
@@ -822,7 +822,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
-        if (sqlSelectQueryExpression.WithSubQuerys != null)
+        if (sqlSelectQueryExpression.WithSubQuerys.HasValue())
         {
             Append(" with");
             for (var i = 0; i < sqlSelectQueryExpression.WithSubQuerys.Count; i++)
@@ -861,7 +861,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlSelectQueryExpression.Top.Accept(this);
         }
 
-        if (sqlSelectQueryExpression.Columns != null)
+        if (sqlSelectQueryExpression.Columns.HasValue())
         {
             for (var i = 0; i < sqlSelectQueryExpression.Columns.Count; i++)
             {
@@ -909,7 +909,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlSelectQueryExpression.Limit.Accept(this);
         }
-        if (sqlSelectQueryExpression.Hints != null && sqlSelectQueryExpression.Hints.Any())
+        if (sqlSelectQueryExpression.Hints.HasValue())
         {
             foreach (var tableExpressionHint in sqlSelectQueryExpression.Hints)
             {
@@ -991,7 +991,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlTableExpression.Alias?.Accept(this);
         }
 
-        if (sqlTableExpression.Hints != null && sqlTableExpression.Hints.Any())
+        if (sqlTableExpression.Hints.HasValue())
         {
             foreach (var tableExpressionHint in sqlTableExpression.Hints)
             {
@@ -1069,7 +1069,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlUpdateExpression.Table.Accept(this);
         }
 
-        if (sqlUpdateExpression.Items != null)
+        if (sqlUpdateExpression.Items.HasValue())
         {
             Append("set");
             for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
@@ -1146,7 +1146,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlWithSubQueryExpression.Alias.Accept(this);
         }
 
-        if (sqlWithSubQueryExpression.Columns != null)
+        if (sqlWithSubQueryExpression.Columns.HasValue())
         {
             EnableParen((() =>
             {

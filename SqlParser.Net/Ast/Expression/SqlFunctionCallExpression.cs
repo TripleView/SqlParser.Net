@@ -18,7 +18,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
     /// </summary>
 
     private SqlCollateExpression collate;
-  
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlFunctionCallExpression(this);
@@ -26,6 +26,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
     public SqlFunctionCallExpression()
     {
         this.Type = SqlExpressionType.FunctionCall;
+        Arguments = new List<SqlExpression>();
     }
 
     public List<SqlExpression> Arguments
@@ -153,7 +154,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         {
             return false;
         }
-        
+
 
         if (!CompareTwoSqlExpression(Name, other.Name))
         {
@@ -204,18 +205,18 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlFunctionCallExpression()
         {
             DbType = this.DbType,
-            Arguments = this.Arguments.Select(x =>x.Clone()).ToList(),
+            Arguments = this.Arguments.Select(x => x.Clone()).ToList(),
             Name = this.Name.Clone(),
-            Over = (SqlOverExpression)this.Over.Clone(),
+            Over = this.Over.Clone(),
             IsDistinct = this.IsDistinct,
             CaseAsTargetType = this.CaseAsTargetType.Clone(),
-            Collate = (SqlCollateExpression)this.Collate.Clone(),
-            WithinGroup =(SqlWithinGroupExpression) this.WithinGroup.Clone(),
+            Collate = this.Collate.Clone(),
+            WithinGroup = this.WithinGroup.Clone(),
             FromSource = this.FromSource.Clone()
         };
         return result;

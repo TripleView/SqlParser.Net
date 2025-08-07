@@ -80,7 +80,7 @@ public class SqlGroupByExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlGroupByExpression()
         {

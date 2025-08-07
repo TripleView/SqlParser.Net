@@ -4,11 +4,11 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlExpression : IAcceptVisitor,ICloneableExpression
+public class SqlExpression : IAcceptVisitor, ICloneableExpression
 {
     public virtual void Accept(IAstVisitor visitor)
     {
-        
+
     }
     public virtual SqlExpressionType Type { get; protected set; }
     /// <summary>
@@ -21,7 +21,7 @@ public class SqlExpression : IAcceptVisitor,ICloneableExpression
     /// 数据库类型
     /// </summary>
     public DbType? DbType { set; get; }
-    
+
     public SqlExpression()
     {
 
@@ -33,7 +33,7 @@ public class SqlExpression : IAcceptVisitor,ICloneableExpression
     /// <param name="exp1"></param>
     /// <param name="exp2"></param>
     /// <returns></returns>
-    protected bool CompareTwoSqlExpression<T>(T exp1,T exp2) where T:class
+    protected bool CompareTwoSqlExpression<T>(T exp1, T exp2) where T : class
     {
         if (exp1 == null ^ exp2 == null)
         {
@@ -57,6 +57,10 @@ public class SqlExpression : IAcceptVisitor,ICloneableExpression
     /// <returns></returns>
     protected bool CompareTwoSqlExpressionList<T>(List<T> exp1, List<T> exp2) where T : class
     {
+        if (exp1 == null && exp2 is { Count: 0 } || (exp2 == null && exp1 is { Count: 0 }))
+        {
+            return true;
+        }
         if (exp1 == null ^ exp2 == null)
         {
             return false;
@@ -82,7 +86,7 @@ public class SqlExpression : IAcceptVisitor,ICloneableExpression
         return true;
     }
 
-    public string ToSql(DbType? dbType=null)
+    public string ToSql(DbType? dbType = null)
     {
         var myDbType = dbType ?? DbType;
         if (myDbType == null)
@@ -108,7 +112,7 @@ public class SqlExpression : IAcceptVisitor,ICloneableExpression
         return result;
     }
 
-    public virtual SqlExpression Clone()
+    public virtual SqlExpression InternalClone()
     {
         return new SqlExpression();
     }

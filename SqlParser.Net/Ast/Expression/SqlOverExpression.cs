@@ -72,13 +72,13 @@ public class SqlOverExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlOverExpression()
         {
             DbType = this.DbType,
-            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
-            PartitionBy = (SqlPartitionByExpression)this.PartitionBy.Clone(),
+            OrderBy = this.OrderBy.Clone(),
+            PartitionBy = this.PartitionBy.Clone(),
         };
         return result;
     }

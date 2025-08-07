@@ -59,12 +59,12 @@ public class SqlPartitionByExpression : SqlExpression
         return Items.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlPartitionByExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => (SqlExpression)x.Clone()).ToList(),
+            Items = this.Items.Select(x => x.Clone()).ToList(),
         };
         return result;
     }

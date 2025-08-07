@@ -99,7 +99,7 @@ public class SqlDeleteExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlDeleteExpression()
         {

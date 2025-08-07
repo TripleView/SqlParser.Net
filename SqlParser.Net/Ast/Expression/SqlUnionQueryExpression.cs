@@ -82,7 +82,7 @@ public class SqlUnionQueryExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlUnionQueryExpression()
         {

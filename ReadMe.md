@@ -3329,6 +3329,16 @@ select * from test where(test.name = 'a')
 
 基于UnitTestAstVisitor，抽象语法树包装了sqlAst.ToFormat()方法用来打印抽象语法树的信息，基于SqlGenerationAstVisitor，抽象语法树包装了sqlAst.ToSql()方法用来打印生成的sql。
 
+### 6.5 抽象语法树的克隆
+
+在我们的实际使用中，我们有时候需要克隆整个抽象语法树，在克隆出来的抽象语法树中修改任何东西，都不会影响到原有的抽象语法树，框架也提供了对应的Clone方法，如下:
+
+````csharp
+var sql = @"select * from test";
+var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+var cloneAst = sqlAst.Clone();
+````
+
 ## 7. sql解析的理论基础
 sql之所以能被我们解析出来，主要是因为sql是一种形式语言，自然语言和形式语言的一个重要区别是，自然语言的一个语句，可能有多重含义，而形式语言的一个语句，只能有一个语义;形式语言的语法是人为规定的，有了一定的语法规则，语法解析器就能根据语法规则，解析出一个语句的唯一含义。
 

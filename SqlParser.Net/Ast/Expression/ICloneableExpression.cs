@@ -6,5 +6,5 @@ namespace SqlParser.Net.Ast.Expression;
 /// </summary>
 public interface ICloneableExpression
 {
-    public SqlExpression Clone();
+    public SqlExpression InternalClone();
 }

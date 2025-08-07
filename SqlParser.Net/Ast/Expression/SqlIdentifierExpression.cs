@@ -10,7 +10,7 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
     /// </summary>
 
     private SqlCollateExpression collate;
-  
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlIdentifierExpression(this);
@@ -76,12 +76,12 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
         return Value.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlIdentifierExpression()
         {
             DbType = this.DbType,
-            Collate =(SqlCollateExpression) this.Collate.Clone(),
+            Collate = this.Collate.Clone(),
             Value = Value,
             LeftQualifiers = LeftQualifiers,
             RightQualifiers = RightQualifiers

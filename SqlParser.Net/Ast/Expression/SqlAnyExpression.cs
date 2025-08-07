@@ -50,12 +50,12 @@ public class SqlAnyExpression : SqlExpression
         return Body.GetHashCode();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlAnyExpression()
         {
             DbType = this.DbType,
-            Body = (SqlSelectExpression)this.Body.Clone()
+            Body = this.Body.Clone()
         };
         return result;
     }

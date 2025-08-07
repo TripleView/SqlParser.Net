@@ -18,6 +18,7 @@ public class SqlInExpression : SqlExpression
     public SqlInExpression()
     {
         this.Type = SqlExpressionType.In;
+        TargetList = new List<SqlExpression>();
     }
 
     /// <summary>
@@ -51,7 +52,7 @@ public class SqlInExpression : SqlExpression
                     {
                         expression.Parent = this;
                     }
-                    
+
                 }
             }
             targetList = value;
@@ -82,7 +83,7 @@ public class SqlInExpression : SqlExpression
         {
             return false;
         }
-        
+
         if (!CompareTwoSqlExpression(Body, other.Body))
         {
             return false;
@@ -92,7 +93,7 @@ public class SqlInExpression : SqlExpression
         {
             return false;
         }
-        
+
         return true;
     }
 
@@ -112,14 +113,14 @@ public class SqlInExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlInExpression()
         {
             DbType = this.DbType,
-            TargetList = this.TargetList.Select(x =>x.Clone()).ToList(),
+            TargetList = this.TargetList.Select(x => x.Clone()).ToList(),
             Body = this.Body.Clone(),
-            SubQuery = (SqlSelectExpression)this.SubQuery.Clone(),
+            SubQuery = this.SubQuery.Clone(),
             IsNot = IsNot
         };
         return result;

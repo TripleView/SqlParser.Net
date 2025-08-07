@@ -115,7 +115,7 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlBinaryExpression()
         {

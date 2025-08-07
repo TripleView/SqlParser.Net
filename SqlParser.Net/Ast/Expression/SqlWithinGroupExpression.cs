@@ -51,12 +51,12 @@ public class SqlWithinGroupExpression : SqlExpression
         throw new System.NotImplementedException();
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
         var result = new SqlWithinGroupExpression()
         {
             DbType = this.DbType,
-            OrderBy = (SqlOrderByExpression)this.OrderBy.Clone(),
+            OrderBy = this.OrderBy.Clone(),
 
         };
         return result;

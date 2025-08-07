@@ -19,6 +19,8 @@ public class SqlInsertExpression : SqlExpression
     public SqlInsertExpression()
     {
         this.Type = SqlExpressionType.Insert;
+        this.Columns = new List<SqlExpression>();
+        this.ValuesList = new List<List<SqlExpression>>();
     }
 
     public SqlExpression Table
@@ -118,41 +120,45 @@ public class SqlInsertExpression : SqlExpression
             return false;
         }
 
-
-        if (ValuesList is null ^ other.ValuesList is null)
+        if (!(ValuesList is null && other.ValuesList is { Count: 0 } ||
+            (other.ValuesList is null && ValuesList is { Count: 0 })))
         {
-            return false;
-        }
-        else if (ValuesList != null && other.ValuesList != null)
-        {
-            if (ValuesList.Count != other.ValuesList.Count)
+            if (ValuesList is null ^ other.ValuesList is null)
             {
                 return false;
             }
-
-            for (var i = 0; i < ValuesList.Count; i++)
+            else if (ValuesList != null && other.ValuesList != null)
             {
-                var items1 = ValuesList[i];
-                var items2 = other.ValuesList[i];
-                if (items1 == null ^ items2 == null)
+                if (ValuesList.Count != other.ValuesList.Count)
                 {
                     return false;
                 }
 
-                if (items1 != null && items2 != null)
+                for (var i = 0; i < ValuesList.Count; i++)
                 {
-                    for (int j = 0; j < items1.Count; j++)
+                    var items1 = ValuesList[i];
+                    var items2 = other.ValuesList[i];
+                    if (items1 == null ^ items2 == null)
                     {
-                        var item = items1[i];
-                        var item2 = items2[i];
-                        if (!item.Equals(item2))
+                        return false;
+                    }
+
+                    if (items1 != null && items2 != null)
+                    {
+                        for (int j = 0; j < items1.Count; j++)
                         {
-                            return false;
+                            var item = items1[i];
+                            var item2 = items2[i];
+                            if (!item.Equals(item2))
+                            {
+                                return false;
+                            }
                         }
                     }
                 }
             }
         }
+
 
         return true;
     }
@@ -177,15 +183,14 @@ public class SqlInsertExpression : SqlExpression
         }
     }
 
-    public override SqlExpression Clone()
+    public override SqlExpression InternalClone()
     {
-        
         var result = new SqlInsertExpression()
         {
             DbType = this.DbType,
             Columns = this.Columns.Select(x => x.Clone()).ToList(),
             Table = this.Table.Clone(),
-            FromSelect =(SqlSelectExpression) this.FromSelect.Clone(),
+            FromSelect = this.FromSelect.Clone(),
             ValuesList = this.ValuesList.Select(x => x.Select(y => y.Clone()).ToList()).ToList()
         };
         return result;
