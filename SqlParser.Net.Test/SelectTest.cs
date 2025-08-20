@@ -16841,4 +16841,20 @@ order by temp.InxNbr";
         }
        
     }
+
+    [Fact]
+    public void TestToFormat()
+    {
+        var sqlExpression = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+            }
+        };
+
+        var formatResult= sqlExpression.ToFormat();
+        Assert.Equal(
+            "var expect = new SqlSelectExpression()\r\n{\r\n    Query = new SqlSelectQueryExpression()\r\n    {\r\n    },\r\n};\r\n",
+            formatResult);
+    }
 }

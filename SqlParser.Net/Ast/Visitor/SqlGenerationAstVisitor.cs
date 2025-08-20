@@ -275,7 +275,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
-        if (!(sqlGroupByExpression.Items != null && sqlGroupByExpression.Items.Count > 0))
+        if (!sqlGroupByExpression.HasValue())
         {
             return;
         }
@@ -540,7 +540,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
-        if (!(sqlOrderByExpression.Items != null && sqlOrderByExpression.Items.Count > 0))
+        if (!sqlOrderByExpression.HasValue())
         {
             return;
         }
@@ -588,7 +588,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         sqlConnectByExpression.Body.Accept(this);
 
-        if (sqlConnectByExpression.OrderBy != null)
+        if (sqlConnectByExpression.OrderBy.HasValue())
         {
             sqlConnectByExpression.OrderBy.Accept(this);
         }
@@ -619,7 +619,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 sqlOverExpression.PartitionBy.Accept(this);
             }
-            if (sqlOverExpression.OrderBy != null)
+            if (sqlOverExpression.OrderBy.HasValue())
             {
                 sqlOverExpression.OrderBy.Accept(this);
             }
@@ -765,7 +765,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlSelectExpression.Alias.Accept(this);
         }
 
-        if (sqlSelectExpression.OrderBy != null)
+        if (sqlSelectExpression.OrderBy.HasValue())
         {
             sqlSelectExpression.OrderBy.Accept(this);
         }
@@ -890,12 +890,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlSelectQueryExpression.Where.Accept(this);
         }
 
-        if (sqlSelectQueryExpression.GroupBy != null)
+        if (sqlSelectQueryExpression.GroupBy.HasValue())
         {
             sqlSelectQueryExpression.GroupBy.Accept(this);
         }
 
-        if (sqlSelectQueryExpression.OrderBy != null)
+        if (sqlSelectQueryExpression.OrderBy.HasValue())
         {
             sqlSelectQueryExpression.OrderBy.Accept(this);
         }
@@ -1133,7 +1133,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("within group");
         EnableParen((() =>
         {
-            if (sqlWithinGroupExpression.OrderBy != null)
+            if (sqlWithinGroupExpression.OrderBy.HasValue())
             {
                 sqlWithinGroupExpression.OrderBy.Accept(this);
             }

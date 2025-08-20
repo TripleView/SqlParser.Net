@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using SqlParser.Net.Ast.Expression;
@@ -343,7 +343,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
-        if (!(sqlGroupByExpression.Items != null && sqlGroupByExpression.Items.Count > 0))
+        if (!sqlGroupByExpression.HasValue())
         {
             return;
         }
@@ -644,7 +644,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
-        if (!(sqlOrderByExpression.Items != null && sqlOrderByExpression.Items.Count > 0))
+        if (!sqlOrderByExpression.HasValue())
         {
             return;
         }
@@ -723,7 +723,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlConnectByExpression.OrderBy != null)
+        if (sqlConnectByExpression.OrderBy.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -783,7 +783,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlOverExpression.PartitionBy.Accept(this);
             });
         }
-        if (sqlOverExpression.OrderBy != null)
+        if (sqlOverExpression.OrderBy.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -959,7 +959,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
 
-        if (sqlSelectExpression.OrderBy != null)
+        if (sqlSelectExpression.OrderBy.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1095,7 +1095,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlSelectQueryExpression.Where.Accept(this);
             });
         }
-        if (sqlSelectQueryExpression.OrderBy != null)
+        if (sqlSelectQueryExpression.OrderBy.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1103,7 +1103,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlSelectQueryExpression.OrderBy.Accept(this);
             });
         }
-        if (sqlSelectQueryExpression.GroupBy != null)
+        if (sqlSelectQueryExpression.GroupBy.HasValue())
         {
             AdvanceNext(() =>
             {
@@ -1415,7 +1415,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("{");
 
 
-        if (sqlWithinGroupExpression.OrderBy != null)
+        if (sqlWithinGroupExpression.OrderBy.HasValue())
         {
             AdvanceNext(() =>
             {
