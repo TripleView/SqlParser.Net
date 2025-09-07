@@ -39,7 +39,7 @@ JsonConvert.SerializeObject(statements.First(), Formatting.Indented)
 
 4. 最后我还发现了另外一个[gsp的sqlparser](https://www.sqlparser.com/sql-parser-pricelist.php),但它是收费的，而且巨贵无比，也pass。
 
-找了一圈下来，我发现符合我要求的类库并不存在，所以我上面的那些想法，也一度搁浅了，但每一次的搁浅，都会使我内心的不甘加重一分，终于有一天，我下定决心，自己动手，丰衣足食，所以最近花了大概3个月时间，从头开始写了一个sql解析引擎，包括词法解析器到语法分析器，不依赖任何第三方组件，纯c#代码，在通过了357个各种各样场景的单元测试以及各种真实的业务环境验证后，今天它[SqlParser.Net](https://github.com/TripleView/SqlParser.Net)1.0.0正式发布了，本项目基于MIT协议开源，有以下优点，
+找了一圈下来，我发现符合我要求的类库并不存在，所以我上面的那些想法，也一度搁浅了，但每一次的搁浅，都会使我内心的不甘加重一分，终于有一天，我下定决心，自己动手，丰衣足食，所以最近花了大概3个月时间，从头开始写了一个sql解析引擎，包括词法解析器到语法分析器，不依赖任何第三方组件，纯c#代码，在通过了360个各种各样场景的单元测试以及各种真实的业务环境验证后，今天它[SqlParser.Net](https://github.com/TripleView/SqlParser.Net)1.0.0正式发布了，本项目基于MIT协议开源，有以下优点，
 1. 支持5大数据库，oracle，sqlserver，mysql，pgsql以及sqlite。
 2. 极致的速度，解析普通sql，时间基本在0.3毫秒以下，当然了,sql越长，解析需要的时间就越长。
 3. 文档完善，众所周知，我三合的开源项目，一向是文档齐全且简单易懂，做到看完就能上手，同时，我也会根据用户的反馈不断的补充以及完善文档。
@@ -2846,6 +2846,96 @@ var expect = new SqlSelectExpression()
     },
 };
 
+
+````
+
+### 1.12 Returning子句
+
+````csharp
+var sql = "INSERT INTO CUSTOMER (name,age,TOTALCONSUMPTIONAMOUNT) VALUES (:name,:age,:TOTALCONSUMPTIONAMOUNT) RETURNING id,age INTO :id,:age2";
+var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+````
+解析结果如下：
+````csharp
+var expect = new SqlInsertExpression()
+{
+    Columns = new List<SqlExpression>()
+    {
+        new SqlIdentifierExpression()
+        {
+            Value = "name",
+        },
+        new SqlIdentifierExpression()
+        {
+            Value = "age",
+        },
+        new SqlIdentifierExpression()
+        {
+            Value = "TOTALCONSUMPTIONAMOUNT",
+        },
+    },
+    ValuesList = new List<List<SqlExpression>>()
+    {
+        new List<SqlExpression>()
+        {
+            new SqlVariableExpression()
+            {
+                Name = "name",
+                Prefix = ":",
+            },
+            new SqlVariableExpression()
+            {
+                Name = "age",
+                Prefix = ":",
+            },
+            new SqlVariableExpression()
+            {
+                Name = "TOTALCONSUMPTIONAMOUNT",
+                Prefix = ":",
+            },
+        },
+    },
+    Table = new SqlTableExpression()
+    {
+        Name = new SqlIdentifierExpression()
+        {
+            Value = "CUSTOMER",
+        },
+    },
+    Returning = new SqlReturningExpression()
+    {
+        Items = new List<SqlExpression>()
+        {
+                new SqlSelectItemExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "id",
+                    },
+                },
+                new SqlSelectItemExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "age",
+                    },
+                },
+        },
+        IntoVariables = new List<SqlExpression>()
+        {
+            new SqlVariableExpression()
+            {
+                Name = "id",
+                Prefix = ":",
+            },
+            new SqlVariableExpression()
+            {
+                Name = "age2",
+                Prefix = ":",
+            },
+        },
+    },
+};
 
 ````
 

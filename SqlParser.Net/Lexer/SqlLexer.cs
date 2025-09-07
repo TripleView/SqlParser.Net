@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Expression;
+using SqlParser.Net.Ast.Expression;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -23,14 +23,14 @@ public class SqlLexer
     private List<char> chars;
     /// <summary>
     /// while maximum number of loops, used to avoid infinite loops
-    /// whileæœ€å¤§å¾ªç¯æ¬¡æ•°ï¼Œç”¨æ¥é¿å…æ­»å¾ªç¯
+    /// while×î´óÑ­»·´ÎÊı£¬ÓÃÀ´±ÜÃâËÀÑ­»·
     /// </summary>
     private int whileMaximumNumberOfLoops = 100000;
     private Dictionary<char, bool> digitDic = new Dictionary<char, bool>();
     private ConcurrentDictionary<string, Token> tokenDic = new ConcurrentDictionary<string, Token>();
     /// <summary>
     /// Token dictionary for all database types
-    /// æ‰€æœ‰æ•°æ®åº“ç±»å‹çš„tokenå­—å…¸
+    /// ËùÓĞÊı¾İ¿âÀàĞÍµÄtoken×Öµä
     /// </summary>
     public static ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>> AllDbTypeTokenDic = new ConcurrentDictionary<DbType, ConcurrentDictionary<string, Token>>();
     private List<Token> tokens = new List<Token>();
@@ -43,12 +43,12 @@ public class SqlLexer
     private bool IsSqlite => this.dbType == DbType.Sqlite;
     /// <summary>
     /// right Qualifiers char
-    /// å³é™å®šç¬¦
+    /// ÓÒÏŞ¶¨·û
     /// </summary>
     private char leftQualifierChar;
     /// <summary>
     /// left Qualifiers char
-    /// å·¦é™å®šç¬¦
+    /// ×óÏŞ¶¨·û
     /// </summary>
     private char rightQualifierChar;
     //static SqlLexer()
@@ -62,7 +62,7 @@ public class SqlLexer
         InitQualifierChar();
         InitTokenDic();
         //Only recognize line breaks \n
-        //ä»…è¯†åˆ«æ¢è¡Œç¬¦\n
+        //½öÊ¶±ğ»»ĞĞ·û\n
         sql = sql.Replace("\r\n", "\n");
         chars = sql.Select(it => it).ToList();
 
@@ -136,7 +136,7 @@ public class SqlLexer
 
     /// <summary>
     /// Initialize the Qualifiers character, such as [System] in sql:select * from RouteData rd where rd.[System] ='a';
-    /// åˆå§‹åŒ–é™å®šå­—ç¬¦ï¼Œæ¯”å¦‚sql:select * from RouteData rd where rd.[System] ='a'ä¸­çš„[System]
+    /// ³õÊ¼»¯ÏŞ¶¨×Ö·û£¬±ÈÈçsql:select * from RouteData rd where rd.[System] ='a'ÖĞµÄ[System]
     /// </summary>
     private void InitQualifierChar()
     {
@@ -160,7 +160,7 @@ public class SqlLexer
     }
 
     /// <summary>
-    /// è·å–é™å®šæ ‡è¯†ç¬¦ï¼Œæ¯”å¦‚select * from [System]ä¸­çš„[System]ï¼Œåˆæ¯”å¦‚SELECT "first name" FROM "user data"ä¸­çš„first nameå’Œuser data
+    /// »ñÈ¡ÏŞ¶¨±êÊ¶·û£¬±ÈÈçselect * from [System]ÖĞµÄ[System]£¬ÓÖ±ÈÈçSELECT "first name" FROM "user data"ÖĞµÄfirst nameºÍuser data
     /// </summary>
     /// <returns></returns>
     private bool AcceptQualifiersIdentifier()
@@ -444,7 +444,7 @@ public class SqlLexer
                 i++;
                 //if (currentChar == '.' && txt.IndexOf(".", StringComparison.InvariantCulture) != -1)
                 //{
-                //    throw new Exception("æ•°å­—é‡Œä¸å…è®¸å‡ºç°å¤šä¸ª.");
+                //    throw new Exception("Êı×ÖÀï²»ÔÊĞí³öÏÖ¶à¸ö.");
                 //}
                 ch = GetCurrentCharValue();
                 sb.Append(ch);
@@ -514,7 +514,7 @@ public class SqlLexer
     }
 
     /// <summary>
-    /// æ¥å—æ“ä½œç¬¦
+    /// ½ÓÊÜ²Ù×÷·û
     /// </summary>
     private bool AcceptOperators()
     {
@@ -565,11 +565,11 @@ public class SqlLexer
 
     /// <summary>
     /// Accepts common symbols
-    /// æ¥å—æ™®é€šç¬¦å·
+    /// ½ÓÊÜÆÕÍ¨·ûºÅ
     /// </summary>
     private bool AcceptSymbol()
     {
-        if (Accept(',') || (dbType == DbType.Oracle && Accept('ï¼Œ')))
+        if (Accept(',') || (dbType == DbType.Oracle && Accept('£¬')))
         {
             var token = Token.Comma;
             UpdateTokenPosition(ref token);
@@ -592,7 +592,7 @@ public class SqlLexer
             return true;
         }
 
-        if (Accept('(') || (dbType == DbType.Oracle && Accept('ï¼ˆ')))
+        if (Accept('(') || (dbType == DbType.Oracle && Accept('£¨')))
         {
             var token = Token.LeftParen;
             UpdateTokenPosition(ref token);
@@ -600,7 +600,7 @@ public class SqlLexer
             return true;
         }
 
-        if (Accept(')') || (dbType == DbType.Oracle && Accept('ï¼‰')))
+        if (Accept(')') || (dbType == DbType.Oracle && Accept('£©')))
         {
             var token = Token.RightParen;
             UpdateTokenPosition(ref token);
@@ -815,7 +815,7 @@ public class SqlLexer
             i++;
             if (Accept('\''))
             {
-                //åœ¨sqlä¸­ï¼Œ''è¡¨ç¤ºå•ä¸ª'
+                //ÔÚsqlÖĞ£¬''±íÊ¾µ¥¸ö'
                 if (Accept('\''))
                 {
                     buffer.Add('\'');
@@ -858,11 +858,11 @@ public class SqlLexer
             return token;
         }
 
-        throw new Exception("æ•°å­—æ ¼å¼é”™è¯¯");
+        throw new Exception("Êı×Ö¸ñÊ½´íÎó");
     }
 
     /// <summary>
-    /// è¿™é‡Œåˆ¤æ–­æ˜¯å¦ä¸ºå…³é”®å­—æˆ–è€…æ ‡è¯†ç¬¦
+    /// ÕâÀïÅĞ¶ÏÊÇ·ñÎª¹Ø¼ü×Ö»òÕß±êÊ¶·û
     /// </summary>
     /// <param name="txt"></param>
     /// <returns></returns>
@@ -880,7 +880,7 @@ public class SqlLexer
 
 
     /// <summary>
-    /// åˆå§‹åŒ–tokenåç§°å­—å…¸
+    /// ³õÊ¼»¯tokenÃû³Æ×Öµä
     /// </summary>
     //private static void InitTokenDic()
     //{
@@ -912,7 +912,7 @@ public class SqlLexer
     //}
 
     /// <summary>
-    /// åˆå§‹åŒ–tokenå­—å…¸é›†åˆ
+    /// ³õÊ¼»¯token×Öµä¼¯ºÏ
     /// </summary>
     private void InitTokenDic()
     {
@@ -1068,13 +1068,16 @@ public class SqlLexer
         {
             tokenDic.TryAdd("Interval".ToLowerInvariant(), Token.Interval);
         }
-
+        if (dbType == DbType.Pgsql || dbType == DbType.Oracle)
+        {
+            tokenDic.TryAdd("Returning".ToLowerInvariant(), Token.Returning);
+        }
         tokenDic.TryAdd("Collate".ToLowerInvariant(), Token.Collate);
 
         AllDbTypeTokenDic.TryAdd(dbType, tokenDic);
     }
     /// <summary>
-    /// åˆå§‹åŒ–å…è®¸çš„æ•°å­—é›†åˆ
+    /// ³õÊ¼»¯ÔÊĞíµÄÊı×Ö¼¯ºÏ
     /// </summary>
     private void InitDigitDic()
     {
@@ -1086,7 +1089,7 @@ public class SqlLexer
 
     }
     /// <summary>
-    /// æ¥å—æ•°å­—é›†åˆ
+    /// ½ÓÊÜÊı×Ö¼¯ºÏ
     /// </summary>
     /// <returns></returns>
     private bool AcceptDigits()
@@ -1101,7 +1104,7 @@ public class SqlLexer
     }
 
     /// <summary>
-    /// æ¥å—å­—æ¯
+    /// ½ÓÊÜ×ÖÄ¸
     /// </summary>
     /// <returns></returns>
     private bool AcceptLetters()
@@ -1178,6 +1181,6 @@ public class SqlLexer
             return true;
         }
 
-        throw new Exception($"{pos}ä½ç½®è¯­æ„é”™è¯¯ï¼Œè¯·ç¡®è®¤");
+        throw new Exception($"{pos}Î»ÖÃÓïÒâ´íÎó£¬ÇëÈ·ÈÏ");
     }
 }

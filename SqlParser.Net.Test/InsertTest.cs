@@ -489,5 +489,263 @@ public class InsertTest
         });
     }
 
+    [Fact]
+    public void TestInsertReturningForOracle()
+    {
+        var sql = "INSERT INTO CUSTOMER (name,age,TOTALCONSUMPTIONAMOUNT) VALUES (:name,:age,:TOTALCONSUMPTIONAMOUNT) RETURNING id,age INTO :id,:age2";
+        var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+        var expect = new SqlInsertExpression()
+        {
+            Columns = new List<SqlExpression>()
+    {
+        new SqlIdentifierExpression()
+        {
+            Value = "name",
+        },
+        new SqlIdentifierExpression()
+        {
+            Value = "age",
+        },
+        new SqlIdentifierExpression()
+        {
+            Value = "TOTALCONSUMPTIONAMOUNT",
+        },
+    },
+            ValuesList = new List<List<SqlExpression>>()
+    {
+        new List<SqlExpression>()
+        {
+            new SqlVariableExpression()
+            {
+                Name = "name",
+                Prefix = ":",
+            },
+            new SqlVariableExpression()
+            {
+                Name = "age",
+                Prefix = ":",
+            },
+            new SqlVariableExpression()
+            {
+                Name = "TOTALCONSUMPTIONAMOUNT",
+                Prefix = ":",
+            },
+        },
+    },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "CUSTOMER",
+                },
+            },
+            Returning = new SqlReturningExpression()
+            {
+                Items = new List<SqlExpression>()
+        {
+                new SqlSelectItemExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "id",
+                    },
+                },
+                new SqlSelectItemExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "age",
+                    },
+                },
+        },
+                IntoVariables = new List<SqlExpression>()
+        {
+            new SqlVariableExpression()
+            {
+                Name = "id",
+                Prefix = ":",
+            },
+            new SqlVariableExpression()
+            {
+                Name = "age2",
+                Prefix = ":",
+            },
+        },
+            },
+        };
 
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal(
+            "insert into CUSTOMER(name, age, TOTALCONSUMPTIONAMOUNT) values(:name,:age,:TOTALCONSUMPTIONAMOUNT) returning id, age into :id,:age2",
+            newSql);
+    }
+
+    [Fact]
+    public void TestInsertReturningForPgsql()
+    {
+        var sql = "INSERT INTO users (name, age) VALUES (@name, @age) RETURNING id,name as newName";
+        var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+        var expect = new SqlInsertExpression()
+        {
+            Columns = new List<SqlExpression>()
+            {
+                new SqlIdentifierExpression()
+                {
+                    Value = "name",
+                },
+                new SqlIdentifierExpression()
+                {
+                    Value = "age",
+                },
+            },
+            ValuesList = new List<List<SqlExpression>>()
+            {
+                new List<SqlExpression>()
+                {
+                    new SqlVariableExpression()
+                    {
+                        Name = "name",
+                        Prefix = "@",
+                    },
+                    new SqlVariableExpression()
+                    {
+                        Name = "age",
+                        Prefix = "@",
+                    },
+                },
+            },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "users",
+                },
+            },
+            Returning = new SqlReturningExpression()
+            {
+                Items = new List<SqlExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "id",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "newName",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal(
+            "insert into users(name, age) values(@name,@age) returning id, name as newName",
+            newSql);
+    }
+    [Fact]
+    public void TestInsertReturningForPgsql2()
+    {
+        var sql = "insert into users(name, age) values(@name,@age) returning id, name newName,age as newAge";
+        var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+        var unitTestAstVisitor = new UnitTestAstVisitor();
+        sqlAst.Accept(unitTestAstVisitor);
+        var result = unitTestAstVisitor.GetResult();
+        var expect = new SqlInsertExpression()
+        {
+            Columns = new List<SqlExpression>()
+            {
+                new SqlIdentifierExpression()
+                {
+                    Value = "name",
+                },
+                new SqlIdentifierExpression()
+                {
+                    Value = "age",
+                },
+            },
+            ValuesList = new List<List<SqlExpression>>()
+            {
+                new List<SqlExpression>()
+                {
+                    new SqlVariableExpression()
+                    {
+                        Name = "name",
+                        Prefix = "@",
+                    },
+                    new SqlVariableExpression()
+                    {
+                        Name = "age",
+                        Prefix = "@",
+                    },
+                },
+            },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "users",
+                },
+            },
+            Returning = new SqlReturningExpression()
+            {
+                Items = new List<SqlExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "id",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "newName",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "age",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "newAge",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal(
+            "insert into users(name, age) values(@name,@age) returning id, name as newName, age as newAge",
+            newSql);
+    }
 }

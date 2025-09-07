@@ -1,4 +1,4 @@
-锘縰sing SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,7 +11,7 @@ public class SqlInsertExpression : SqlExpression
     private List<SqlExpression> columns;
     private List<List<SqlExpression>> valuesList;
     private SqlSelectExpression fromSelect;
-
+    private SqlReturningExpression returning;
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitSqlInsertExpression(this);
@@ -35,7 +35,18 @@ public class SqlInsertExpression : SqlExpression
             table = value;
         }
     }
-
+    public SqlReturningExpression Returning
+    {
+        get => returning;
+        set
+        {
+            if (value != null)
+            {
+                value.Parent = this;
+            }
+            returning = value;
+        }
+    }
     public List<SqlExpression> Columns
     {
         get => columns;
@@ -56,8 +67,8 @@ public class SqlInsertExpression : SqlExpression
     }
 
     /// <summary>
-    /// Since MySQL, SQL Server, SQLite, and PostgreSQL support inserting multiple rows of data in an insert statement, the values 鈥嬧�媣alue is a list.
-    /// 鐢变簬mysql锛宻qlserver,SQLite,PostgreSQL鏀寔鍦╥nsert璇彞涓彃鍏ュ琛屾暟鎹紝鎵�浠alues鍊兼槸鍒楄〃
+    /// Since MySQL, SQL Server, SQLite, and PostgreSQL support inserting multiple rows of data in an insert statement, the values ??value is a list.
+    /// 由于mysql，sqlserver,SQLite,PostgreSQL支持在insert语句中插入多行数据，所以values值是列表
     /// </summary>
     public List<List<SqlExpression>> ValuesList
     {
@@ -116,6 +127,11 @@ public class SqlInsertExpression : SqlExpression
         }
 
         if (!CompareTwoSqlExpression(FromSelect, other.FromSelect))
+        {
+            return false;
+        }
+
+        if (!CompareTwoSqlExpression(Returning, other.Returning))
         {
             return false;
         }
@@ -191,7 +207,8 @@ public class SqlInsertExpression : SqlExpression
             Columns = this.Columns.Select(x => x.Clone()).ToList(),
             Table = this.Table.Clone(),
             FromSelect = this.FromSelect.Clone(),
-            ValuesList = this.ValuesList.Select(x => x.Select(y => y.Clone()).ToList()).ToList()
+            ValuesList = this.ValuesList.Select(x => x.Select(y => y.Clone()).ToList()).ToList(),
+            Returning = this.Returning.Clone(),
         };
         return result;
     }

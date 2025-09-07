@@ -1,4 +1,4 @@
-ï»¿namespace SqlParser.Net.Ast.Expression;
+namespace SqlParser.Net.Ast.Expression;
 
 public enum SqlExpressionType
 {
@@ -47,21 +47,26 @@ public enum SqlExpressionType
     Hint,
     AtTimeZone,
     /// <summary>
-    /// Time intervalï¼›æ—¶é—´é—´éš”
+    /// Time interval£»Ê±¼ä¼ä¸ô
     /// </summary>
     Interval,
     /// <summary>
-    /// Time Unit;æ—¶é—´å•ä½
+    /// Time Unit;Ê±¼äµ¥Î»
     /// </summary>
     TimeUnit,
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     Collate,
     /// <summary>
     /// Regular Expressions
-    /// æ­£åˆ™è¡¨è¾¾å¼
+    /// ÕıÔò±í´ïÊ½
     /// </summary>
     Regex,
+    /// <summary>
+    /// Returning expression, allowing the return of field values after an insert in PostgreSQL and Oracle
+    /// Returning±í´ïÊ½£¬ pgsqlºÍoracleÖĞinsertºóÔÊĞí·µ»Ø×Ö¶ÎµÄÖµ
+    /// </summary>
+    Returning,
 }

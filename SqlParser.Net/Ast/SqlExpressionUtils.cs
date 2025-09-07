@@ -15,4 +15,10 @@ public static class SqlExpressionUtils
         return sqlGroupByExpression != null && sqlGroupByExpression.Items != null &&
                sqlGroupByExpression.Items.Count > 0;
     }
+
+    public static bool HasValue(this SqlReturningExpression sqlReturningExpression)
+    {
+        return sqlReturningExpression != null && sqlReturningExpression.Items != null &&
+               sqlReturningExpression.Items.Count > 0;
+    }
 }

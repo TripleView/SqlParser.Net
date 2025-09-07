@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,7 +40,7 @@ public class SqlParser
 
     private static Dictionary<Token, bool> splitTokenDics = new Dictionary<Token, bool>();
     /// <summary>
-    /// List of time units;æ—¶é—´å•ä½åˆ—è¡¨
+    /// List of time units;Ê±¼äµ¥Î»ÁĞ±í
     /// </summary>
     private static HashSet<string> timeUnitSet = new HashSet<string>()
         { "year", "month", "day", "hour", "minute", "second" };
@@ -52,7 +52,7 @@ public class SqlParser
 
     /// <summary>
     /// Whether it is in the context of a merge result set operation
-    /// æ˜¯å¦åœ¨åˆå¹¶ç»“æœé›†æ“ä½œé‡Œçš„ä¸Šä¸‹æ–‡
+    /// ÊÇ·ñÔÚºÏ²¢½á¹û¼¯²Ù×÷ÀïµÄÉÏÏÂÎÄ
     /// </summary>
     private InTheMergeResultSetOperationContext inTheMergeResultSetOperationContext = new InTheMergeResultSetOperationContext()
     {
@@ -60,7 +60,7 @@ public class SqlParser
     };
     /// <summary>
     /// Enable the flag in the merge result set operation
-    /// å¼€å¯åœ¨åˆå¹¶ç»“æœé›†æ“ä½œé‡Œçš„æ ‡è®°
+    /// ¿ªÆôÔÚºÏ²¢½á¹û¼¯²Ù×÷ÀïµÄ±ê¼Ç
     /// </summary>
     /// <param name="act"></param>
     private void EnableTheFlagInTheMergeResultSetOperation(Action act)
@@ -72,7 +72,7 @@ public class SqlParser
 
     /// <summary>
     /// while maximum number of loops, used to avoid infinite loops
-    /// whileæœ€å¤§å¾ªç¯æ¬¡æ•°ï¼Œç”¨æ¥é¿å…æ­»å¾ªç¯
+    /// while×î´óÑ­»·´ÎÊı£¬ÓÃÀ´±ÜÃâËÀÑ­»·
     /// </summary>
     private int whileMaximumNumberOfLoops = 100000;
     static SqlParser()
@@ -120,14 +120,14 @@ public class SqlParser
 
     /// <summary>
     /// sql parsing type
-    /// sql è§£æç±»å‹
+    /// sql ½âÎöÀàĞÍ
     /// </summary>
     public ParseType? SqlParseType { get; private set; }
 
     public string Sql { get; set; }
     /// <summary>
     /// true:Only recursive arithmetic operations,false:recursive all logical operations
-    /// true:ä»…é€’å½’å››åˆ™è¿ç®—,false:é€’å½’æ‰€æœ‰é€»è¾‘è¿ç®—
+    /// true:½öµİ¹éËÄÔòÔËËã,false:µİ¹éËùÓĞÂß¼­ÔËËã
     /// </summary>
     private bool isOnlyRecursiveFourArithmeticOperations = false;
 
@@ -185,11 +185,11 @@ public class SqlParser
             return result;
         }
 
-        throw new Exception("Unrecognized parsing type.ä¸è¯†åˆ«è¯¥ç§è§£æç±»å‹");
+        throw new Exception("Unrecognized parsing type.²»Ê¶±ğ¸ÃÖÖ½âÎöÀàĞÍ");
     }
     /// <summary>
     /// Check whether the SQL is parsed
-    /// æ£€æŸ¥sqlæ˜¯å¦è§£æå®Œæ¯•
+    /// ¼ì²ésqlÊÇ·ñ½âÎöÍê±Ï
     /// </summary>
     private void CheckIfParsingIsComplete()
     {
@@ -207,7 +207,7 @@ public class SqlParser
     }
     /// <summary>
     /// remove any comments
-    /// ç§»é™¤æ‰€æœ‰æ³¨é‡Š
+    /// ÒÆ³ıËùÓĞ×¢ÊÍ
     /// </summary>
     private void RemoveAllComment()
     {
@@ -234,7 +234,7 @@ public class SqlParser
 
     /// <summary>
     /// remove all comment
-    /// ç§»é™¤æ‰€æœ‰æ³¨é‡Š
+    /// ÒÆ³ıËùÓĞ×¢ÊÍ
     /// </summary>
     //private void RemoveAllComment()
     //{
@@ -273,6 +273,8 @@ public class SqlParser
         result.Table = AcceptTableExpression();
         result.Columns = AcceptInsertColumnsExpression();
         result.ValuesList = AcceptInsertValuesExpression();
+        result.Returning = AcceptReturningExpression();
+
         if (CheckNextToken(Token.Select))
         {
             result.FromSelect = AcceptSelectExpression();
@@ -322,7 +324,8 @@ public class SqlParser
                     result.Add(items);
                     items = new List<SqlExpression>();
                 }
-                if (nextToken == null)
+
+                if (nextToken == null || CheckNextToken(Token.Returning))
                 {
                     break;
                 }
@@ -332,6 +335,117 @@ public class SqlParser
         }
 
         return null;
+    }
+
+    private SqlReturningExpression AcceptReturningExpression()
+    {
+        if (IsOracle || IsPgsql)
+        {
+            if (Accept(Token.Returning))
+            {
+                var returningExpression = new SqlReturningExpression()
+                {
+                    DbType = dbType
+                };
+                AcceptReturningItems(returningExpression);
+                AcceptReturningIntoVariables(returningExpression);
+                return returningExpression;
+            }
+        }
+
+        return null;
+    }
+
+    private void AcceptReturningItems(SqlReturningExpression returningExpression)
+    {
+        var item = new SqlSelectItemExpression()
+        {
+            DbType = dbType,
+        };
+        var i = 0;
+        while (true)
+        {
+            if (i >= whileMaximumNumberOfLoops)
+            {
+                throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+            }
+
+            i++;
+            if (nextToken is null || (IsOracle && CheckNextToken(Token.Into)))
+            {
+                break;
+            }
+
+            var hasComma = false;
+            if (Accept(Token.Comma))
+            {
+                hasComma = true;
+                item = new SqlSelectItemExpression()
+                {
+                    DbType = dbType,
+                };
+            }
+
+            if (!hasComma && i != 1)
+            {
+                throw new Exception("Missing symbol ',' between select options");
+            }
+
+            item.Body = AcceptNestedComplexExpression();
+            returningExpression.Items.Add(item);
+            if (nextToken is null || (IsOracle && CheckNextToken(Token.Into)))
+            {
+                break;
+            }
+
+            if (IsPgsql)
+            {
+                AppendAliasExpression(item, true);
+            }
+        }
+    }
+
+    private void AcceptReturningIntoVariables(SqlReturningExpression returningExpression)
+    {
+        if (IsOracle && Accept(Token.Into))
+        {
+            var item = new SqlExpression()
+            {
+                DbType = dbType,
+            };
+            var i = 0;
+            while (true)
+            {
+                if (i >= whileMaximumNumberOfLoops)
+                {
+                    throw new Exception($"The number of SQL parsing times exceeds {whileMaximumNumberOfLoops}");
+                }
+
+                i++;
+                if (nextToken is null)
+                {
+                    break;
+                }
+
+                var hasComma = false;
+                if (Accept(Token.Comma))
+                {
+                    hasComma = true;
+                    item = new SqlExpression()
+                    {
+                        DbType = dbType,
+                    };
+                }
+
+                if (!hasComma && i != 1)
+                {
+                    throw new Exception("Missing symbol ',' between select options");
+                }
+
+                item = AcceptNestedComplexExpression();
+                returningExpression.IntoVariables.Add(item);
+            }
+        }
     }
 
     private List<SqlExpression> AcceptInsertColumnsExpression()
@@ -434,7 +548,7 @@ public class SqlParser
 
     private SqlExpression AcceptTableExpression()
     {
-        //sub queryå­æŸ¥è¯¢
+        //sub query×Ó²éÑ¯
         if (Accept(Token.LeftParen))
         {
             var subQuery = AcceptSelectExpression();
@@ -632,7 +746,7 @@ public class SqlParser
 
                 if (IsSqlServer)
                 {
-                    //sql serverå…¼å®¹å•å¼•å·åŒ…è£¹åˆ—åˆ«åï¼Œä¾‹å¦‚select city 'b' from Address 
+                    //sql server¼æÈİµ¥ÒıºÅ°ü¹üÁĞ±ğÃû£¬ÀıÈçselect city 'b' from Address 
                     if (Accept(Token.StringConstant))
                     {
                         isHandle = true;
@@ -658,7 +772,7 @@ public class SqlParser
         {
             if (IsSqlServer)
             {
-                //sql serverå…¼å®¹å•å¼•å·åŒ…è£¹åˆ—åˆ«åï¼Œä¾‹å¦‚select city 'b' from Address 
+                //sql server¼æÈİµ¥ÒıºÅ°ü¹üÁĞ±ğÃû£¬ÀıÈçselect city 'b' from Address 
                 if (Accept(Token.StringConstant))
                 {
                     isHandle = true;
@@ -1011,7 +1125,7 @@ public class SqlParser
 
     /// <summary>
     /// Virtual Advance
-    /// è™šæ‹Ÿå‰è¿›
+    /// ĞéÄâÇ°½ø
     /// </summary>
     /// <param name="action"></param>
     private void VirtualAdvance(Action action)
@@ -1277,7 +1391,7 @@ public class SqlParser
 
     /// <summary>
     /// Check if the next step is order by
-    /// æ£€æŸ¥æ¥ä¸‹æ¥æ˜¯å¦æ˜¯order by
+    /// ¼ì²é½ÓÏÂÀ´ÊÇ·ñÊÇorder by
     /// </summary>
     /// <returns></returns>
     private bool CheckNextIsOrderBy()
@@ -1287,7 +1401,7 @@ public class SqlParser
 
     /// <summary>
     /// Check if the next step is group by
-    /// æ£€æŸ¥æ¥ä¸‹æ¥æ˜¯å¦æ˜¯group by
+    /// ¼ì²é½ÓÏÂÀ´ÊÇ·ñÊÇgroup by
     /// </summary>
     /// <returns></returns>
     private bool CheckNextIsGroupBy()
@@ -1356,7 +1470,7 @@ public class SqlParser
 
     /// <summary>
     /// Parsing at time zone expressions
-    /// è§£æat time zoneè¡¨è¾¾å¼
+    /// ½âÎöat time zone±í´ïÊ½
     /// </summary>
     /// <param name="body"></param>
     /// <returns></returns>
@@ -1390,7 +1504,7 @@ public class SqlParser
                                 }
                             };
                             //Recursive call, such as SELECT order_date at TIME zone 'Asia/ShangHai' at TIME zone 'utc' as b FROM orders;
-                            //é€’å½’è°ƒç”¨ï¼Œä¾‹å¦‚SELECT order_date at TIME zone 'Asia/ShangHai' at TIME zone 'utc' as b FROM orders;
+                            //µİ¹éµ÷ÓÃ£¬ÀıÈçSELECT order_date at TIME zone 'Asia/ShangHai' at TIME zone 'utc' as b FROM orders;
                             var recursionResult = AcceptAtTimeZoneExpression(result);
 
                             return recursionResult ?? result;
@@ -1406,7 +1520,7 @@ public class SqlParser
 
     /// <summary>
     /// Parsing nested complex expressions
-    /// è§£æåµŒå¥—çš„å¤æ‚è¡¨è¾¾å¼
+    /// ½âÎöÇ¶Ì×µÄ¸´ÔÓ±í´ïÊ½
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptNestedComplexExpression()
@@ -1417,8 +1531,8 @@ public class SqlParser
     }
 
     /// <summary>
-    /// Parsing logical expressions,notã€andã€or,The order of logical operators is not, and, or
-    /// è§£æé€»è¾‘è¡¨è¾¾å¼ï¼Œnotã€andã€or,é€»è¾‘è¿ç®—ç¬¦çš„é¡ºåºä¸ºnotã€andã€or
+    /// Parsing logical expressions,not¡¢and¡¢or,The order of logical operators is not, and, or
+    /// ½âÎöÂß¼­±í´ïÊ½£¬not¡¢and¡¢or,Âß¼­ÔËËã·ûµÄË³ĞòÎªnot¡¢and¡¢or
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptLogicalExpression()
@@ -1430,7 +1544,7 @@ public class SqlParser
 
     /// <summary>
     /// Parsing logical expressions or
-    /// è§£æé€»è¾‘è¡¨è¾¾å¼or
+    /// ½âÎöÂß¼­±í´ïÊ½or
     /// </summary>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
@@ -1472,7 +1586,7 @@ public class SqlParser
 
     /// <summary>
     /// Parsing logical expressions and
-    /// è§£æé€»è¾‘è¡¨è¾¾å¼and
+    /// ½âÎöÂß¼­±í´ïÊ½and
     /// </summary>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
@@ -1514,7 +1628,7 @@ public class SqlParser
 
     /// <summary>
     /// Parsing logical expression not
-    /// è§£æé€»è¾‘è¡¨è¾¾å¼not
+    /// ½âÎöÂß¼­±í´ïÊ½not
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptLogicalExpressionForNot()
@@ -1540,7 +1654,7 @@ public class SqlParser
     }
 
     /// <summary>
-    /// è§£æç­‰å¼è¿ç®—
+    /// ½âÎöµÈÊ½ÔËËã
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptEquationOperationExpression()
@@ -1611,7 +1725,7 @@ public class SqlParser
     }
     /// <summary>
     /// Parse relational expressions, such as ||,is null,Between,like,in etc.
-    /// è§£æå…³ç³»å‹è¡¨è¾¾å¼ï¼Œæ¯”å¦‚||,is null,Between,like,inç­‰
+    /// ½âÎö¹ØÏµĞÍ±í´ïÊ½£¬±ÈÈç||,is null,Between,like,inµÈ
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptRelationalExpression()
@@ -1862,7 +1976,7 @@ public class SqlParser
     }
     /// <summary>
     /// Analyze addition and subtraction in the four arithmetic operations
-    /// è§£æå››åˆ™è¿ç®—ä¸­çš„åŠ æ³•å’Œå‡æ³•
+    /// ½âÎöËÄÔòÔËËãÖĞµÄ¼Ó·¨ºÍ¼õ·¨
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptFourArithmeticOperationsAddOrSub()
@@ -1908,7 +2022,7 @@ public class SqlParser
 
     /// <summary>
     /// Analyze multiplication and division in the four arithmetic operations
-    /// è§£æå››åˆ™è¿ç®—ä¸­çš„ä¹˜æ³•å’Œé™¤æ³•
+    /// ½âÎöËÄÔòÔËËãÖĞµÄ³Ë·¨ºÍ³ı·¨
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptFourArithmeticOperationsMultiplyOrDivide()
@@ -1956,7 +2070,7 @@ public class SqlParser
         return left;
     }
     /// <summary>
-    /// è§£æä½è¿ç®—ï¼Œä½è¿ç®—ä¼˜å…ˆçº§é«˜äºåŠ å‡ä¹˜é™¤
+    /// ½âÎöÎ»ÔËËã£¬Î»ÔËËãÓÅÏÈ¼¶¸ßÓÚ¼Ó¼õ³Ë³ı
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptBitwiseOperations()
@@ -2267,7 +2381,7 @@ public class SqlParser
 
     /// <summary>
     /// Analyze the basic units in the four arithmetic operations
-    /// è§£æå››åˆ™è¿ç®—ä¸­çš„åŸºç¡€å•å…ƒ
+    /// ½âÎöËÄÔòÔËËãÖĞµÄ»ù´¡µ¥Ôª
     /// </summary>
     /// <returns></returns>
     private SqlExpression AcceptFourArithmeticOperationsBaseOperationUnit()
@@ -2785,7 +2899,7 @@ public class SqlParser
     }
 
     /// <summary>
-    /// Accepts time unitsï¼›æ¥å—æ—¶é—´å•ä½
+    /// Accepts time units£»½ÓÊÜÊ±¼äµ¥Î»
     /// </summary>
     /// <returns></returns>
     private bool AcceptTimeUnit()
@@ -3044,7 +3158,7 @@ public class SqlParser
 
     private SqlExpression AcceptTableSourceExpression()
     {
-        //å•è¡¨æˆ–è€…å¤šè¡¨å…³è”
+        //µ¥±í»òÕß¶à±í¹ØÁª
         var tableOrJoinTable = AcceptTableOrJoinTableSourceExpression();
         var result = AcceptPivotTable(tableOrJoinTable);
         return result;
@@ -3147,11 +3261,11 @@ public class SqlParser
             i++;
             SqlJoinType joinType;
             //Determine whether the on condition is required 
-            //åˆ¤æ–­onæ¡ä»¶æ˜¯å¦æ˜¯å¿…é¡»çš„
+            //ÅĞ¶ÏonÌõ¼şÊÇ·ñÊÇ±ØĞëµÄ
             var isRequireOnCondition = true;
 
-            /// use comma splitï¼Œeg. select * from test t,test11 t1 where t.name =t1.name
-            /// ä½¿ç”¨é€—å·åˆ†éš”çš„joinè¯­æ³•ï¼Œselect * from test t,test11 t1 where t.name =t1.name
+            /// use comma split£¬eg. select * from test t,test11 t1 where t.name =t1.name
+            /// Ê¹ÓÃ¶ººÅ·Ö¸ôµÄjoinÓï·¨£¬select * from test t,test11 t1 where t.name =t1.name
             var isCommaJoin = false;
             if (Accept(Token.Inner))
             {
@@ -3317,7 +3431,7 @@ public class SqlParser
 
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     private SqlCollateExpression AcceptCollateExpression()
     {

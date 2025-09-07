@@ -406,6 +406,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlInsertExpression.FromSelect?.Accept(this);
         }
+
+        if (sqlInsertExpression.Returning != null)
+        {
+            sqlInsertExpression.Returning?.Accept(this);
+        }
     }
     public override void VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
     {
@@ -1262,4 +1267,43 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
 
     }
+
+    public override void VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
+    {
+        if (!sqlReturningExpression.HasValue())
+        {
+            return;
+        }
+
+        if (sqlReturningExpression.Items.HasValue())
+        {
+            AppendSpace();
+            Append("returning");
+            for (var i = 0; i < sqlReturningExpression.Items.Count; i++)
+            {
+                var item = sqlReturningExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlReturningExpression.Items.Count - 1)
+                {
+                    AppendWithoutSpaces(",");
+                }
+            }
+
+        }
+
+        if (sqlReturningExpression.IntoVariables.HasValue())
+        {
+            Append("into");
+            for (var i = 0; i < sqlReturningExpression.IntoVariables.Count; i++)
+            {
+                var item = sqlReturningExpression.IntoVariables[i];
+                item.Accept(this);
+                if (i < sqlReturningExpression.IntoVariables.Count - 1)
+                {
+                    AppendWithoutSpaces(",");
+                }
+            }
+        }
+    }
+
 }

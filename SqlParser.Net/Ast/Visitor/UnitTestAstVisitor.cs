@@ -514,7 +514,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlInsertExpression.FromSelect?.Accept(this);
             });
         }
-
+        if (sqlInsertExpression.Returning != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("Returning = ");
+                sqlInsertExpression.Returning?.Accept(this);
+            });
+        }
 
         if (isFirst)
         {
@@ -1631,4 +1638,50 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
         AppendLine("},");
     }
+
+    public override void VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
+    {
+        if (!sqlReturningExpression.HasValue())
+        {
+            return;
+        }
+        AppendLine("new SqlReturningExpression()");
+        AppendLine("{");
+        if (sqlReturningExpression.Items.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("Items = new List<SqlExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlReturningExpression.Items)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+
+                }
+                AppendLine("},");
+            });
+        }
+        if (sqlReturningExpression.IntoVariables.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("IntoVariables = new List<SqlExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlReturningExpression.IntoVariables)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+
+                }
+                AppendLine("},");
+            });
+        }
+        AppendLine("},");
+    }
+
 }

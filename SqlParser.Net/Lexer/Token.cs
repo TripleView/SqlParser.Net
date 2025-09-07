@@ -1,4 +1,4 @@
-ï»¿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace SqlParser.Net.Lexer;
 
@@ -23,7 +23,7 @@ public struct Token
     public TokenType TokenType { get; private set; }
     /// <summary>
     /// Used to determine whether the token is a keyword
-    /// ç”¨æ¥åˆ¤æ–­tokenæ˜¯å¦ä¸ºå…³é”®å­—
+    /// ÓÃÀ´ÅĞ¶ÏtokenÊÇ·ñÎª¹Ø¼ü×Ö
     /// </summary>
     public bool IsKeyWord => this.TokenType == TokenType.Keyword;
     public bool IsHints => this.TokenType == TokenType.Hints;
@@ -34,32 +34,32 @@ public struct Token
 
     /// <summary>
     /// Used to indicate that the token is removed during the parsing process and does not participate in the parsing
-    /// ç”¨æ¥è¡¨ç¤ºtokenåœ¨è§£æè¿‡ç¨‹ä¸­è¢«ç§»é™¤ï¼Œä¸å‚ä¸è§£æ
+    /// ÓÃÀ´±íÊ¾tokenÔÚ½âÎö¹ı³ÌÖĞ±»ÒÆ³ı£¬²»²ÎÓë½âÎö
     /// </summary>
     public bool IsRemove { get; set; }
     /// <summary>
     /// Used for fast comparison between two tokens, because comparison between numbers is 10 times faster than comparison between strings.
-    /// ç”¨æ¥è¿›è¡Œ2ä¸ªtokenä¹‹é—´çš„å¿«é€Ÿæ¯”è¾ƒï¼Œå› ä¸ºæ•°å­—ä¹‹é—´çš„æ¯”è¾ƒæ¯”å­—ç¬¦ä¸²ä¹‹é—´çš„æ¯”è¾ƒå¿«10å€
+    /// ÓÃÀ´½øĞĞ2¸ötokenÖ®¼äµÄ¿ìËÙ±È½Ï£¬ÒòÎªÊı×ÖÖ®¼äµÄ±È½Ï±È×Ö·û´®Ö®¼äµÄ±È½Ï¿ì10±¶
     /// </summary>
     public int CompareIndex { get; set; }
     /// <summary>
     /// Token start position index
-    /// tokenèµ·å§‹ä½ç½®ç´¢å¼•
+    /// tokenÆğÊ¼Î»ÖÃË÷Òı
     /// </summary>
     public int StartPositionIndex { get; set; }
     /// <summary>
     /// Token end position index
-    /// tokenç»“æŸä½ç½®ç´¢å¼•
+    /// token½áÊøÎ»ÖÃË÷Òı
     /// </summary>
     public int EndPositionIndex { get; set; }
     /// <summary>
     /// Left Qualifiers
-    /// å·¦é™å®šç¬¦
+    /// ×óÏŞ¶¨·û
     /// </summary>
     public string LeftQualifiers { get; set; }
     /// <summary>
     /// right Qualifiers
-    /// å³é™å®šç¬¦
+    /// ÓÒÏŞ¶¨·û
     /// </summary>
     public string RightQualifiers { get; set; }
     public Token(string name, object value, int compareIndex)
@@ -191,33 +191,33 @@ public struct Token
     public static readonly Token MultiLineComment = new Token("MultiLineComment", "MultiLineComment", 95);
     /// <summary>
     /// Identifier
-    /// æ ‡è¯†ç¬¦
+    /// ±êÊ¶·û
     /// </summary>
     public static readonly Token IdentifierString = new Token("IdentifierString", "IdentifierString", 96);
     /// <summary>
     /// Number Constant
-    /// æ•°å­—å¸¸é‡
+    /// Êı×Ö³£Á¿
     /// </summary>
     public static readonly Token NumberConstant = new Token("NumberConstant", 0, 97) { TokenType = TokenType.Constant };
     /// <summary>
     /// String Constant
-    /// å­—ç¬¦ä¸²å¸¸é‡
+    /// ×Ö·û´®³£Á¿
     /// </summary>
     public static readonly Token StringConstant = new Token("StringConstant", "StringConstant", 98) { TokenType = TokenType.Constant };
     /// <summary>
     /// Backtick
-    /// å•åå¼•å·
+    /// µ¥·´ÒıºÅ
     /// </summary>
     public static readonly Token Backtick = new Token("Backtick", "`", 99) { TokenType = TokenType.Symbol };
 
     /// <summary>
     /// BarBar,||
-    /// è¿æ¥ç¬¦||
+    /// Á¬½Ó·û||
     /// </summary>
     public static readonly Token BarBar = new Token("BarBar", "||", 100) { TokenType = TokenType.Operator };
     /// <summary>
     ///Bitwise OR |
-    /// æŒ‰ä½æˆ–|
+    /// °´Î»»ò|
     /// </summary>
     public static readonly Token Bar = new Token("Bar", "|", 101) { TokenType = TokenType.Operator };
 
@@ -261,4 +261,5 @@ public struct Token
     public static readonly Token Collate = new Token("Collate", "Collate", 127) { TokenType = TokenType.Keyword };
     public static readonly Token RegexPForPg = new Token("RegexPForPg", "~", 128) { TokenType = TokenType.Operator };
     public static readonly Token RegexpForMysql = new Token("RegexpForMysql", "regexp", 129) { TokenType = TokenType.Keyword };
+    public static readonly Token Returning = new Token("Returning", "Returning", 129) { TokenType = TokenType.Keyword };
 }
