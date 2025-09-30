@@ -1,15 +1,15 @@
-ï»¿namespace SqlParser.Net.Lexer;
+namespace SqlParser.Net.Ast.AnalyzeContext;
 
 
 /// <summary>
 /// Whether it is in the context of a merge result set operation
-/// æ˜¯å¦åœ¨åˆå¹¶ç»“æœé›†æ“ä½œé‡Œçš„ä¸Šä¸‹æ–‡
+/// ÊÇ·ñÔÚºÏ²¢½á¹û¼¯²Ù×÷ÀïµÄÉÏÏÂÎÄ
 /// </summary>
 public class InTheMergeResultSetOperationContext
 {
     /// <summary>
     /// Is it in the merge result set operation
-    /// æ˜¯å¦åœ¨åˆå¹¶ç»“æœé›†æ“ä½œé‡Œ
+    /// ÊÇ·ñÔÚºÏ²¢½á¹û¼¯²Ù×÷Àï
     /// </summary>
     public bool IsInTheMergeResultSetOperation
     {
@@ -19,7 +19,7 @@ public class InTheMergeResultSetOperationContext
         }
         set
         {
-            this.isInTheMergeResultSetOperation = value;
+            isInTheMergeResultSetOperation = value;
             if (value == false)
             {
                 InitParenDepth();
@@ -30,19 +30,19 @@ public class InTheMergeResultSetOperationContext
     private bool isInTheMergeResultSetOperation = false;
     /// <summary>
     /// Parentheses depth
-    /// åœ†æ‹¬å·æ·±åº¦
+    /// Ô²À¨ºÅÉî¶È
     /// </summary>
     public int ParenDepth { get; private set; }
 
     public void IncreaseParenDepth()
     {
-        this.ParenDepth++;
+        ParenDepth++;
     }
 
     private void InitParenDepth()
     {
-        this.ParenDepth = 0;
+        ParenDepth = 0;
     }
 
-    public bool HasParenDepth => this.ParenDepth > 0;
+    public bool HasParenDepth => ParenDepth > 0;
 }

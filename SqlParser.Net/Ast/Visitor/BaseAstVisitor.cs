@@ -191,4 +191,18 @@ public class BaseAstVisitor : IAstVisitor
     {
 
     }
+
+    public virtual void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    {
+       
+    }
+
+    public virtual void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    {
+    }
+
+    public virtual void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    {
+
+    }
 }

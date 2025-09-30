@@ -73,7 +73,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update test set name = '4', d = '2024-11-22 08:19:47.243' where(name = '1')", newSql);
+        Assert.Equal("update test set name = '4', d = '2024-11-22 08:19:47.243' where (name = '1')", newSql);
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public class UpdateTest
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update test set name = 4 where(name = 1)", newSql);
+        Assert.Equal("update test set name = 4 where (name = 1)", newSql);
     }
     [Fact]
     public void TestUpdate3()
@@ -197,7 +197,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update test3.dbo.test set a = test3.dbo.test.b where(1 = 2)", newSql);
+        Assert.Equal("update test3.dbo.test set a = test3.dbo.test.b where (1 = 2)", newSql);
     }
 
 
@@ -283,7 +283,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 set Id = '1' from T4 where(t3.id = t4.Pid)", newSql);
+        Assert.Equal("update t3 set Id = '1' from T4 where (t3.id = t4.Pid)", newSql);
     }
 
     [Fact]
@@ -362,7 +362,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 set Id = '1' from T4 as t where(t3.id = t.Pid)", newSql);
+        Assert.Equal("update t3 set Id = '1' from T4 as t where (t3.id = t.Pid)", newSql);
     }
 
     [Fact]
@@ -476,7 +476,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 set Id = '1' from t3 as t inner join T4 as t2 on(t.id = t2.Pid) where(t.id = 'a')", newSql);
+        Assert.Equal("update t3 set Id = '1' from t3 as t inner join T4 as t2 on (t.id = t2.Pid) where (t.id = 'a')", newSql);
     }
 
     [Fact]
@@ -592,7 +592,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 set t3.Id = '1' from T3 inner join T4 as t4 on(t3.id = t4.Pid) where(t3.id = 'abc')", newSql);
+        Assert.Equal("update t3 set t3.Id = '1' from T3 inner join T4 as t4 on (t3.id = t4.Pid) where (t3.id = 'abc')", newSql);
     }
 
     [Fact]
@@ -711,7 +711,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t set t.Id = '1' from T3 as t inner join T4 as t4 on(t.id = t4.Pid) where(t.id = 'abc')", newSql);
+        Assert.Equal("update t set t.Id = '1' from T3 as t inner join T4 as t4 on (t.id = t4.Pid) where (t.id = 'abc')", newSql);
     }
 
 
@@ -838,7 +838,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal($"update t3 {resultJoinString} join T4 on(t3.id = t4.Pid) set t3.Id = '1' where(1 = 1)", newSql);
+        Assert.Equal($"update t3 {resultJoinString} join T4 on (t3.id = t4.Pid) set t3.Id = '1' where (1 = 1)", newSql);
     }
 
     [Fact]
@@ -944,7 +944,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 as a inner join T4 as b on(a.id = b.Pid) set a.Id = '1' where(1 = 1)", newSql);
+        Assert.Equal("update t3 as a inner join T4 as b on (a.id = b.Pid) set a.Id = '1' where (1 = 1)", newSql);
     }
 
     [Fact]
@@ -1086,7 +1086,7 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 set id =(select pid from t4 where(t3.id = t4.PID)) where exists(select 1 from t4 where(t3.id = t4.pid))", newSql);
+        Assert.Equal("update t3 set id = (select pid from t4 where (t3.id = t4.PID)) where exists(select 1 from t4 where (t3.id = t4.pid))", newSql);
     }
 
     [Fact]
@@ -1161,6 +1161,6 @@ public class UpdateTest
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("update t3 set Id = 'aa' from t4 where(t3.Id = t4.Pid)", newSql);
+        Assert.Equal("update t3 set Id = 'aa' from t4 where (t3.Id = t4.Pid)", newSql);
     }
 }

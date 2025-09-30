@@ -116,7 +116,7 @@ public class SelectTest
 
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select * from TABLE(splitstr('a;b', ';'))", generationSql);
+        Assert.Equal("select * from TABLE(splitstr('a;b',';'))", generationSql);
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public class SelectTest
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select * from generate_series(1, 5) as t", generationSql);
+        Assert.Equal("select * from generate_series(1,5) as t", generationSql);
     }
 
     [Theory]
@@ -229,7 +229,7 @@ public class SelectTest
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select n from generate_series(1, 5) as t(n)", generationSql);
+        Assert.Equal("select n from generate_series(1,5) as t(n)", generationSql);
     }
 
     [Fact]
@@ -376,7 +376,7 @@ public class SelectTest
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(('a' is not null) = true )", generationSql);
+        Assert.Equal("select (('a' is not null) = true)", generationSql);
     }
 
     [Fact]
@@ -675,7 +675,7 @@ public class SelectTest
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 where(NAME = lower(UPPER('a')))", generationSql);
+        Assert.Equal("select * from TEST5 where (NAME = lower(UPPER('a')))", generationSql);
     }
 
     [Fact]
@@ -1750,14 +1750,12 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
             },
         };
 
-
-
         Assert.True(sqlAst.Equals(expect));
 
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select case(('1' || cast(cast('01' as bit varying) as varchar)) = '1') when('1' =('1' || cast(cast('01' as bit varying) as varchar))) then('1' =('1' || cast(cast('01' as bit varying) as varchar))) end from test as a inner join test2 as b on((('1' =('1' || cast(cast('01' as bit varying) as varchar))) and('2' =('1' || cast(cast('01' as bit varying) as varchar)))) or(('1' || cast(cast('01' as bit varying) as varchar)) = '1')) left join test3 on('1' =('1' || cast(cast('01' as bit varying) as varchar))) right join test4 on('1' =('1' || cast(cast('01' as bit varying) as varchar))) full join test5 on('1' =('1' || cast(cast('01' as bit varying) as varchar))) where('2' =('1' || cast(cast('01' as bit varying) as varchar))) group by('1' || cast(cast('01' as bit varying) as varchar)) order by('1' || cast(cast('01' as bit varying) as varchar)) limit cast(cast(1 as smallint) as float8) offset 1", generationSql);
+        Assert.Equal("select case(('1' || cast(cast('01' as bit varying) as varchar)) = '1') when ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) then ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) end from test as a inner join test2 as b on ((('1' = ('1' || cast(cast('01' as bit varying) as varchar))) and ('2' = ('1' || cast(cast('01' as bit varying) as varchar)))) or (('1' || cast(cast('01' as bit varying) as varchar)) = '1')) left join test3 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) right join test4 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) full join test5 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) where ('2' = ('1' || cast(cast('01' as bit varying) as varchar))) group by ('1' || cast(cast('01' as bit varying) as varchar)) order by ('1' || cast(cast('01' as bit varying) as varchar)) limit cast(cast(1 as smallint) as float8) offset 1", generationSql);
     }
 
     [Theory]
@@ -2403,7 +2401,7 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select date_trunc('year', order_date), extract(month from  date_trunc('minute', order_date)) as order_year from orders", generationSql);
+        Assert.Equal("select date_trunc('year',order_date), extract(month from date_trunc('minute',order_date)) as order_year from orders", generationSql);
     }
 
     [Fact]
@@ -2529,7 +2527,7 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select EXTRACT(DAY from  NOW())", generationSql);
+        Assert.Equal("select EXTRACT(DAY from NOW())", generationSql);
     }
 
     [Fact]
@@ -2598,7 +2596,7 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select EXTRACT(DAY from  c.order_date) as b from orders as c", generationSql);
+        Assert.Equal("select EXTRACT(DAY from c.order_date) as b from orders as c", generationSql);
     }
 
     [Theory]
@@ -2682,7 +2680,7 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal($"select max((select d from test3 where(a = 'a'))) from test3", generationSql);
+        Assert.Equal($"select max((select d from test3 where (a = 'a'))) from test3", generationSql);
     }
 
 
@@ -2767,7 +2765,7 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal($"select max((select d from test3 where(a = 'a'))) from test3", generationSql);
+        Assert.Equal($"select max((select d from test3 where (a = 'a'))) from test3", generationSql);
     }
 
     [Fact]
@@ -3005,7 +3003,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select((rd.Active * 2) + 5) from RouteData as rd", generationSql);
+        Assert.Equal("select ((rd.Active * 2) + 5) from RouteData as rd", generationSql);
     }
 
     [Fact]
@@ -3216,7 +3214,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from(select * from RouteData) as a", generationSql);
+        Assert.Equal("select * from (select * from RouteData) as a", generationSql);
     }
 
     [Fact]
@@ -3269,11 +3267,11 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from(select * from TEST t3)", generationSql);
+        Assert.Equal("select * from (select * from TEST t3)", generationSql);
     }
 
     [Fact]
-    public void TestWhere()
+    public void Testwhere()
     {
         var sql = "select * from RouteData rd where id='805B9CFC-1671-4BD8-B011-003EB7398FB0'";
         var sqlAst = new SqlExpression();
@@ -3325,7 +3323,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from RouteData as rd where(id = '805B9CFC-1671-4BD8-B011-003EB7398FB0')", generationSql);
+        Assert.Equal("select * from RouteData as rd where (id = '805B9CFC-1671-4BD8-B011-003EB7398FB0')", generationSql);
     }
 
     [Fact]
@@ -3411,7 +3409,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from customer as t3 where(t3.Name =(select city from address as a))", generationSql);
+        Assert.Equal("select * from customer as t3 where (t3.Name = (select city from address as a))", generationSql);
     }
 
     [Fact]
@@ -3472,7 +3470,7 @@ FROM
 
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select * from test3 as t where(t.a ilike @abc)", generationSql);
+        Assert.Equal("select * from test3 as t where (t.a ilike @abc)", generationSql);
     }
 
     [Fact]
@@ -3520,7 +3518,7 @@ FROM
 
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select * from test where(:f is null)", generationSql);
+        Assert.Equal("select * from test where (:f is null)", generationSql);
     }
 
 
@@ -3688,11 +3686,9 @@ FROM
         };
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+        var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select * from FlowActivity as fa where(fa.OnlyMainJobProcessing between((0 + 0.5) * 2) and 1 and(fa.Active = 1))",
+            "select * from FlowActivity as fa where (fa.OnlyMainJobProcessing between ((0 + 0.5) * 2) and 1 and (fa.Active = 1))",
             generationSql);
     }
 
@@ -3833,7 +3829,7 @@ FROM
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select * from Customer as c inner join Address as a on(((c.Id = a.CustomerId) or(c.Age >= a.CustomerId)) and(c.CustomerNo != 'abc'))",
+            "select * from Customer as c inner join Address as a on (((c.Id = a.CustomerId) or (c.Age >= a.CustomerId)) and (c.CustomerNo != 'abc'))",
             generationSql);
     }
 
@@ -3954,7 +3950,7 @@ FROM
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select * from(select * from TEST as t3) as t inner join(select * from test1 as t) as t2 on(t.name = t2.test)",
+            "select * from (select * from TEST as t3) as t inner join (select * from test1 as t) as t2 on (t.name = t2.test)",
             generationSql);
     }
 
@@ -4020,7 +4016,7 @@ FROM
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select * from Customer inner join Address on(1 = 1)",
+            "select * from Customer inner join Address on (1 = 1)",
             generationSql);
     }
 
@@ -4121,7 +4117,7 @@ FROM
                 break;
         }
 
-        Assert.Equal($"select * from Customer as c {joinTypeName} join Address as a on(c.Id = a.CustomerId)",
+        Assert.Equal($"select * from Customer as c {joinTypeName} join Address as a on (c.Id = a.CustomerId)",
             generationSql);
     }
 
@@ -4203,9 +4199,7 @@ FROM
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+        var generationSql = sqlAst.ToSql();
         Assert.Equal("select fa.FlowId from FlowActivity as fa group by fa.FlowId, fa.Id", generationSql);
     }
 
@@ -4275,7 +4269,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from(select name from test5 group by NAME) t", generationSql);
+        Assert.Equal("select * from (select name from test5 group by NAME) t", generationSql);
     }
 
     [Fact]
@@ -4350,7 +4344,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from(select name from test5 group by NAME,(1 + 2)) t", generationSql);
+        Assert.Equal("select * from (select name from test5 group by NAME, (1 + 2)) t", generationSql);
     }
 
 
@@ -4462,7 +4456,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select fa.FlowId from FlowActivity as fa group by fa.FlowId, fa.Id having(count(fa.Id) > 1)",
+        Assert.Equal("select fa.FlowId from FlowActivity as fa group by fa.FlowId, fa.Id having (count(fa.Id) > 1)",
             generationSql);
     }
 
@@ -4563,7 +4557,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select fa.FlowId from FlowActivity as fa group by fa.FlowId, fa.Id having((1 + 2) > 3)",
+        Assert.Equal("select fa.FlowId from FlowActivity as fa group by fa.FlowId, fa.Id having ((1 + 2) > 3)",
             generationSql);
     }
 
@@ -4726,7 +4720,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from(select name from test5 order by NAME) t", generationSql);
+        Assert.Equal("select * from (select name from test5 order by NAME) t", generationSql);
     }
 
     [Theory]
@@ -4913,7 +4907,7 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select name, age from customer order by IF((age is null), 1, 0), age desc", generationSql);
+        Assert.Equal("select name, age from customer order by IF((age is null),1,0), age desc", generationSql);
     }
 
     [Fact]
@@ -5010,7 +5004,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select name, age from customer order by case when(Name is null) then 1 else 0 end, age desc",
+        Assert.Equal("select name, age from customer order by case when (Name is null) then 1 else 0 end, age desc",
             generationSql);
     }
 
@@ -5108,7 +5102,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select name, age from customer order by(select name from test as t), age desc", generationSql);
+        Assert.Equal("select name, age from customer order by (select name from test as t), age desc", generationSql);
     }
 
 
@@ -5305,7 +5299,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select rd.[System] from RouteData as rd where(rd.[System] = 'ats')", generationSql);
+        Assert.Equal("select rd.[System] from RouteData as rd where (rd.[System] = 'ats')", generationSql);
     }
 
     [Fact]
@@ -5486,7 +5480,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from RouteData as rd where(rd.name is null)", generationSql);
+        Assert.Equal("select * from RouteData as rd where (rd.name is null)", generationSql);
     }
 
     [Fact]
@@ -5539,7 +5533,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from RouteData as rd where(rd.name is not null)", generationSql);
+        Assert.Equal("select * from RouteData as rd where (rd.name is not null)", generationSql);
     }
 
     [Fact]
@@ -5625,7 +5619,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t where(exists(select * from TEST1 t2) or(1 = 1))", generationSql);
+        Assert.Equal("select * from TEST t where (exists(select * from TEST1 t2) or (1 = 1))", generationSql);
     }
 
     [Fact]
@@ -5736,7 +5730,7 @@ ORDER BY
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal($"select * from test3 as t where(t.a{notStr}ilike '%a%')", generationSql);
+        Assert.Equal($"select * from test3 as t where (t.a{notStr}ilike '%a%')", generationSql);
     }
 
     [Fact]
@@ -5820,7 +5814,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from test t , test11 t1 where(t.name = t1.name)", generationSql);
+        Assert.Equal("select * from test t , test11 t1 where (t.name = t1.name)", generationSql);
     }
 
     [Fact]
@@ -5916,7 +5910,7 @@ ORDER BY
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select name from test union (select name from test11) except (select name from test11)",
+        Assert.Equal("((select name from test) union (select name from test11) except (select name from test11))",
             generationSql);
     }
 
@@ -6016,7 +6010,7 @@ ORDER BY
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select name from test union all (select name from test11) except (select name from test11)",
+            "((select name from test) union all (select name from test11) except (select name from test11))",
             generationSql);
     }
 
@@ -6115,7 +6109,7 @@ ORDER BY
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select name from test union ((select name from test11) except (select name from test11))",
+        Assert.Equal("((select name from test) union ((select name from test11) except (select name from test11)))",
             generationSql);
     }
 
@@ -6296,7 +6290,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select temp.Value as Value, temp.Text as Text from((select 'a' as Value, 'b' as Text, 1 as InxNbr) union all (select 'c' as Value, 'd' as Text, 2 as InxNbr)) as temp order by temp.InxNbr",
+        Assert.Equal("select temp.Value as Value, temp.Text as Text from ((select 'a' as Value, 'b' as Text, 1 as InxNbr) union all (select 'c' as Value, 'd' as Text, 2 as InxNbr)) as temp order by temp.InxNbr",
             newSql);
     }
 
@@ -6372,8 +6366,8 @@ order by temp.InxNbr";
 
             var newSql = sqlAst.ToSql();
             var expectSql = dbType == DbType.Sqlite
-                ? $"select 1 {unionString}  select 2"
-                : $"select 1 {unionString} (select 2)";
+                ? $"select 1 {unionString} select 2"
+                : $"((select 1) {unionString} (select 2))";
             Assert.Equal(expectSql,
                 newSql);
         }
@@ -6432,7 +6426,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 1 union (select 2)",
+        Assert.Equal("((select 1) union (select 2))",
             newSql);
     }
 
@@ -6546,7 +6540,7 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn union (select 2 as pn) union (select 5 as pn)", newSql);
+        Assert.Equal("((select 3 as pn) union (select 2 as pn) union (select 5 as pn))", newSql);
     }
 
     [Fact]
@@ -6634,7 +6628,7 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn union (select 2 as pn order by pn)", newSql);
+        Assert.Equal("((select 3 as pn) union (select 2 as pn order by pn))", newSql);
     }
 
     [Theory]
@@ -6714,8 +6708,8 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
         var exceptSql = dbType == DbType.Sqlite
-            ? "select 3 as pn union  select 2 as pn order by pn"
-            : "select 3 as pn union (select 2 as pn) order by pn";
+            ? "select 3 as pn union select 2 as pn order by pn"
+            : "((select 3 as pn) union (select 2 as pn)) order by pn";
         Assert.Equal(exceptSql, newSql);
     }
 
@@ -6805,7 +6799,7 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn from dual union (select 2 as pn from dual) order by pn", newSql);
+        Assert.Equal("((select 3 as pn from dual) union (select 2 as pn from dual)) order by pn", newSql);
     }
 
     [Theory]
@@ -6888,7 +6882,7 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        var expectSql = dbType == DbType.Sqlite ? "select * from(select 3 as pn union  select 2 as pn) as b" : "select * from((select 3 as pn) union (select 2 as pn)) as b";
+        var expectSql = dbType == DbType.Sqlite ? "select * from (select 3 as pn union select 2 as pn) as b" : "select * from ((select 3 as pn) union (select 2 as pn)) as b";
         Assert.Equal(expectSql, newSql);
     }
 
@@ -6978,7 +6972,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn union ((select 2 as pn) except (select 5 as pn))",
+        Assert.Equal("((select 3 as pn) union ((select 2 as pn) except (select 5 as pn)))",
             newSql);
     }
 
@@ -7090,7 +7084,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn union (select 2 as pn) order by pn OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
+        Assert.Equal("((select 3 as pn) union (select 2 as pn)) order by pn OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
             newSql);
     }
 
@@ -7177,7 +7171,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn union (select 2 as pn) order by pn OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
+        Assert.Equal("((select 3 as pn) union (select 2 as pn)) order by pn OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
             newSql);
     }
 
@@ -7251,7 +7245,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 3 as pn union (select 2 as pn) limit 1, 1",
+        Assert.Equal("((select 3 as pn) union (select 2 as pn)) limit 1, 1",
             newSql);
     }
 
@@ -7281,7 +7275,7 @@ order by temp.InxNbr";
                     Value = 1
                 }
             };
-            expectSql = "select 2 as pn union (select 1 as pn) limit 1 offset 1";
+            expectSql = "((select 2 as pn) union (select 1 as pn)) limit 1 offset 1";
         }
         else if (limitString == " limit 1 ")
         {
@@ -7292,7 +7286,7 @@ order by temp.InxNbr";
                     Value = 1
                 }
             };
-            expectSql = "select 2 as pn union (select 1 as pn) limit 1";
+            expectSql = "((select 2 as pn) union (select 1 as pn)) limit 1";
         }
         else if (limitString == " offset 1")
         {
@@ -7303,7 +7297,7 @@ order by temp.InxNbr";
                     Value = 1
                 }
             };
-            expectSql = "select 2 as pn union (select 1 as pn) offset 1";
+            expectSql = "((select 2 as pn) union (select 1 as pn)) offset 1";
         }
 
         var expect = new SqlSelectExpression()
@@ -7442,7 +7436,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select 2 as pn from dual union (select 1 as pn from dual) fetch first 1 rows only", generationSql);
+        Assert.Equal("((select 2 as pn from dual) union (select 1 as pn from dual)) fetch first 1 rows only", generationSql);
     }
 
     [Fact]
@@ -7515,7 +7509,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select 2 as pn union  select 1 as pn limit 1, 1",
+        Assert.Equal("select 2 as pn union select 1 as pn limit 1, 1",
             newSql);
     }
 
@@ -7660,10 +7654,8 @@ order by temp.InxNbr";
         };
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from customer as c where(c.Age > all((select o.Quantity from orderdetail as o)))",
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select * from customer as c where (c.Age > all((select o.Quantity from orderdetail as o)))",
             generationSql);
     }
 
@@ -7759,7 +7751,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from customer as c where(c.Age > any((select o.Quantity from orderdetail as o)))",
+        Assert.Equal("select * from customer as c where (c.Age > any((select o.Quantity from orderdetail as o)))",
             generationSql);
     }
 
@@ -7874,7 +7866,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t where t.NAME in('a', 'b', 'c')", generationSql);
+        Assert.Equal("select * from TEST t where t.NAME in ('a', 'b', 'c')", generationSql);
     }
 
     [Fact]
@@ -7982,7 +7974,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t inner join TEST2 t2 on(t.NAME in('a') and(t.NAME = t2.NAME))",
+        Assert.Equal("select * from TEST t inner join TEST2 t2 on (t.NAME in ('a') and (t.NAME = t2.NAME))",
             generationSql);
     }
 
@@ -8051,7 +8043,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 where \"Number\" in((1 + 2), 3)", generationSql);
+        Assert.Equal("select * from TEST5 where \"Number\" in ((1 + 2), 3)", generationSql);
     }
 
     [Fact]
@@ -8112,7 +8104,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 where NAME in(lower('a'), 'b')", generationSql);
+        Assert.Equal("select * from TEST5 where NAME in (lower('a'), 'b')", generationSql);
     }
 
     [Fact]
@@ -8175,7 +8167,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 where NAME in(select NAME from TEST3)", generationSql);
+        Assert.Equal("select * from TEST5 where NAME in (select NAME from TEST3)", generationSql);
     }
 
     [Theory]
@@ -8395,7 +8387,7 @@ order by temp.InxNbr";
         }
 
         Assert.Equal(
-            $"select case when(t.name = 'a') then '1' when t.name in('b', 'c') then '2' else '3' end {name}from test t inner join test5 t2 on(case when(t.name = 'a') then '1' when(t.name is null) then '2' end = t2.name)",
+            $"select case when (t.name = 'a') then '1' when t.name in ('b', 'c') then '2' else '3' end {name}from test t inner join test5 t2 on (case when (t.name = 'a') then '1' when (t.name is null) then '2' end = t2.name)",
             generationSql);
     }
 
@@ -8489,9 +8481,7 @@ order by temp.InxNbr";
         };
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+        var generationSql = sqlAst.ToSql();
         Assert.Equal(
             "select case(select name from test5 fetch first 1 rows only) when 'a' then 1 else 2 end from test5 t",
             generationSql);
@@ -8862,7 +8852,7 @@ order by temp.InxNbr";
         var expectSql = "";
         if (limitString == " limit 1,5")
         {
-            expectSql = "select * from customer as a where(a.name != '''123') order by a.Id limit 1, 5";
+            expectSql = "select * from customer as a where (a.name != '''123') order by a.Id limit 1, 5";
             limit = new SqlLimitExpression()
             {
                 RowCount = new SqlNumberExpression()
@@ -8877,7 +8867,7 @@ order by temp.InxNbr";
         }
         else if (limitString == " limit 1")
         {
-            expectSql = "select * from customer as a where(a.name != '''123') order by a.Id limit 1";
+            expectSql = "select * from customer as a where (a.name != '''123') order by a.Id limit 1";
             limit = new SqlLimitExpression()
             {
                 RowCount = new SqlNumberExpression()
@@ -9194,7 +9184,7 @@ order by temp.InxNbr";
                     Value = 10
                 }
             };
-            expectSql = "select * from test as t where(t.test != 'abc') order by t.test limit 1 offset 10";
+            expectSql = "select * from test as t where (t.test != 'abc') order by t.test limit 1 offset 10";
         }
         else if (limitString == " limit 1 ")
         {
@@ -9205,7 +9195,7 @@ order by temp.InxNbr";
                     Value = 1
                 }
             };
-            expectSql = "select * from test as t where(t.test != 'abc') order by t.test limit 1";
+            expectSql = "select * from test as t where (t.test != 'abc') order by t.test limit 1";
         }
         else if (limitString == " offset 10")
         {
@@ -9216,7 +9206,7 @@ order by temp.InxNbr";
                     Value = 10
                 }
             };
-            expectSql = "select * from test as t where(t.test != 'abc') order by t.test offset 10";
+            expectSql = "select * from test as t where (t.test != 'abc') order by t.test offset 10";
         }
 
 
@@ -9320,11 +9310,11 @@ order by temp.InxNbr";
                 }
             };
             expectSql =
-                "select t.*, ROW_NUMBER() over(partition by NAME, ID order by t.NAME, t.ID) as rnum from TEST as t";
+                "select t.*, ROW_NUMBER() over (partition by NAME, ID order by t.NAME, t.ID) as rnum from TEST as t";
         }
         else
         {
-            expectSql = "select t.*, ROW_NUMBER() over(order by t.NAME, t.ID) as rnum from TEST as t";
+            expectSql = "select t.*, ROW_NUMBER() over (order by t.NAME, t.ID) as rnum from TEST as t";
         }
 
         var expect = new SqlSelectExpression()
@@ -9487,7 +9477,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST t where not((t.NAME = 'abc'))", generationSql);
+        Assert.Equal("select * from TEST t where not ((t.NAME = 'abc'))", generationSql);
     }
 
     [Fact]
@@ -9626,7 +9616,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 where NAME not in(lower('a'), 'b')", generationSql);
+        Assert.Equal("select * from TEST5 where NAME not in (lower('a'), 'b')", generationSql);
     }
 
     [Fact]
@@ -9681,7 +9671,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST as t where(name not like '%a%')", generationSql);
+        Assert.Equal("select * from TEST as t where (name not like '%a%')", generationSql);
     }
 
     [Fact]
@@ -9818,7 +9808,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 where not(((name = 'a') and(AGE = '16')))", generationSql);
+        Assert.Equal("select * from TEST5 where not (((name = 'a') and (AGE = '16')))", generationSql);
     }
 
 
@@ -9965,7 +9955,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select * from epf.dbo.Ability as a left join ATL_Login.dbo.ATLAdUsers as au on(a.Id = au.Id)",
+        Assert.Equal("select * from epf.dbo.Ability as a left join ATL_Login.dbo.ATLAdUsers as au on (a.Id = au.Id)",
             newSql);
     }
 
@@ -10011,9 +10001,8 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
+
+        var generationSql = sqlAst.ToSql();
         Assert.Equal("select * from \"ATLAdUsers\"@login",
             generationSql);
     }
@@ -10334,7 +10323,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on(a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName",
+        Assert.Equal("select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on (a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName",
             newSql);
     }
 
@@ -10665,7 +10654,7 @@ order by temp.InxNbr";
         if (columns == "(name)")
         {
             expectSql =
-                "with c1(name) as((select name from test t)), c2(name) as((select name from test3 t3)) select * from c1 inner join c2 on(c1.name = c2.name)";
+                "with c1(name) as ((select name from test t)), c2(name) as ((select name from test3 t3)) select * from c1 inner join c2 on (c1.name = c2.name)";
             cteColumn = new List<SqlIdentifierExpression>()
             {
                 new SqlIdentifierExpression()
@@ -10677,7 +10666,7 @@ order by temp.InxNbr";
         else
         {
             expectSql =
-                "with c1 as((select name from test t)), c2 as((select name from test3 t3)) select * from c1 inner join c2 on(c1.name = c2.name)";
+                "with c1 as ((select name from test t)), c2 as ((select name from test3 t3)) select * from c1 inner join c2 on (c1.name = c2.name)";
         }
 
         var expect = new SqlSelectExpression()
@@ -10870,7 +10859,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select DATEDIFF(day, '2023-01-01', '2023-01-10')", generationSql);
+        Assert.Equal("select DATEDIFF(day,'2023-01-01','2023-01-10')", generationSql);
     }
 
     [Fact]
@@ -10921,7 +10910,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(NAME || AGE) from TEST5", generationSql);
+        Assert.Equal("select (NAME || AGE) from TEST5", generationSql);
     }
 
     [Fact]
@@ -10972,7 +10961,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(ActivityEnglishName + ActivityName) from FlowActivity", generationSql);
+        Assert.Equal("select (ActivityEnglishName + ActivityName) from FlowActivity", generationSql);
     }
 
     [Fact]
@@ -11027,10 +11016,8 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select((NAME || '-') || AGE) from TEST5", generationSql);
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select ((NAME || '-') || AGE) from TEST5", generationSql);
     }
 
     [Fact]
@@ -11176,7 +11163,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select name, percentile_cont(0.5) within group(order by test5.[number]) over(partition by NAME) as b from TEST5",
+            "select name, percentile_cont(0.5) within group(order by test5.[number]) over (partition by NAME) as b from TEST5",
             generationSql);
     }
 
@@ -11269,7 +11256,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select name, percentile_cont(0.5) within group(order by \"Number\") over(partition by NAME) from TEST5",
+            "select name, percentile_cont(0.5) within group(order by \"Number\") over (partition by NAME) from TEST5",
             generationSql);
     }
 
@@ -11489,7 +11476,7 @@ order by temp.InxNbr";
         if (string.IsNullOrWhiteSpace(aliasName))
         {
             fieldBody = new SqlAllColumnExpression();
-            expectSql = "select * from(select * from test6) t pivot(SUM(amount) for MONTH in(1 as j, 2 as b))";
+            expectSql = "select * from (select * from test6) t pivot (SUM(amount) for MONTH in (1 as j, 2 as b))";
 
             alias = null;
         }
@@ -11506,7 +11493,7 @@ order by temp.InxNbr";
                     Value = "d"
                 },
             };
-            expectSql = "select d.* from(select * from test6) t pivot(SUM(amount) for MONTH in(1 as j, 2 as b)) d";
+            expectSql = "select d.* from (select * from test6) t pivot (SUM(amount) for MONTH in (1 as j, 2 as b)) d";
         }
 
         var expect = new SqlSelectExpression()
@@ -11776,7 +11763,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select year, [1], [2] from(select t.[year], t.[month], t.amount from test6 as t) as sourceTable pivot(sum(amount) for [month] in([1], [2])) as PivotTable",
+            "select year, [1], [2] from (select t.[year], t.[month], t.amount from test6 as t) as sourceTable pivot (sum(amount) for [month] in ([1], [2])) as PivotTable",
             generationSql);
     }
 
@@ -11928,7 +11915,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from customer as a where( true and(a.name = 'a'))", generationSql);
+        Assert.Equal("select * from customer as a where (true and (a.name = 'a'))", generationSql);
     }
 
 
@@ -11973,7 +11960,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(3 | 5)", generationSql);
+        Assert.Equal("select (3 | 5)", generationSql);
     }
 
     [Fact]
@@ -12017,7 +12004,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(3 & 5)", generationSql);
+        Assert.Equal("select (3 & 5)", generationSql);
     }
 
     [Fact]
@@ -12061,7 +12048,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(3 ^ 5)", generationSql);
+        Assert.Equal("select (3 ^ 5)", generationSql);
     }
 
     [Fact]
@@ -12103,7 +12090,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select(5 # 3)", generationSql);
+        Assert.Equal("select (5 # 3)", generationSql);
     }
 
     [Fact]
@@ -12146,7 +12133,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(-3 * 5)", generationSql);
+        Assert.Equal("select (-3 * 5)", generationSql);
     }
 
     [Fact]
@@ -12190,7 +12177,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(5 * -3)", generationSql);
+        Assert.Equal("select (5 * -3)", generationSql);
     }
 
     [Fact]
@@ -12252,7 +12239,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from test6 as t where(t.partition = 'a')", generationSql);
+        Assert.Equal("select * from test6 as t where (t.partition = 'a')", generationSql);
     }
 
     [Fact]
@@ -12399,7 +12386,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal($"select LEFT.id from ADDRESS LEFT {joinType} join test on(1 = 1)", generationSql);
+        Assert.Equal($"select LEFT.id from ADDRESS LEFT {joinType} join test on (1 = 1)", generationSql);
     }
 
     [Fact]
@@ -12485,7 +12472,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select(5 * 3) as PARTITION from dual PARTITION inner join TEST t on(1 = 1)", generationSql);
+        Assert.Equal("select (5 * 3) as PARTITION from dual PARTITION inner join TEST t on (1 = 1)", generationSql);
     }
 
     [Fact]
@@ -12675,7 +12662,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select g.group_ as \"GROUP\" from group_ g inner join group_class gc on(g.groupclassid = gc.id) where(gc.name = 'CellGroup') order by group_",
+            "select g.group_ as \"GROUP\" from group_ g inner join group_class gc on (g.groupclassid = gc.id) where (gc.name = 'CellGroup') order by group_",
             generationSql);
     }
 
@@ -12851,7 +12838,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from TEST5 t where t.NAME in('a', 'b', 'c')", generationSql);
+        Assert.Equal("select * from TEST5 t where t.NAME in ('a', 'b', 'c')", generationSql);
     }
 
     [Fact]
@@ -13032,7 +13019,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select F.FACILITY,((F.FACILITY || '__') || TT.MEDIUM) as NAME from FACILITY F left join TEXT_TRANSLATION TT on(TT.TEXTID = F.TEXTID) where((TT.LANGUAGEID = '2052') and(F.OBJECTCLASS = '1'))",
+            "select F.FACILITY, ((F.FACILITY || '__') || TT.MEDIUM) as NAME from FACILITY F left join TEXT_TRANSLATION TT on (TT.TEXTID = F.TEXTID) where ((TT.LANGUAGEID = '2052') and (F.OBJECTCLASS = '1'))",
             generationSql);
     }
 
@@ -13282,7 +13269,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select((5 ^ 3) * 2)",
+            "select ((5 ^ 3) * 2)",
             generationSql);
     }
 
@@ -13339,7 +13326,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select(('a' is not null) = true )",
+            "select (('a' is not null) = true)",
             generationSql);
     }
 
@@ -13428,7 +13415,79 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select('101' =('1' || cast(cast('01' as bit varying) as varchar)))",
+            "select ('101' = ('1' || cast(cast('01' as bit varying) as varchar)))",
+            generationSql);
+    }
+
+    /// <summary>
+    /// 运算符优先级
+    /// Operator precedence
+    /// </summary>
+    [Fact]
+    public void TestOperatorPrecedence4()
+    {
+        var sql =
+            "select * from dual where (3+5)*5>1";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "dual",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Operator = SqlBinaryOperator.Add,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 5M,
+                            },
+                        },
+                        Operator = SqlBinaryOperator.Multiply,
+                        Right = new SqlNumberExpression()
+                        {
+                            Value = 5M,
+                        },
+                    },
+                    Operator = SqlBinaryOperator.GreaterThen,
+                    Right = new SqlNumberExpression()
+                    {
+                        Value = 1M,
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select * from dual where (((3 + 5) * 5) > 1)",
             generationSql);
     }
 
@@ -13653,7 +13712,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from FlowStartUpSetting as a with  (TABLOCK ,  FORCESEEK) inner join FlowStartUpReadyEmployee as b on(a.Id = b.FlowStartUpSettingId)", generationSql);
+        Assert.Equal("select * from FlowStartUpSetting as a with  (TABLOCK ,  FORCESEEK) inner join FlowStartUpReadyEmployee as b on (a.Id = b.FlowStartUpSettingId)", generationSql);
     }
 
     [Fact]
@@ -13716,7 +13775,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from FlowStartUpSetting where(active = @active) OPTION (OPTIMIZE FOR (@active =0))", generationSql);
+        Assert.Equal("select * from FlowStartUpSetting where (active = @active) OPTION (OPTIMIZE FOR (@active =0))", generationSql);
     }
 
     [Fact]
@@ -13827,7 +13886,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select * from customer as c where((c.Id % 3) = 1)",
+            "select * from customer as c where ((c.Id % 3) = 1)",
             generationSql);
     }
 
@@ -13979,7 +14038,7 @@ order by temp.InxNbr";
                 is SqlSelectQueryExpression a && a.From is SqlSelectExpression b)
         {
             var fromSql = b.ToSql();
-            Assert.Equal("(select t.*, ROW_NUMBER() over(partition by bill_code order by seq_date desc) as rn from bill_sequence as t) as ranked", fromSql);
+            Assert.Equal("(select t.*, ROW_NUMBER() over (partition by bill_code order by seq_date desc) as rn from bill_sequence as t) as ranked", fromSql);
         }
     }
 
@@ -14171,7 +14230,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(select order_date as b from orders limit 1) at time zone 'Asia/ShangHai' from orders",
+            "select (select order_date as b from orders limit 1) at time zone 'Asia/ShangHai' from orders",
             generationSql);
     }
 
@@ -14270,7 +14329,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select order_date at time zone 'Asia/ShangHai' as b from orders where(date_trunc('minute', order_date at time zone 'Asia/ShangHai') = cast('2023-04-19 03:11' as timestamp))",
+            "select order_date at time zone 'Asia/ShangHai' as b from orders where (date_trunc('minute',order_date at time zone 'Asia/ShangHai') = cast('2023-04-19 03:11' as timestamp))",
             generationSql);
     }
 
@@ -14390,7 +14449,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select date_trunc('minute', order_date at time zone 'Asia/ShangHai') at time zone 'Asia/ShangHai' as b from orders where(date_trunc('minute', order_date at time zone 'Asia/ShangHai') = cast('2023-04-19 03:11' as timestamp))",
+            "select date_trunc('minute',order_date at time zone 'Asia/ShangHai') at time zone 'Asia/ShangHai' as b from orders where (date_trunc('minute',order_date at time zone 'Asia/ShangHai') = cast('2023-04-19 03:11' as timestamp))",
             generationSql);
     }
 
@@ -14446,7 +14505,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(order_date + interval '3 hours') as b from orders",
+            "select (order_date + interval '3 hours') as b from orders",
             generationSql);
     }
 
@@ -14569,7 +14628,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(SYSDATE + interval '1234 12:30:00' DAY(4) TO second(4)) from dual",
+            "select (SYSDATE + interval '1234 12:30:00' DAY(4) TO second(4)) from dual",
             generationSql);
     }
 
@@ -14625,7 +14684,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(SYSDATE + interval '1' second(4)) from dual",
+            "select (SYSDATE + interval '1' second(4)) from dual",
             generationSql);
     }
 
@@ -14682,7 +14741,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(SYSDATE + interval '1-2' YEAR(3) TO MONTH) from dual",
+            "select (SYSDATE + interval '1-2' YEAR(3) TO MONTH) from dual",
             generationSql);
     }
 
@@ -14738,7 +14797,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(SYSDATE + interval '1 12:30:00' DAY TO second(4)) from dual",
+            "select (SYSDATE + interval '1 12:30:00' DAY TO second(4)) from dual",
             generationSql);
     }
 
@@ -14794,7 +14853,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select(SYSDATE + interval '3' DAY) from dual",
+            "select (SYSDATE + interval '3' DAY) from dual",
             generationSql);
     }
 
@@ -15030,7 +15089,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select 1 as pn where(pn = 2)",
+            "select 1 as pn where (pn = 2)",
             generationSql);
     }
 
@@ -15226,6 +15285,63 @@ order by temp.InxNbr";
             generationSql);
     }
 
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Pgsql)]
+    public void TestSelect9(DbType dbType)
+    {
+        var sql = "select 1=1 ,'a' as name ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlStringExpression()
+                        {
+                            Value = "a",
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select (1 = 1), 'a' as name",
+            generationSql);
+    }
+
 
     [Fact]
     public void TestLogical()
@@ -15330,7 +15446,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select * from test3 as t where((t.a = 'a') or((t.b = '2') and(t.c = '3')))",
+            "select * from test3 as t where ((t.a = 'a') or ((t.b = '2') and (t.c = '3')))",
             generationSql);
     }
     [Fact]
@@ -15416,7 +15532,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select * from test3 as t where(not((t.a = 'a')) and(t.c = '3'))",
+            "select * from test3 as t where (not ((t.a = 'a')) and (t.c = '3'))",
             generationSql);
     }
 
@@ -15503,7 +15619,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select * from test3 as t where not(((t.a = 'a') and(t.c = '3')))",
+            "select * from test3 as t where not (((t.a = 'a') and (t.c = '3')))",
             generationSql);
     }
 
@@ -15591,7 +15707,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select * from test3 as t where((t.a = 'a') and not((t.c = '3')))",
+            "select * from test3 as t where ((t.a = 'a') and not ((t.c = '3')))",
             generationSql);
     }
 
@@ -15683,14 +15799,13 @@ order by temp.InxNbr";
     [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
     public void TestCollate(DbType dbType, string sortingRules)
     {
-        var sql = $"SELECT * FROM test3 t  ORDER BY t.a COLLATE {sortingRules} desc,t.b desc;";
+        var sql = $"SELECT * FROM test3 t  ORDER BY t.a COLLATE {sortingRules} desc, t.b desc;";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
         testOutputHelper.WriteLine("time:" + t);
         var result = sqlAst.ToFormat();
 
         SqlExpression body = null;
-
         switch (dbType)
         {
             case DbType.Pgsql:
@@ -15712,8 +15827,6 @@ order by temp.InxNbr";
                 };
                 break;
         }
-
-
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
@@ -15757,7 +15870,7 @@ order by temp.InxNbr";
                             Body = body
                         },
                     },
-                    
+
                     OrderByType = SqlOrderByType.Desc,
                 },
                 new SqlOrderByItemExpression()
@@ -15934,7 +16047,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select * from test3{asStr}t where(((t.a = 'a' collate {sortingRules}) and(t.b != 'c' collate {sortingRules})) and(t.c like '%c%' collate {sortingRules}))", generationSql);
+        Assert.Equal($"select * from test3{asStr}t where (((t.a = 'a' collate {sortingRules}) and (t.b != 'c' collate {sortingRules})) and (t.c like '%c%' collate {sortingRules}))", generationSql);
     }
 
     [Theory]
@@ -16063,7 +16176,7 @@ order by temp.InxNbr";
     [InlineData(DbType.Pgsql, "\"C\"", "SUBSTRING")]
     [InlineData(DbType.Sqlite, "BINARY", "SUBSTRING")]
     [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"", "SUBSTR")]
-    public void TestCollate4(DbType dbType, string sortingRules,string functionName)
+    public void TestCollate4(DbType dbType, string sortingRules, string functionName)
     {
         var sql = $"SELECT {functionName}(t.a, 1, 10) COLLATE {sortingRules} FROM test3 t;";
         var sqlAst = new SqlExpression();
@@ -16158,7 +16271,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select {functionName}(t.a, 1, 10) collate {sortingRules} from test3{asStr}t", generationSql);
+        Assert.Equal($"select {functionName}(t.a,1,10) collate {sortingRules} from test3{asStr}t", generationSql);
     }
 
     [Theory]
@@ -16170,7 +16283,7 @@ order by temp.InxNbr";
     public void TestCollate5(DbType dbType, string sortingRules)
     {
         var sql = $"SELECT RANK() OVER (partition by t.a COLLATE {sortingRules} ORDER BY t.a   COLLATE {sortingRules} DESC) AS a FROM test3 t ;";
-  
+
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -16288,7 +16401,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select RANK() over(partition by t.a collate {sortingRules} order by t.a collate {sortingRules} desc) as a from test3{asStr}t", generationSql);
+        Assert.Equal($"select RANK() over (partition by t.a collate {sortingRules} order by t.a collate {sortingRules} desc) as a from test3{asStr}t", generationSql);
     }
 
     [Theory]
@@ -16436,7 +16549,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select * from test3{asStr}t where(((t.a collate {sortingRules} = 'a') and(t.b collate {sortingRules} != 'c')) and(t.c collate {sortingRules} like '%c%'))", generationSql);
+        Assert.Equal($"select * from test3{asStr}t where (((t.a collate {sortingRules} = 'a') and (t.b collate {sortingRules} != 'c')) and (t.c collate {sortingRules} like '%c%'))", generationSql);
     }
 
     [Theory]
@@ -16531,7 +16644,7 @@ order by temp.InxNbr";
                     Right = new SqlVariableExpression()
                     {
                         Name = "name",
-                        Prefix =prefix,
+                        Prefix = prefix,
                         Collate = new SqlCollateExpression()
                         {
                             Body = body,
@@ -16545,7 +16658,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select * from test3{asStr}t where(t.a = {prefix}name collate {sortingRules})", generationSql);
+        Assert.Equal($"select * from test3{asStr}t where (t.a = {prefix}name collate {sortingRules})", generationSql);
     }
 
     [Theory]
@@ -16565,7 +16678,7 @@ order by temp.InxNbr";
                 contact = "||";
                 break;
             case DbType.SqlServer:
-                operatorSymbol=SqlBinaryOperator.Add;
+                operatorSymbol = SqlBinaryOperator.Add;
                 contact = "+";
                 break;
         }
@@ -16647,7 +16760,7 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        var exceptSql = $"select * from test3 where(((a {contact} b) collate {sortingRules}) like '%a%')";
+        var exceptSql = $"select * from test3 where ((a {contact} b collate {sortingRules}) like '%a%')";
         Assert.Equal(exceptSql, generationSql);
     }
 
@@ -16707,7 +16820,7 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            $"select * from test3 where a ~ '^a' collate \"C\"",
+            $"select * from test3 where a~'^a' collate \"C\"",
             generationSql);
     }
 
@@ -16825,11 +16938,11 @@ order by temp.InxNbr";
     [Fact]
     public void TestSqlPamameter1()
     {
-        var sql =  "select * from a where a.b between @p1 and @p2";
+        var sql = "select * from a where a.b between @p1 and @p2";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
-        
+
         if (sqlAst is SqlSelectExpression { Query: SqlSelectQueryExpression sqlExpression })
         {
             var generationSql = sqlExpression.Where.ToSql();
@@ -16839,7 +16952,7 @@ order by temp.InxNbr";
         {
             throw new NotSupportedException();
         }
-       
+
     }
 
     [Fact]
@@ -16852,9 +16965,669 @@ order by temp.InxNbr";
             }
         };
 
-        var formatResult= sqlExpression.ToFormat();
+        var formatResult = sqlExpression.ToFormat();
         Assert.Equal(
             "var expect = new SqlSelectExpression()\r\n{\r\n    Query = new SqlSelectQueryExpression()\r\n    {\r\n    },\r\n};\r\n",
             formatResult);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql()
+    {
+        var sql = @$"SELECT ARRAY['apple', 'banana', 'cherry'];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "apple",
+                                },
+                                new SqlStringExpression()
+                                {
+                                    Value = "banana",
+                                },
+                                new SqlStringExpression()
+                                {
+                                    Value = "cherry",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select array['apple','banana','cherry']",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql2()
+    {
+        var sql = @$"select array[1,2,3];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select array[1,2,3]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql3()
+    {
+        var sql = @$"SELECT '{{""red"", ""green"", ""blue""}}'::text[];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "cast",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlStringExpression()
+                                {
+                                    Value = "{\"red\", \"green\", \"blue\"}",
+                                },
+                            },
+                            CaseAsTargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "text[]",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select cast('{{\"red\", \"green\", \"blue\"}}' as text[])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql4()
+    {
+        var sql = @$"SELECT ARRAY[[1, 2], [3, 4], [5, 6]]; ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlArrayExpression()
+                {
+                    Items = new List<SqlExpression>()
+                    {
+                        new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                            },
+                        },
+                        new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 4M,
+                                },
+                            },
+                        },
+                        new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 5M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 6M,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select array[array[1,2],array[3,4],array[5,6]]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql5()
+    {
+        var sql = @$"select array[array[1,2],array[3,4],array[5,6]]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlArrayExpression()
+                {
+                    Items = new List<SqlExpression>()
+                    {
+                        new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                            },
+                        },
+                        new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 4M,
+                                },
+                            },
+                        },
+                        new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 5M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 6M,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select array[array[1,2],array[3,4],array[5,6]]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql6()
+    {
+        var sql = @$"SELECT array_length(ARRAY[1,2,3], 1); ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "array_length",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                    },
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select array_length(array[1,2,3],1)",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql7()
+    {
+        var sql = @$"SELECT ARRAY[1,2] || 3 ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.Concat,
+                            Right = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2] || 3)",
+            generationSql);
+    }
+
+
+    [Fact]
+    public void TestArrayForPgsql8()
+    {
+        var sql = @$"SELECT ARRAY[1,2] || ARRAY[3,4] ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.Concat,
+                            Right = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2] || array[3,4])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql9()
+    {
+        var sql = @$"SELECT 3 = ANY(ARRAY[1,2,3,4])";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlAnyExpression()
+                            {
+                                Body = new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (3 = any(array[1,2,3,4]))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayIndexForPgsq()
+    {
+        var sql = @$"select (array[1,2,3])[2]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayIndexExpression()
+                        {
+                            Body = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            Index = new SqlNumberExpression()
+                            {
+                                Value = 2M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3])[2]",
+            generationSql);
+    }
+    [Fact]
+    public void TestArrayIndexForPgsq2()
+    {
+        var sql = @$"SELECT (ARRAY[[1,2],[3,4],[5,6]])[2][1]; ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayIndexExpression()
+                        {
+                            Body = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            Index = new SqlNumberExpression()
+                            {
+                                Value = 2M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3])[2]",
+            generationSql);
     }
 }

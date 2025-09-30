@@ -21,4 +21,10 @@ public static class SqlExpressionUtils
         return sqlReturningExpression != null && sqlReturningExpression.Items != null &&
                sqlReturningExpression.Items.Count > 0;
     }
+
+    public static bool HasValue(this SqlArrayExpression sqlArrayExpression)
+    {
+        return sqlArrayExpression != null && sqlArrayExpression.Items != null &&
+               sqlArrayExpression.Items.Count > 0;
+    }
 }

@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Serialization;
+using SqlParser.Net.Ast.AnalyzeContext;
 using SqlParser.Net.Ast.Expression;
 
 namespace SqlParser.Net.Ast.Visitor;
@@ -12,7 +15,6 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     private string fourSpace = "    ";
     private int numberOfLevels = 0;
 
-    private bool addSpace = true;
     private DbType dbType = DbType.MySql;
     private bool addParen = true;
     private bool IsOracle => this.dbType == DbType.Oracle;
@@ -26,6 +28,9 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     private bool isInUpdateSetContext = false;
 
+    private CommonContext commonContext = new CommonContext();
+
+    //private HashSet<char> delimiters = new HashSet<char>() { '.',',','(',')'};
     public SqlGenerationAstVisitor(DbType dbType)
     {
         this.dbType = dbType;
@@ -37,7 +42,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
     {
-        Append("*");
+        AppendWithSpace("*");
     }
     public override void VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
     {
@@ -64,15 +69,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlBetweenAndExpression.IsNot)
         {
-            Append("not");
+            AppendWithSpace("not");
         }
-        Append("between");
+        AppendWithSpace("between");
         if (sqlBetweenAndExpression.Begin != null)
         {
             sqlBetweenAndExpression.Begin.Accept(this);
         }
 
-        Append("and");
+        AppendWithSpace("and");
 
         if (sqlBetweenAndExpression.End != null)
         {
@@ -91,45 +96,28 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
             if (sqlBinaryExpression.Operator != null)
             {
-                if (sqlBinaryExpression.Left is SqlVariableExpression)
-                {
-                    AppendSpace();
-                }
-                Append(sqlBinaryExpression.Operator.Value.ToString().ToLowerInvariant());
-                if (sqlBinaryExpression.Right is SqlVariableExpression)
-                {
-                    AppendSpace();
-                }
+                AppendWithSpace(sqlBinaryExpression.Operator.Value.ToString().ToLowerInvariant());
             }
-
             if (sqlBinaryExpression.Right != null)
             {
                 sqlBinaryExpression.Right.Accept(this);
             }
-        }
 
-        void action()
-        {
             if (sqlBinaryExpression.Collate != null)
             {
-                EnableParen(internalAction);
                 sqlBinaryExpression.Collate.Accept(this);
-            }
-            else
-            {
-                internalAction();
             }
         }
 
-        if (sqlBinaryExpression.Parent is SqlConnectByExpression
-            || (sqlBinaryExpression.Parent is SqlUpdateExpression && isInUpdateSetContext))
+        if (sqlBinaryExpression.Parent is SqlConnectByExpression || (sqlBinaryExpression.Parent is SqlUpdateExpression && isInUpdateSetContext))
         {
-            action();
+            internalAction();
         }
         else
         {
-            EnableParen(action);
+            EnableParen(internalAction);
         }
+
     }
     public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
@@ -150,37 +138,37 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlCaseExpression.Else != null)
         {
-            Append("else");
+            AppendWithSpace("else");
             sqlCaseExpression.Else.Accept(this);
         }
 
-        Append("end");
+        AppendWithLeftSpace("end");
     }
     public override void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
     {
 
         if (sqlCaseItemExpression.Condition != null)
         {
-            Append("when");
+            AppendWithSpace("when");
             sqlCaseItemExpression.Condition.Accept(this);
         }
 
         if (sqlCaseItemExpression.Value != null)
         {
-            Append("then");
+            AppendWithSpace("then");
             sqlCaseItemExpression.Value.Accept(this);
         }
 
     }
     public override void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
-        Append("delete");
+        AppendWithRightSpace("delete");
         if (sqlDeleteExpression.Body != null)
         {
             sqlDeleteExpression.Body.Accept(this);
         }
 
-        Append("from");
+        AppendWithSpace("from");
 
         if (sqlDeleteExpression.Table != null)
         {
@@ -188,7 +176,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlDeleteExpression.Where != null)
         {
-            Append("where");
+            AppendWithSpace("where");
             sqlDeleteExpression.Where.Accept(this);
         }
 
@@ -197,7 +185,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         if (sqlExistsExpression.IsNot)
         {
-            Append("not");
+            AppendWithSpace("not");
         }
 
         Append("exists");
@@ -229,7 +217,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     {
                         if (sqlFunctionCallExpression.IsDistinct)
                         {
-                            Append("distinct");
+                            AppendWithSpace("distinct");
                         }
                     }
                     var argument = sqlFunctionCallExpression.Arguments[i];
@@ -237,12 +225,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
                     if (sqlFunctionCallExpression.CaseAsTargetType != null)
                     {
-                        Append($"as {sqlFunctionCallExpression.CaseAsTargetType.Value}");
+                        AppendWithSpace("as");
+                        Append($"{sqlFunctionCallExpression.CaseAsTargetType.Value}");
                     }
 
                     if (sqlFunctionCallExpression.FromSource != null)
                     {
-                        Append($"from ");
+                        AppendWithSpace($"from");
                         sqlFunctionCallExpression.FromSource.Accept(this);
                     }
 
@@ -265,7 +254,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlFunctionCallExpression.Over != null)
         {
-            sqlFunctionCallExpression.Over?.Accept(this);
+            sqlFunctionCallExpression.Over.Accept(this);
         }
 
         if (sqlFunctionCallExpression.Collate != null)
@@ -279,7 +268,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             return;
         }
-        Append("group by");
+        AppendWithSpace("group by");
         if (sqlGroupByExpression.Items.HasValue())
         {
             for (var i = 0; i < sqlGroupByExpression.Items.Count; i++)
@@ -288,14 +277,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 item.Accept(this);
                 if (i < sqlGroupByExpression.Items.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
         }
 
         if (sqlGroupByExpression.Having != null)
         {
-            Append("having");
+            AppendWithSpace("having");
             sqlGroupByExpression.Having.Accept(this);
         }
 
@@ -325,9 +314,9 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlInExpression.IsNot)
         {
-            Append("not");
+            AppendWithSpace("not");
         }
-        Append("in");
+        AppendWithSpace("in");
 
         if (sqlInExpression.TargetList.HasValue())
         {
@@ -339,7 +328,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     item.Accept(this);
                     if (i < sqlInExpression.TargetList.Count - 1)
                     {
-                        AppendWithoutSpaces(",");
+                        AppendWithoutSpaces(", ");
                     }
                 }
             });
@@ -352,7 +341,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
-        Append("insert into");
+        AppendWithRightSpace("insert into");
 
         if (sqlInsertExpression.Table != null)
         {
@@ -369,14 +358,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     item.Accept(this);
                     if (i < sqlInsertExpression.Columns.Count - 1)
                     {
-                        AppendWithoutSpaces(",");
+                        AppendWithoutSpaces(", ");
                     }
                 }
             });
         }
         if (sqlInsertExpression.ValuesList.HasValue())
         {
-            Append("values");
+            AppendWithLeftSpace("values");
             for (var i = 0; i < sqlInsertExpression.ValuesList.Count; i++)
             {
                 var items = sqlInsertExpression.ValuesList[i];
@@ -388,7 +377,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                         item.Accept(this);
                         if (j < items.Count - 1)
                         {
-                            AppendWithoutSpaces(",");
+                            AppendWithoutSpaces(", ");
                         }
                     }
                 }));
@@ -404,6 +393,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlInsertExpression.FromSelect != null)
         {
+            AppendSpace();
             sqlInsertExpression.FromSelect?.Accept(this);
         }
 
@@ -443,7 +433,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     joinType = ",";
                     break;
             }
-            Append(joinType);
+            AppendWithSpace(joinType);
 
         }
         if (sqlJoinTableExpression.Right != null)
@@ -453,7 +443,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlJoinTableExpression.Conditions != null)
         {
-            Append("on");
+            AppendWithSpace("on");
             sqlJoinTableExpression.Conditions.Accept(this);
         }
 
@@ -463,20 +453,20 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         switch (dbType)
         {
             case DbType.Oracle:
-                Append("fetch first");
+                AppendWithSpace("fetch first");
                 if (sqlLimitExpression.RowCount != null)
                 {
                     sqlLimitExpression.RowCount.Accept(this);
                 }
-                Append("rows only");
+                AppendWithLeftSpace("rows only");
                 break;
             case DbType.MySql:
             case DbType.Sqlite:
-                Append("limit");
+                AppendWithSpace("limit");
                 if (sqlLimitExpression.Offset != null)
                 {
                     sqlLimitExpression.Offset.Accept(this);
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
                 if (sqlLimitExpression.RowCount != null)
                 {
@@ -485,29 +475,29 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
                 break;
             case DbType.SqlServer:
-                Append("OFFSET");
+                AppendWithSpace("OFFSET");
                 if (sqlLimitExpression.Offset != null)
                 {
                     sqlLimitExpression.Offset.Accept(this);
                 }
-                Append("ROWS FETCH NEXT");
+                AppendWithSpace("ROWS FETCH NEXT");
                 if (sqlLimitExpression.RowCount != null)
                 {
                     sqlLimitExpression.RowCount.Accept(this);
                 }
-                Append("ROWS ONLY");
+                AppendWithSpace("ROWS ONLY");
                 break;
             case DbType.Pgsql:
 
                 if (sqlLimitExpression.RowCount != null)
                 {
-                    Append("limit");
+                    AppendWithSpace("limit");
                     sqlLimitExpression.RowCount.Accept(this);
                 }
 
                 if (sqlLimitExpression.Offset != null)
                 {
-                    Append("offset");
+                    AppendWithSpace("offset");
                     sqlLimitExpression.Offset.Accept(this);
                 }
 
@@ -519,7 +509,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
     {
-        Append("not");
+        AppendWithSpace("not");
         if (sqlNotExpression.Body != null)
         {
             EnableParen(() =>
@@ -551,11 +541,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlOrderByExpression.IsSiblings)
         {
-            Append("order siblings by");
+            AppendWithSpace("order siblings by");
         }
         else
         {
-            Append("order by");
+            AppendWithSpace("order by");
         }
 
         if (sqlOrderByExpression.Items.HasValue())
@@ -566,7 +556,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 item.Accept(this);
                 if (i < sqlOrderByExpression.Items.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
 
@@ -577,18 +567,18 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         if (sqlConnectByExpression.StartWith != null)
         {
-            Append("start with");
+            AppendWithSpace("start with");
             sqlConnectByExpression.StartWith.Accept(this);
         }
 
-        Append("connect by");
+        AppendWithSpace("connect by");
         if (sqlConnectByExpression.IsNocycle)
         {
-            Append("nocycle");
+            AppendWithSpace("nocycle");
         }
         if (sqlConnectByExpression.IsPrior)
         {
-            Append("prior");
+            AppendWithSpace("prior");
         }
 
         sqlConnectByExpression.Body.Accept(this);
@@ -608,16 +598,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlOrderByItemExpression.OrderByType.HasValue)
         {
-            Append(sqlOrderByItemExpression.OrderByType == SqlOrderByType.Asc ? "asc" : "desc");
+            AppendWithLeftSpace(sqlOrderByItemExpression.OrderByType == SqlOrderByType.Asc ? "asc" : "desc");
         }
         if (sqlOrderByItemExpression.NullsType.HasValue)
         {
-            Append(sqlOrderByItemExpression.NullsType == SqlOrderByNullsType.First ? "nulls first" : "nulls last");
+            AppendWithLeftSpace(sqlOrderByItemExpression.NullsType == SqlOrderByNullsType.First ? "nulls first" : "nulls last");
         }
     }
     public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
     {
-        Append("over");
+        AppendWithSpace("over");
         EnableParen((() =>
         {
             if (sqlOverExpression.PartitionBy != null)
@@ -637,7 +627,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             return;
         }
-        Append("partition by");
+        AppendWithRightSpace("partition by");
 
         if (sqlPartitionByExpression.Items.HasValue())
         {
@@ -647,7 +637,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 item.Accept(this);
                 if (i < sqlPartitionByExpression.Items.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
         }
@@ -659,7 +649,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlPivotTableExpression.SubQuery.Accept(this);
         }
 
-        Append("pivot");
+        AppendWithSpace("pivot");
         EnableParen(() =>
         {
             if (sqlPivotTableExpression.FunctionCall != null)
@@ -668,12 +658,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
             if (sqlPivotTableExpression.For != null)
             {
-                Append("for");
+                AppendWithSpace("for");
                 sqlPivotTableExpression.For.Accept(this);
             }
             if (sqlPivotTableExpression.In != null)
             {
-                Append("in");
+                AppendWithSpace("in");
                 EnableParen(() =>
                 {
                     for (var i = 0; i < sqlPivotTableExpression.In.Count; i++)
@@ -682,7 +672,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                         item.Accept(this);
                         if (i < sqlPivotTableExpression.In.Count - 1)
                         {
-                            AppendWithoutSpaces(",");
+                            AppendWithoutSpaces(", ");
                         }
                     }
                 });
@@ -694,7 +684,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             if (dbType != DbType.Oracle)
             {
-                Append("as");
+                AppendWithSpace("as");
+            }
+            else
+            {
+                AppendSpace();
             }
 
             sqlPivotTableExpression.Alias.Accept(this);
@@ -706,8 +700,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         if (sqlPropertyExpression.Table != null)
         {
             sqlPropertyExpression.Table?.Accept(this);
-            sb.Append(".");
-            this.addSpace = false;
+            Append(".");
         }
 
         if (sqlPropertyExpression.Name != null)
@@ -732,7 +725,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             if (!IsOracle)
             {
-                Append("as");
+                AppendWithSpace("as");
             }
             sqlReferenceTableExpression.Alias?.Accept(this);
         }
@@ -765,7 +758,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             if (dbType != DbType.Oracle)
             {
-                Append("as");
+                AppendWithSpace("as");
+            }
+            else
+            {
+                AppendSpace();
             }
             sqlSelectExpression.Alias.Accept(this);
         }
@@ -785,37 +782,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         sqlSelectItemExpression.Body?.Accept(this);
         if (sqlSelectItemExpression.Alias != null)
         {
-            Append("as");
+            AppendWithSpace("as");
             sqlSelectItemExpression.Alias?.Accept(this);
         }
     }
 
     private void EnableParen(Action action, bool isForce = false)
     {
-        if (sb.Length == 0 && !isForce)
-        {
-            action();
-            return;
-        }
-        if (addParen || isForce)
-        {
-            sb.Append("(");
-        }
-        this.addSpace = false;
+        Append("(");
         action();
-
-        if (addParen || isForce)
-        {
-            sb.Append(")");
-        }
-
-    }
-
-    private void DisableParen(Action action)
-    {
-        this.addParen = false;
-        action();
-        this.addParen = true;
+        Append(")");
     }
 
     private void EnableUpdateSetContext(Action action)
@@ -829,19 +805,20 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         if (sqlSelectQueryExpression.WithSubQuerys.HasValue())
         {
-            Append(" with");
+            AppendWithRightSpace(" with");
             for (var i = 0; i < sqlSelectQueryExpression.WithSubQuerys.Count; i++)
             {
                 var item = sqlSelectQueryExpression.WithSubQuerys[i];
                 item.Accept(this);
                 if (i < sqlSelectQueryExpression.WithSubQuerys.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
+            AppendSpace();
         }
 
-        Append("select");
+        AppendWithRightSpace("select");
 
         if (sqlSelectQueryExpression.ResultSetReturnOption.HasValue)
         {
@@ -858,7 +835,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     resultSetReturnOption = "unique";
                     break;
             }
-            Append(resultSetReturnOption);
+            AppendWithSpace(resultSetReturnOption);
         }
 
         if (sqlSelectQueryExpression.Top != null)
@@ -870,6 +847,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             for (var i = 0; i < sqlSelectQueryExpression.Columns.Count; i++)
             {
+                AppendSpace();
                 var item = sqlSelectQueryExpression.Columns[i];
                 item.Accept(this);
                 if (i < sqlSelectQueryExpression.Columns.Count - 1)
@@ -881,17 +859,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlSelectQueryExpression.Into != null)
         {
-            Append("into");
+            AppendWithSpace("into");
             sqlSelectQueryExpression.Into.Accept(this);
         }
         if (sqlSelectQueryExpression.From != null)
         {
-            Append("from");
+            AppendWithSpace("from");
             sqlSelectQueryExpression.From.Accept(this);
         }
         if (sqlSelectQueryExpression.Where != null)
         {
-            Append("where");
+            AppendWithSpace("where");
             sqlSelectQueryExpression.Where.Accept(this);
         }
 
@@ -918,40 +896,62 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             foreach (var tableExpressionHint in sqlSelectQueryExpression.Hints)
             {
+                AppendSpace();
                 tableExpressionHint.Body?.Accept(this);
             }
         }
     }
 
-    private void Append(string str)
+    private void AppendWithSpace(Action action)
     {
-        if (addSpace)
-        {
-            sb.Append($" {str}");
-        }
-        else
-        {
-            sb.Append($"{str}");
-            addSpace = true;
-        }
+        AppendSpace();
+        action();
+        AppendSpace();
+    }
 
+    private void AppendWithSpace(string str)
+    {
+        Append(str, true, true);
+    }
+
+    private void AppendWithRightSpace(string str)
+    {
+        Append(str, false, true);
+    }
+    private void AppendWithLeftSpace(string str)
+    {
+        Append(str, true, false);
+    }
+    private void Append(string str, bool hasLeftSpace = false, bool hasRightSpace = false)
+    {
+        var isLastCharSpace = sb.Length > 0 && sb[sb.Length - 1] == ' ';
+        var isLastCharLeftParen = sb.Length > 0 && sb[sb.Length - 1] == '(';
+        if (hasLeftSpace && !(isLastCharSpace || isLastCharLeftParen))
+        {
+            sb.Append(" ");
+        }
+        sb.Append(str);
+        if (hasRightSpace)
+        {
+            sb.Append(" ");
+        }
     }
 
     private void AppendSpace()
     {
-        sb.Append($" ");
+        Append($"", true);
     }
 
     private void AppendWithoutSpaces(string str)
     {
-        sb.Append($"{str}");
+        Append($"{str}");
     }
 
     public override void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
     {
         if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
         {
-            sb.Append($" {sqlBoolExpression.Value.ToString().ToLowerInvariant()} ");
+            Append($"{sqlBoolExpression.Value.ToString().ToLowerInvariant()}");
         }
 
     }
@@ -969,30 +969,32 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         if (sqlTableExpression.Database != null)
         {
             sqlTableExpression.Database?.Accept(this);
-            AppendWithoutSpaces(".");
-            this.addSpace = false;
+            Append(".");
         }
+
         if (sqlTableExpression.Schema != null)
         {
             sqlTableExpression.Schema?.Accept(this);
-            AppendWithoutSpaces(".");
-            this.addSpace = false;
+            Append(".");
         }
 
         sqlTableExpression.Name?.Accept(this);
         if ((IsOracle || IsPgsql) && sqlTableExpression.DbLink != null)
         {
             AppendWithoutSpaces("@");
-            this.addSpace = false;
             sqlTableExpression.DbLink?.Accept(this);
-            this.addSpace = true;
         }
         if (sqlTableExpression.Alias != null)
         {
             if (!IsOracle)
             {
-                Append("as");
+                AppendWithSpace("as");
             }
+            else
+            {
+                AppendSpace();
+            }
+
             sqlTableExpression.Alias?.Accept(this);
         }
 
@@ -1000,6 +1002,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             foreach (var tableExpressionHint in sqlTableExpression.Hints)
             {
+                AppendSpace();
                 tableExpressionHint.Body?.Accept(this);
             }
         }
@@ -1013,10 +1016,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         else
         {
-            EnableParen(() =>
+            if (IsSqlite)
             {
                 VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
-            });
+            }
+            else
+            {
+                EnableParen(() =>
+                {
+                    VisitSqlUnionQueryExpressionInternal(sqlUnionQueryExpression);
+                });
+            }
         }
 
     }
@@ -1055,8 +1065,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     unionType = "union all";
                     break;
             }
-            Append(unionType);
-            AppendSpace();
+            AppendWithSpace(unionType);
         }
         var right = sqlUnionQueryExpression.Right;
         if (right != null)
@@ -1068,7 +1077,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
         sqlParseType = ParseType.Update;
-        Append("update");
+        AppendWithRightSpace("update");
         if (sqlUpdateExpression.Table != null)
         {
             sqlUpdateExpression.Table.Accept(this);
@@ -1076,7 +1085,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlUpdateExpression.Items.HasValue())
         {
-            Append("set");
+            AppendWithSpace("set");
             for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
             {
                 var item = sqlUpdateExpression.Items[i];
@@ -1088,7 +1097,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
                 if (i < sqlUpdateExpression.Items.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
         }
@@ -1097,14 +1106,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             if (sqlUpdateExpression.From != null)
             {
-                Append("from");
+                AppendWithSpace("from");
                 sqlUpdateExpression.From.Accept(this);
             }
         }
 
         if (sqlUpdateExpression.Where != null)
         {
-            sb.Append(" where");
+            AppendWithSpace("where");
             sqlUpdateExpression.Where.Accept(this);
         }
 
@@ -1117,16 +1126,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             var lastChar = sb[sb.Length - 1];
             if (lastChar != ' ' && lastChar != '(' && lastChar != ',')
             {
-                sb.Append(" ");
+                Append(" ");
             }
         }
         if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Prefix))
         {
-            sb.Append(sqlVariableExpression.Prefix);
+            Append(sqlVariableExpression.Prefix);
         }
         if (!string.IsNullOrWhiteSpace(sqlVariableExpression.Name))
         {
-            sb.Append(sqlVariableExpression.Name);
+            Append(sqlVariableExpression.Name);
         }
         if (sqlVariableExpression.Collate != null)
         {
@@ -1135,7 +1144,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
-        Append("within group");
+        AppendWithLeftSpace("within group");
         EnableParen((() =>
         {
             if (sqlWithinGroupExpression.OrderBy.HasValue())
@@ -1168,7 +1177,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         }
 
-        Append("as");
+        AppendWithSpace("as");
         if (sqlWithSubQueryExpression.FromSelect != null)
         {
             EnableParen(() =>
@@ -1180,7 +1189,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     public override void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
     {
-        Append("top");
+        AppendWithSpace("top");
         if (sqlTopExpression.Body != null)
         {
             sqlTopExpression.Body.Accept(this);
@@ -1191,6 +1200,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         if (sqlHintExpression.Body != null)
         {
+            AppendSpace();
             sqlHintExpression.Body.Accept(this);
         }
     }
@@ -1201,19 +1211,21 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlAtTimeZoneExpression.Body.Accept(this);
         }
-        Append("at time zone");
+        AppendWithSpace("at time zone");
         sqlAtTimeZoneExpression.TimeZone.Accept(this);
     }
 
     public override void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
     {
-        Append("interval");
+        AppendWithSpace("interval");
         if (sqlIntervalExpression.Body != null)
         {
+            AppendSpace();
             sqlIntervalExpression.Body.Accept(this);
         }
         if (sqlIntervalExpression.Unit != null)
         {
+            AppendSpace();
             sqlIntervalExpression.Unit.Accept(this);
         }
     }
@@ -1228,7 +1240,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     public override void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
     {
-        Append("collate");
+        AppendWithSpace("collate");
         if (sqlCollateExpression.Body != null)
         {
             sqlCollateExpression.Body.Accept(this);
@@ -1254,7 +1266,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         else if (IsMySql)
         {
-            Append("regexp");
+            AppendWithSpace("regexp");
         }
 
         if (sqlRegexExpression.RegEx != null)
@@ -1277,15 +1289,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlReturningExpression.Items.HasValue())
         {
-            AppendSpace();
-            Append("returning");
+            AppendWithSpace("returning");
             for (var i = 0; i < sqlReturningExpression.Items.Count; i++)
             {
                 var item = sqlReturningExpression.Items[i];
                 item.Accept(this);
                 if (i < sqlReturningExpression.Items.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
 
@@ -1293,17 +1304,72 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlReturningExpression.IntoVariables.HasValue())
         {
-            Append("into");
+            AppendWithSpace("into");
             for (var i = 0; i < sqlReturningExpression.IntoVariables.Count; i++)
             {
                 var item = sqlReturningExpression.IntoVariables[i];
                 item.Accept(this);
                 if (i < sqlReturningExpression.IntoVariables.Count - 1)
                 {
-                    AppendWithoutSpaces(",");
+                    AppendWithoutSpaces(", ");
                 }
             }
         }
     }
 
+    public override void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    {
+        if (!sqlArrayExpression.HasValue())
+        {
+            return;
+        }
+
+        if (sqlArrayExpression.Items.HasValue())
+        {
+            Append("array[");
+
+            for (var i = 0; i < sqlArrayExpression.Items.Count; i++)
+            {
+                var item = sqlArrayExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlArrayExpression.Items.Count - 1)
+                {
+                    AppendWithoutSpaces(",");
+                }
+            }
+            AppendWithoutSpaces("]");
+        }
+    }
+
+    public override void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    {
+        if (sqlArrayIndexExpression.Body == null || sqlArrayIndexExpression.Index == null)
+        {
+            return;
+        }
+
+        Append("(");
+        sqlArrayIndexExpression.Body.Accept(this);
+        Append(")");
+        Append("[");
+        sqlArrayIndexExpression.Index.Accept(this);
+        Append("]");
+    }
+
+    public override void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    {
+        if (sqlArraySliceExpression.Body == null)
+        {
+            return;
+        }
+
+        Append("(");
+        sqlArraySliceExpression.Body.Accept(this);
+        Append(")");
+        Append("[");
+        sqlArraySliceExpression.StartIndex?.Accept(this);
+        Append(":");
+        sqlArraySliceExpression.EndIndex?.Accept(this);
+        Append("]");
+    }
 }

@@ -10,6 +10,9 @@ public class SqlExpression : IAcceptVisitor, ICloneableExpression
     {
 
     }
+
+    public Guid Id { get;private set; }
+
     public virtual SqlExpressionType Type { get; protected set; }
     /// <summary>
     /// Parent Expression
@@ -24,7 +27,7 @@ public class SqlExpression : IAcceptVisitor, ICloneableExpression
 
     public SqlExpression()
     {
-
+        this.Id=Guid.NewGuid();
     }
     /// <summary>
     /// Compare 2 SqlExpressions for equality
@@ -97,6 +100,15 @@ public class SqlExpression : IAcceptVisitor, ICloneableExpression
         this.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         return generationSql;
+    }
+
+    public override string ToString()
+    {
+        if (DbType is null)
+        {
+            return "";
+        }
+        return base.ToString()+";sql:"+ ToSql();
     }
 
     /// <summary>

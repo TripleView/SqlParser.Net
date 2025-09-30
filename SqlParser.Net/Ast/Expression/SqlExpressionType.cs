@@ -69,4 +69,19 @@ public enum SqlExpressionType
     /// Returning表达式， pgsql和oracle中insert后允许返回字段的值
     /// </summary>
     Returning,
+    /// <summary>
+    /// Array Types in PostgreSQL
+    /// pgsql中的数组类型
+    /// </summary>
+    Array,
+    /// <summary>
+    /// Array index type in PostgreSQL
+    /// pgsql中的数组索引类型
+    /// </summary>
+    ArrayIndex,
+    /// <summary>
+    /// Array Slice Type in PostgreSQL
+    /// pgsql中的数组切片类型
+    /// </summary>
+    ArraySlice
 }

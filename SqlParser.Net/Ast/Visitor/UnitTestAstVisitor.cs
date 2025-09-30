@@ -1684,4 +1684,87 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("},");
     }
 
+    public override void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    {
+        if (!sqlArrayExpression.HasValue())
+        {
+            return;
+        }
+        AppendLine("new SqlArrayExpression()");
+        AppendLine("{");
+        if (sqlArrayExpression.Items.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("Items = new List<SqlExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlArrayExpression.Items)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+
+                }
+                AppendLine("},");
+            });
+        }
+
+        AppendLine("},");
+    }
+
+    public override void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    {
+        if (sqlArrayIndexExpression.Body == null || sqlArrayIndexExpression.Index == null)
+        {
+            return;
+        }
+
+        AppendLine("new SqlArrayIndexExpression()");
+        AppendLine("{");
+        AdvanceNext(() =>
+        {
+            AppendAndNotRequiredNextSpace("Body = ");
+            sqlArrayIndexExpression.Body.Accept(this);
+        });
+        AdvanceNext(() =>
+        {
+            AppendAndNotRequiredNextSpace("Index = ");
+            sqlArrayIndexExpression.Index.Accept(this);
+        });
+        AppendLine("},");
+    }
+
+    public override void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    {
+        if (sqlArraySliceExpression.Body == null)
+        {
+            return;
+        }
+
+        AppendLine("new SqlArraySliceExpression()");
+        AppendLine("{");
+        AdvanceNext(() =>
+        {
+            AppendAndNotRequiredNextSpace("Body = ");
+            sqlArraySliceExpression.Body.Accept(this);
+        });
+        if (sqlArraySliceExpression.StartIndex != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("StartIndex = ");
+                sqlArraySliceExpression.StartIndex.Accept(this);
+            });
+        }
+        if (sqlArraySliceExpression.EndIndex != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("EndIndex = ");
+                sqlArraySliceExpression.EndIndex.Accept(this);
+            });
+        }
+        AppendLine("},");
+    }
 }

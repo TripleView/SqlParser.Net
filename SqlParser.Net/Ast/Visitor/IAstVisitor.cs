@@ -51,5 +51,7 @@ public interface IAstVisitor
     void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression);
     void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression);
     void VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression);
-    
+    void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression);
+    void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression);
+    void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression);
 }

@@ -166,7 +166,7 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("insert into test11(name, id) values(@a,@b)", newSql);
+        Assert.Equal("insert into test11(name, id) values(@a, @b)", newSql);
     }
 
     [Fact]
@@ -368,7 +368,7 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("insert into \"TEST\"(\"Value\", \"Age\") values(:Value,:Age)", newSql);
+        Assert.Equal("insert into \"TEST\"(\"Value\", \"Age\") values(:Value, :Age)", newSql);
     }
 
     [Fact]
@@ -475,7 +475,7 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("insert into TEST2(name) select t.name as name2 from TEST as t inner join test2 on(t.name = test2.name)", newSql);
+        Assert.Equal("insert into TEST2(name) select t.name as name2 from TEST as t inner join test2 on (t.name = test2.name)", newSql);
     }
 
     [Fact]
@@ -497,6 +497,7 @@ public class InsertTest
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
         var result = unitTestAstVisitor.GetResult();
+        
         var expect = new SqlInsertExpression()
         {
             Columns = new List<SqlExpression>()
@@ -580,7 +581,7 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
         Assert.Equal(
-            "insert into CUSTOMER(name, age, TOTALCONSUMPTIONAMOUNT) values(:name,:age,:TOTALCONSUMPTIONAMOUNT) returning id, age into :id,:age2",
+            "insert into CUSTOMER(name, age, TOTALCONSUMPTIONAMOUNT) values(:name, :age, :TOTALCONSUMPTIONAMOUNT) returning id, age into :id, :age2",
             newSql);
     }
 
@@ -657,7 +658,7 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
         Assert.Equal(
-            "insert into users(name, age) values(@name,@age) returning id, name as newName",
+            "insert into users(name, age) values(@name, @age) returning id, name as newName",
             newSql);
     }
     [Fact]
@@ -745,7 +746,7 @@ public class InsertTest
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
         Assert.Equal(
-            "insert into users(name, age) values(@name,@age) returning id, name as newName, age as newAge",
+            "insert into users(name, age) values(@name, @age) returning id, name as newName, age as newAge",
             newSql);
     }
 }

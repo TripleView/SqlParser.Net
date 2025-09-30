@@ -262,4 +262,5 @@ public struct Token
     public static readonly Token RegexPForPg = new Token("RegexPForPg", "~", 128) { TokenType = TokenType.Operator };
     public static readonly Token RegexpForMysql = new Token("RegexpForMysql", "regexp", 129) { TokenType = TokenType.Keyword };
     public static readonly Token Returning = new Token("Returning", "Returning", 129) { TokenType = TokenType.Keyword };
+    public static readonly Token Array = new Token("Array", "Array", 130) { TokenType = TokenType.Keyword };
 }

@@ -236,6 +236,6 @@ public class DeleteTest
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("delete t from T3 as t inner join T4 as t4 on(t.id = t4.Pid) where(t.id = 'abc')",newSql);
+        Assert.Equal("delete t from T3 as t inner join T4 as t4 on (t.id = t4.Pid) where (t.id = 'abc')",newSql);
     }
 }

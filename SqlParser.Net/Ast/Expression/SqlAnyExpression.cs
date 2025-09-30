@@ -5,7 +5,7 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlAnyExpression : SqlExpression
 {
-    private SqlSelectExpression body;
+    private SqlExpression body;
 
     public override void Accept(IAstVisitor visitor)
     {
@@ -19,7 +19,7 @@ public class SqlAnyExpression : SqlExpression
     public SqlAnyExpressionTokenContext TokenContext { get; set; }
 
 
-    public SqlSelectExpression Body
+    public SqlExpression Body
     {
         get => body;
         set

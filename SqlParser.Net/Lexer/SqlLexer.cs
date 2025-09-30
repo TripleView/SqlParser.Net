@@ -1057,6 +1057,7 @@ public class SqlLexer
             tokenDic.TryAdd("ILike".ToLowerInvariant(), Token.ILike);
             tokenDic.TryAdd("BitwiseXorForPg".ToLowerInvariant(), Token.BitwiseXorForPg);
             tokenDic.TryAdd("RegexPForPg".ToLowerInvariant(), Token.RegexPForPg);
+            tokenDic.TryAdd("Array".ToLowerInvariant(), Token.Array);
         }
 
         if (dbType == DbType.MySql)
