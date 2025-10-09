@@ -17525,6 +17525,975 @@ order by temp.InxNbr";
     }
 
     [Fact]
+    public void TestArrayForPgsql10()
+    {
+        //CREATE TABLE users(
+        //    id SERIAL PRIMARY KEY,
+        //    tags TEXT[], --字符串数组
+ 
+        //scores INTEGER[]-- 整型数组
+        //    );
+
+
+        //INSERT INTO users(tags, scores) VALUES
+        //    ('{admin,editor,guest}', '{90,85,100}');
+        var sql = @$"SELECT * FROM users WHERE 'admin' = ANY(tags)";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "users",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlStringExpression()
+                    {
+                        Value = "admin",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlAnyExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "tags",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from users where ('admin' = any(tags))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql11()
+    {
+        var sql = @$"SELECT 3 = all(ARRAY[1,2,3,4])";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlAllExpression()
+                            {
+                                Body = new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (3 = all(array[1,2,3,4]))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql12()
+    {
+        //CREATE TABLE users(
+        //    id SERIAL PRIMARY KEY,
+        //    tags TEXT[], --字符串数组
+
+        //scores INTEGER[]-- 整型数组
+        //    );
+
+
+        //INSERT INTO users(tags, scores) VALUES
+        //    ('{admin,editor,guest}', '{90,85,100}');
+        var sql = @$"SELECT * FROM users WHERE 'admin' = all(tags)";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "users",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlStringExpression()
+                    {
+                        Value = "admin",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlAllExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "tags",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from users where ('admin' = all(tags))",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql13()
+    {
+        //CREATE TABLE users(
+        //    id SERIAL PRIMARY KEY,
+        //    tags TEXT[], --字符串数组
+
+        //scores INTEGER[]-- 整型数组
+        //    );
+
+
+        //INSERT INTO users(tags, scores) VALUES
+        //    ('{admin,editor,guest}', '{90,85,100}');
+        var sql = @$"SELECT tags[1] FROM users;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayIndexExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "tags",
+                            },
+                            Index = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "users",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select tags[1] from users",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql14()
+    {
+        //CREATE TABLE users(
+        //    id SERIAL PRIMARY KEY,
+        //    tags TEXT[], --字符串数组
+
+        //scores INTEGER[]-- 整型数组
+        //    );
+
+
+        //INSERT INTO users(tags, scores) VALUES
+        //    ('{admin,editor,guest}', '{90,85,100}');
+        var sql = @$"SELECT a.tags[1] FROM users a;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayIndexExpression()
+                        {
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "tags",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                            },
+                            Index = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "users",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select a.tags[1] from users as a",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql15()
+    {
+        //CREATE TABLE users(
+        //    id SERIAL PRIMARY KEY,
+        //    tags TEXT[], --字符串数组
+
+        //scores INTEGER[]-- 整型数组
+        //    );
+
+
+        //INSERT INTO users(tags, scores) VALUES
+        //    ('{admin,editor,guest}', '{90,85,100}');
+        var sql = @$"SELECT * FROM users where tags[1]='admin';";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "users",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlArrayIndexExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "tags",
+                        },
+                        Index = new SqlNumberExpression()
+                        {
+                            Value = 1M,
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlStringExpression()
+                    {
+                        Value = "admin",
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from users where (tags[1] = 'admin')",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql16()
+    {
+        //CREATE TABLE users2(
+        //    id SERIAL PRIMARY KEY,
+        //    tags TEXT[][]-- 字符串数组
+        //);
+
+        //INSERT INTO users2(tags) VALUES
+        //    ('{{1},{2},{3}}');
+
+        var sql = @$" SELECT a.tags[3][1] FROM users2 a;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArrayIndexExpression()
+                        {
+                            Body = new SqlArrayIndexExpression()
+                            {
+                                Body = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "tags",
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                },
+                                Index = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                            },
+                            Index = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "users2",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select a.tags[3][1] from users2 as a",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql17()
+    {
+        var sql = @$"SELECT ARRAY[1,2,3,4] @> ARRAY[2,3]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.ArrayContainsForPg,
+                            Right = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3,4] @> array[2,3])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql18()
+    {
+        var sql = @$"SELECT ARRAY[2,3] <@ ARRAY[1,2,3,4];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.ArrayContainedForPg,
+                            Right = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[2,3] <@ array[1,2,3,4])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql19()
+    {
+        var sql = @$"SELECT ARRAY[1,2,3] && ARRAY[3,4,5];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.ArrayIntersectionForPg,
+                            Right = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 5M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3] && array[3,4,5])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql20()
+    {
+        var sql = @$"SELECT ARRAY[1,2,3] = ARRAY[1,2,3]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3] = array[1,2,3])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql21()
+    {
+        var sql = @$"SELECT ARRAY[1,2,3] <> ARRAY[1,2,4];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            Operator = SqlBinaryOperator.NotEqualTo,
+                            Right = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3] != array[1,2,4])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql22()
+    {
+        var sql = @$"SELECT ARRAY[1,2] || ARRAY[3,4] @> ARRAY[1,2,3,4];";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                            },
+                        },
+                        Operator = SqlBinaryOperator.Concat,
+                        Right = new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                new SqlNumberExpression()
+                                {
+                                    Value = 4M,
+                                },
+                            },
+                        },
+                    },
+                    Operator = SqlBinaryOperator.ArrayContainsForPg,
+                    Right = new SqlArrayExpression()
+                    {
+                        Items = new List<SqlExpression>()
+                        {
+                            new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                            new SqlNumberExpression()
+                            {
+                                Value = 2M,
+                            },
+                            new SqlNumberExpression()
+                            {
+                                Value = 3M,
+                            },
+                            new SqlNumberExpression()
+                            {
+                                Value = 4M,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select ((array[1,2] || array[3,4]) @> array[1,2,3,4])",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArrayForPgsql23()
+    {
+        var sql = @$"SELECT 1 + 2 = ANY(ARRAY[3,4,5]); ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlBinaryExpression()
+                        {
+                            Left = new SqlBinaryExpression()
+                            {
+                                Left = new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                Operator = SqlBinaryOperator.Add,
+                                Right = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlAnyExpression()
+                            {
+                                Body = new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 5M,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select ((1 + 2) = any(array[3,4,5]))",
+            generationSql);
+    }
+
+    [Fact]
     public void TestArrayIndexForPgsq()
     {
         var sql = @$"select (array[1,2,3])[2]";
@@ -17590,10 +18559,102 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlArrayIndexExpression()
+                {
+                    Body = new SqlArrayIndexExpression()
+                    {
+                        Body = new SqlArrayExpression()
+                        {
+                            Items = new List<SqlExpression>()
+                            {
+                                new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                    },
+                                },
+                                new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                    },
+                                },
+                                new SqlArrayExpression()
+                                {
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 5M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 6M,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        Index = new SqlNumberExpression()
+                        {
+                            Value = 2M,
+                        },
+                    },
+                    Index = new SqlNumberExpression()
+                    {
+                        Value = 1M,
+                    },
+                },
+            },
+        },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[array[1,2],array[3,4],array[5,6]])[2][1]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArraySliceForPgsq()
+    {
+        var sql = @$"select (array[1,2,3])[:2]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
                 {
                     new SqlSelectItemExpression()
                     {
-                        Body = new SqlArrayIndexExpression()
+                        Body = new SqlArraySliceExpression()
                         {
                             Body = new SqlArrayExpression()
                             {
@@ -17613,9 +18674,123 @@ order by temp.InxNbr";
                                     },
                                 },
                             },
-                            Index = new SqlNumberExpression()
+                            EndIndex = new SqlNumberExpression()
                             {
                                 Value = 2M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3])[:2]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArraySliceForPgsq2()
+    {
+        var sql = @$"select (array[1,2,3])[1:2]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArraySliceExpression()
+                        {
+                            Body = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            StartIndex = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
+                            EndIndex = new SqlNumberExpression()
+                            {
+                                Value = 2M,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[1,2,3])[1:2]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArraySliceForPgsq3()
+    {
+        var sql = @$"select (array[1,2,3])[1:]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlArraySliceExpression()
+                        {
+                            Body = new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                },
+                            },
+                            StartIndex = new SqlNumberExpression()
+                            {
+                                Value = 1M,
                             },
                         },
                     },
@@ -17627,7 +18802,96 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            $"select (array[1,2,3])[2]",
+            $"select (array[1,2,3])[1:]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestArraySliceForPgsq4()
+    {
+        var sql = @$"select (array[array[1,2],array[3,4],array[5,6]])[1:2]";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlArraySliceExpression()
+                {
+                    Body = new SqlArrayExpression()
+                    {
+                        Items = new List<SqlExpression>()
+                        {
+                            new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                },
+                            },
+                            new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
+                                },
+                            },
+                            new SqlArrayExpression()
+                            {
+                                Items = new List<SqlExpression>()
+                                {
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 5M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 6M,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    StartIndex = new SqlNumberExpression()
+                    {
+                        Value = 1M,
+                    },
+                    EndIndex = new SqlNumberExpression()
+                    {
+                        Value = 2M,
+                    },
+                },
+            },
+        },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select (array[array[1,2],array[3,4],array[5,6]])[1:2]",
             generationSql);
     }
 }

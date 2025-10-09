@@ -24,7 +24,7 @@ namespace Demo
 
             //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
-            sql = "select (ARRAY[1,2,3])[2]";
+            sql = "SELECT * FROM users WHERE tags && ARRAY['admin','vip'];";
             var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
            
             var result = sqlAst.ToFormat();

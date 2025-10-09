@@ -263,4 +263,19 @@ public struct Token
     public static readonly Token RegexpForMysql = new Token("RegexpForMysql", "regexp", 129) { TokenType = TokenType.Keyword };
     public static readonly Token Returning = new Token("Returning", "Returning", 129) { TokenType = TokenType.Keyword };
     public static readonly Token Array = new Token("Array", "Array", 130) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// Contains operator for arrays in pgsql;
+    /// pgsql中数组的包含操作符
+    /// </summary>
+    public static readonly Token ArrayContainsForPg = new Token("ArrayContainsForPg", "@>", 131) { TokenType = TokenType.Operator };
+    /// <summary>
+    /// Contained operator for arrays in pgsql;
+    /// pgsql中数组的被包含操作符
+    /// </summary>
+    public static readonly Token ArrayContainedForPg = new Token("ArrayContainedForPg", "<@", 132) { TokenType = TokenType.Operator };
+    /// <summary>
+    /// Intersection operator for arrays in pgsql;
+    /// pgsql中数组的有交集操作符
+    /// </summary>
+    public static readonly Token ArrayIntersectionForPg = new Token("ArrayIntersectionForPg", "&&", 133) { TokenType = TokenType.Operator };
 }

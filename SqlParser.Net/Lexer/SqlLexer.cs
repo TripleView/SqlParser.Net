@@ -684,7 +684,13 @@ public class SqlLexer
 
         if (Accept('<'))
         {
-            if (Accept('='))
+            if (IsPgsql && Accept('@'))
+            {
+                var token = Token.ArrayContainedForPg;
+                UpdateTokenPosition(ref token, 2);
+                tokens.Add(token);
+            }
+            else if (Accept('='))
             {
                 var token = Token.LessThenOrEqualTo;
                 UpdateTokenPosition(ref token, 2);
@@ -731,9 +737,19 @@ public class SqlLexer
         }
         if (Accept('&'))
         {
-            var token = Token.BitwiseAnd;
-            UpdateTokenPosition(ref token);
-            tokens.Add(token);
+            if (IsPgsql && Accept('&'))
+            {
+                var token = Token.ArrayIntersectionForPg;
+                UpdateTokenPosition(ref token, 2);
+                tokens.Add(token);
+            }
+            else
+            {
+                var token = Token.BitwiseAnd;
+                UpdateTokenPosition(ref token);
+                tokens.Add(token);
+            }
+           
             return true;
         }
         if (Accept('^'))
@@ -752,9 +768,19 @@ public class SqlLexer
         }
         if (Accept('@'))
         {
-            var token = Token.At;
-            UpdateTokenPosition(ref token);
-            tokens.Add(token);
+            if (IsPgsql && Accept('>'))
+            {
+                var token = Token.ArrayContainsForPg;
+                UpdateTokenPosition(ref token, 2);
+                tokens.Add(token);
+            }
+            else
+            {
+                var token = Token.At;
+                UpdateTokenPosition(ref token);
+                tokens.Add(token);
+            }
+
             return true;
         }
         if (Accept('"'))
@@ -1056,6 +1082,9 @@ public class SqlLexer
             tokenDic.TryAdd("Zone".ToLowerInvariant(), Token.Zone);
             tokenDic.TryAdd("ILike".ToLowerInvariant(), Token.ILike);
             tokenDic.TryAdd("BitwiseXorForPg".ToLowerInvariant(), Token.BitwiseXorForPg);
+            tokenDic.TryAdd("ArrayContainsForPg".ToLowerInvariant(), Token.ArrayContainsForPg);
+            tokenDic.TryAdd("ArrayContainedForPg".ToLowerInvariant(), Token.ArrayContainedForPg);
+            tokenDic.TryAdd("ArrayIntersectionForPg".ToLowerInvariant(), Token.ArrayIntersectionForPg);
             tokenDic.TryAdd("RegexPForPg".ToLowerInvariant(), Token.RegexPForPg);
             tokenDic.TryAdd("Array".ToLowerInvariant(), Token.Array);
         }

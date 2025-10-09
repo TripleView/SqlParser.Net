@@ -1348,9 +1348,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             return;
         }
 
-        Append("(");
-        sqlArrayIndexExpression.Body.Accept(this);
-        Append(")");
+        if (sqlArrayIndexExpression.Body is SqlArrayExpression)
+        {
+            Append("(");
+            sqlArrayIndexExpression.Body.Accept(this);
+            Append(")");
+        }
+        else
+        {
+            sqlArrayIndexExpression.Body.Accept(this);
+        }
+        
         Append("[");
         sqlArrayIndexExpression.Index.Accept(this);
         Append("]");

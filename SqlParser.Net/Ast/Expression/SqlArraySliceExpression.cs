@@ -61,19 +61,20 @@ public class SqlArraySliceExpression : SqlExpression, IArrayRelatedExpression
 
     protected bool Equals(SqlArraySliceExpression other)
     {
-        if (!StartIndex.Equals(other.StartIndex))
-        {
-            return false;
-        }
-        if (!EndIndex.Equals(other.EndIndex))
-        {
-            return false;
-        }
-        if (!Body.Equals(other.Body))
-        {
-            return false;
-        }
         
+        if (!CompareTwoSqlExpression(StartIndex, other.StartIndex))
+        {
+            return false;
+        }
+        if (!CompareTwoSqlExpression(EndIndex, other.EndIndex))
+        {
+            return false;
+        }
+        if (!CompareTwoSqlExpression(Body, other.Body))
+        {
+            return false;
+        }
+
 
         return true;
     }

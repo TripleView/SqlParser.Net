@@ -207,7 +207,7 @@ public class SqlParser
         }
     }
 
-   
+
     private void ThrowSqlParsingErrorException()
     {
         var startIndex = tokens[pos].StartPositionIndex;
@@ -1565,7 +1565,9 @@ public class SqlParser
 
     private SqlExpression AcceptSqlArrayIndexExpressionInternal(SqlExpression sqlExpression)
     {
-        if (IsPgsql && sqlExpression is IArrayRelatedExpression arrayRelatedExpression)
+        if (IsPgsql && CheckNextToken(Token.LeftSquareBracket) && (sqlExpression is IArrayRelatedExpression ||
+                                                                  sqlExpression is SqlIdentifierExpression ||
+                                                                  sqlExpression is SqlPropertyExpression))
         {
             if (Accept(Token.LeftSquareBracket))
             {
@@ -1579,6 +1581,7 @@ public class SqlParser
                         endSqlNumberExpression = endIndexSqlNumberExpression;
                         var result = new SqlArraySliceExpression()
                         {
+                            DbType = dbType,
                             StartIndex = startSqlNumberExpression,
                             EndIndex = endSqlNumberExpression,
                             Body = sqlExpression
@@ -1603,12 +1606,24 @@ public class SqlParser
 
                     if (Accept(Token.Colon))
                     {
+                        if (Accept(Token.RightSquareBracket))
+                        {
+                            var r3 = new SqlArraySliceExpression()
+                            {
+                                DbType = dbType,
+                                StartIndex = startSqlNumberExpression,
+                                Body = sqlExpression
+                            };
+                            return r3;
+                        }
+
                         var endIndex = AcceptNestedComplexExpression();
                         if (endIndex is SqlNumberExpression endIndexSqlNumberExpression)
                         {
                             endSqlNumberExpression = endIndexSqlNumberExpression;
                             var r2 = new SqlArraySliceExpression()
                             {
+                                DbType = dbType,
                                 StartIndex = startSqlNumberExpression,
                                 EndIndex = endSqlNumberExpression,
                                 Body = sqlExpression
@@ -1621,6 +1636,7 @@ public class SqlParser
                     {
                         var r3 = new SqlArrayIndexExpression()
                         {
+                            DbType = dbType,
                             Index = startSqlNumberExpression,
                             Body = sqlExpression
                         };
@@ -1799,6 +1815,25 @@ public class SqlParser
             else if (Accept(Token.GreaterThenOrEqualTo))
             {
                 @operator = SqlBinaryOperator.GreaterThenOrEqualTo;
+            }
+            else if (IsPgsql)
+            {
+                if (Accept(Token.ArrayContainsForPg))
+                {
+                    @operator = SqlBinaryOperator.ArrayContainsForPg;
+                }
+                else if (Accept(Token.ArrayContainedForPg))
+                {
+                    @operator = SqlBinaryOperator.ArrayContainedForPg;
+                }
+                else if (Accept(Token.ArrayIntersectionForPg))
+                {
+                    @operator = SqlBinaryOperator.ArrayIntersectionForPg;
+                }
+                else
+                {
+                    break;
+                }
             }
             else
             {
@@ -2567,9 +2602,16 @@ public class SqlParser
             var any = currentToken;
             AcceptOrThrowException(Token.LeftParen);
             SqlExpression tempBody = null;
-            if (IsPgsql && CheckNextToken(Token.Array))
+            if (IsPgsql)
             {
-                tempBody = AcceptArrayExpression();
+                if (CheckNextToken(Token.Array))
+                {
+                    tempBody = AcceptArrayExpression();
+                }
+                else if (CheckNextToken(Token.IdentifierString))
+                {
+                    tempBody = AcceptFourArithmeticOperationsBaseOperationUnit();
+                }
             }
             else
             {
@@ -2592,10 +2634,26 @@ public class SqlParser
         {
             var all = currentToken;
             AcceptOrThrowException(Token.LeftParen);
+            SqlExpression tempBody = null;
+            if (IsPgsql)
+            {
+                if (CheckNextToken(Token.Array))
+                {
+                    tempBody = AcceptArrayExpression();
+                }
+                else if (CheckNextToken(Token.IdentifierString))
+                {
+                    tempBody = AcceptFourArithmeticOperationsBaseOperationUnit();
+                }
+            }
+            else
+            {
+                tempBody = AcceptSelectExpression();
+            }
             var result = new SqlAllExpression()
             {
                 DbType = dbType,
-                Body = AcceptSelectExpression(),
+                Body = tempBody,
                 TokenContext = new SqlAllExpressionTokenContext()
                 {
                     All = all
@@ -2700,13 +2758,11 @@ public class SqlParser
         }
         else if (IsPgsql && CheckNextToken(Token.Array))
         {
-            var arrayExpression = AcceptArrayExpression();
-            return arrayExpression;
+            body = AcceptArrayExpression();
         }
         else if (IsPgsql && commonContext.IsInPgSqlArrayIndex > 0 && CheckNextToken(Token.LeftSquareBracket))
         {
-            var arrayExpression = AcceptArrayExpression(false);
-            return arrayExpression;
+            body = AcceptArrayExpression(false);
         }
         else if (Accept(Token.IdentifierString))
         {
@@ -2801,12 +2857,9 @@ public class SqlParser
                         Value = name
                     };
                     body = sqlIdentifierExpression;
-                    return body;
                 }
-                else
-                {
-                    break;
-                }
+
+                break;
             }
 
             if (nameTokenList.Count >= 2)
@@ -2889,18 +2942,12 @@ public class SqlParser
 
                 body = sqlPropertyExpression;
             }
-            else
-            {
-                ThrowSqlParsingErrorException();
-            }
-
         }
         else if ((IsPgsql || IsOracle || IsMySql) && CheckNextToken(Token.Interval))
         {
             var intervalExpression = AcceptIntervalExpression();
             return intervalExpression;
         }
-
         else
         {
             ThrowSqlParsingErrorException();
@@ -2911,6 +2958,8 @@ public class SqlParser
             var result = AcceptPgsqlSpecialCaseAs(body);
             return result;
         }
+
+        body = AcceptSqlArrayIndexExpression(body);
 
         return body;
 

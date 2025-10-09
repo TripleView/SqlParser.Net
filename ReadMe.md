@@ -67,6 +67,8 @@ netstandard2.0
 ````csharp
 var sql = "select * from test";
 var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+var result = sqlAst.ToFormat();
+var newSql= sqlAst.ToSql();
 ````
 解析结果如下：
 ````csharp
@@ -2944,6 +2946,165 @@ RegEx子句，即正则表达式子句，仅在mysql和pgsql中出现，在本�
 1. 要进行正则匹配的字段，即Body字段，值为a
 2. 正则表达式，即RegEx字段，值为a
 3. 是否大小写敏感，即IsCaseSensitive字段，值为true
+
+### 1.13 Array子句(pgsql)
+
+````csharp
+var sql = "SELECT ARRAY['apple', 'banana', 'cherry'];";
+var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+````
+解析结果如下：
+````csharp
+      var expect = new SqlSelectExpression()
+      {
+          Query = new SqlSelectQueryExpression()
+          {
+              Columns = new List<SqlSelectItemExpression>()
+              {
+                  new SqlSelectItemExpression()
+                  {
+                      Body = new SqlArrayExpression()
+                      {
+                          Items = new List<SqlExpression>()
+                          {
+                              new SqlStringExpression()
+                              {
+                                  Value = "apple",
+                              },
+                              new SqlStringExpression()
+                              {
+                                  Value = "banana",
+                              },
+                              new SqlStringExpression()
+                              {
+                                  Value = "cherry",
+                              },
+                          },
+                      },
+                  },
+              },
+          },
+      };
+
+````
+
+Array子句，即数组子句，仅在pgsql中出现，在本例子中值为SqlArrayExpression，代表这是一个SqlArray表达式，它包含了
+
+1. 数组里的元素列表，即Items字段，在本例子中值为3个SqlStringExpression
+
+### 1.14 ArrayIndex子句(pgsql)
+
+````csharp
+var sql = "select (array[1,2,3])[2]";
+var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+````
+解析结果如下：
+````csharp
+     var expect = new SqlSelectExpression()
+ {
+     Query = new SqlSelectQueryExpression()
+     {
+         Columns = new List<SqlSelectItemExpression>()
+         {
+             new SqlSelectItemExpression()
+             {
+                 Body = new SqlArrayIndexExpression()
+                 {
+                     Body = new SqlArrayExpression()
+                     {
+                         Items = new List<SqlExpression>()
+                         {
+                             new SqlNumberExpression()
+                             {
+                                 Value = 1M,
+                             },
+                             new SqlNumberExpression()
+                             {
+                                 Value = 2M,
+                             },
+                             new SqlNumberExpression()
+                             {
+                                 Value = 3M,
+                             },
+                         },
+                     },
+                     Index = new SqlNumberExpression()
+                     {
+                         Value = 2M,
+                     },
+                 },
+             },
+         },
+     },
+ };
+
+````
+
+ArrayIndex子句，即数组索引子句，仅在pgsql中出现，在本例子中值为SqlArrayIndexExpression，代表这是一个SqlArrayIndex表达式，它包含了
+
+1. 被索引的数组，即Body字段，在本例子中值为1个SqlArrayExpression
+2. 索引的值，即Index字段，在本例子值为2
+
+### 1.15 ArraySlice子句(pgsql)
+
+````csharp
+var sql = "select (array[1,2,3])[1:2]";
+var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+````
+解析结果如下：
+````csharp
+   var expect = new SqlSelectExpression()
+ {
+     Query = new SqlSelectQueryExpression()
+     {
+         Columns = new List<SqlSelectItemExpression>()
+         {
+             new SqlSelectItemExpression()
+             {
+                 Body = new SqlArraySliceExpression()
+                 {
+                     Body = new SqlArrayExpression()
+                     {
+                         Items = new List<SqlExpression>()
+                         {
+                             new SqlNumberExpression()
+                             {
+                                 Value = 1M,
+                             },
+                             new SqlNumberExpression()
+                             {
+                                 Value = 2M,
+                             },
+                             new SqlNumberExpression()
+                             {
+                                 Value = 3M,
+                             },
+                         },
+                     },
+                     StartIndex = new SqlNumberExpression()
+                     {
+                         Value = 1M,
+                     },
+                     EndIndex = new SqlNumberExpression()
+                     {
+                         Value = 2M,
+                     },
+                 },
+             },
+         },
+     },
+ };
+
+
+````
+
+ArraySlice子句，即数组切片子句，仅在pgsql中出现，在本例子中值为SqlArraySliceExpression，代表这是一个ArraySlice表达式，它包含了
+
+1. 被切片的数组，即Body字段，在本例子中值为1个SqlArrayExpression
+2. 切片起始索引的值，即StartIndex字段，在本例子值为1，可为null
+3. 切片终止索引的值，即EndIndex字段，在本例子值为2,可为null
+
+
 
 ## 2. Insert插入语句
 

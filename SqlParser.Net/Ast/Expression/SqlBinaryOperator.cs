@@ -37,6 +37,21 @@ public class SqlBinaryOperator
     public static readonly SqlBinaryOperator BitwiseXor = new SqlBinaryOperator("BitwiseXor", "^");
     public static readonly SqlBinaryOperator NotILike = new SqlBinaryOperator("NotILike", "Not ILike");
     public static readonly SqlBinaryOperator BitwiseXorForPg = new SqlBinaryOperator("BitwiseXorForPg", "#");
+    /// <summary>
+    /// Contains operator for arrays in pgsql
+    /// pgsql中数组的包含操作符
+    /// </summary>
+    public static readonly SqlBinaryOperator ArrayContainsForPg = new SqlBinaryOperator("ArrayContainsForPg", "@>");
+    /// <summary>
+    /// Contained operator for arrays in pgsql
+    /// pgsql中数组的被包含操作符
+    /// </summary>
+    public static readonly SqlBinaryOperator ArrayContainedForPg = new SqlBinaryOperator("ArrayContainedForPg", "<@");
+    /// <summary>
+    /// Intersection operator for arrays in pgsql
+    /// pgsql中数组的有交集操作符
+    /// </summary>
+    public static readonly SqlBinaryOperator ArrayIntersectionForPg = new SqlBinaryOperator("ArrayIntersectionForPg", "&&");
     protected bool Equals(SqlBinaryOperator other)
     {
         return Name == other.Name && Value.Equals(other.Value);

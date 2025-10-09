@@ -6,13 +6,13 @@ namespace SqlParser.Net.Ast.Expression;
 public class SqlAllExpression : SqlExpression
 {
 
-    private SqlSelectExpression body;
+    private SqlExpression body;
     public SqlAllExpression()
     {
         this.Type = SqlExpressionType.All;
     }
 
-    public SqlSelectExpression Body
+    public SqlExpression Body
     {
         get => body;
         set
