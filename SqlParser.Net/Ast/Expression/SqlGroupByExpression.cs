@@ -9,9 +9,9 @@ public class SqlGroupByExpression : SqlExpression
     private List<SqlExpression> items;
     private SqlExpression having;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlGroupByExpression(this);
+        return visitor.VisitSqlGroupByExpression(this);
     }
     public SqlGroupByExpression()
     {

@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -7,9 +7,9 @@ public class SqlSelectItemExpression : SqlExpression, IAliasExpression
     private SqlExpression body;
     private SqlIdentifierExpression alias;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlSelectItemExpression(this);
+        return visitor.VisitSqlSelectItemExpression(this);
     }
     public SqlSelectItemExpression()
     {

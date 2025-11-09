@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -6,13 +6,13 @@ public class SqlStringExpression : SqlExpression, ICollateExpression
 {
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
 
     private SqlCollateExpression collate;
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlStringExpression(this);
+        return visitor.VisitSqlStringExpression(this);
     }
     public SqlStringExpression()
     {
@@ -24,7 +24,7 @@ public class SqlStringExpression : SqlExpression, ICollateExpression
     public bool IsUniCode { get; set; }
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     public SqlCollateExpression Collate
     {

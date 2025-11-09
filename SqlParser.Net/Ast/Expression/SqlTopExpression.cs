@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -46,9 +46,9 @@ public class SqlTopExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlTopExpression(this);
+        return visitor.VisitSqlTopExpression(this);
     }
 
     public override SqlExpression InternalClone()

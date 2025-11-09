@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -8,14 +8,14 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
     private SqlExpression table;
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
 
     private SqlCollateExpression collate;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlPropertyExpression(this);
+        return visitor.VisitSqlPropertyExpression(this);
     }
     public SqlPropertyExpression()
     {
@@ -24,7 +24,7 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
 
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     public SqlCollateExpression Collate
     {
@@ -40,7 +40,7 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
     }
     /// <summary>
     /// property name
-    /// å±æ€§åç§°
+    /// ÊôĞÔÃû³Æ
     /// </summary>
     public SqlIdentifierExpression Name
     {

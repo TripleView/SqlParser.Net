@@ -7,9 +7,9 @@ public class SqlAtTimeZoneExpression : SqlExpression
     private SqlExpression body;
     private SqlStringExpression timeZone;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlAtTimeZoneExpression(this);
+        return visitor.VisitSqlAtTimeZoneExpression(this);
     }
     public SqlAtTimeZoneExpression()
     {

@@ -5,204 +5,200 @@ using SqlParser.Net.Ast.Expression;
 /// </summary>
 public class BaseAstVisitor : IAstVisitor
 {
-    public virtual void VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
+    public virtual SqlExpression VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
     {
-
+        return sqlAllColumnExpression;
     }
-    public virtual void VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
+    public virtual SqlExpression VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
     {
-
+        return sqlAllExpression;
     }
-    public virtual void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
+    public virtual SqlExpression VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
     {
-
+        return sqlAnyExpression;
     }
-    public virtual void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    public virtual SqlExpression VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
     {
-
+        return sqlArrayExpression;
     }
-    public virtual void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
+    public virtual SqlExpression VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
     {
-
+        return sqlArrayIndexExpression;
     }
-    public virtual void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
+    public virtual SqlExpression VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
     {
-
+        return sqlArraySliceExpression;
     }
-    public virtual void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    public virtual SqlExpression VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
     {
-
+        return sqlAtTimeZoneExpression;
     }
-    public virtual void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
+    public virtual SqlExpression VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
     {
-
+        return sqlBetweenAndExpression;
     }
-    public virtual void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
+    public virtual SqlExpression VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
     {
-
+        return sqlBinaryExpression;
     }
-    public virtual void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
+    public virtual SqlExpression VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
     {
-
+        return sqlBoolExpression;
     }
-    public virtual void VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
+    public virtual SqlExpression VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
-
+        return sqlCaseExpression;
     }
-    public virtual void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
+    public virtual SqlExpression VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
     {
-
+        return sqlCaseItemExpression;
     }
-    public virtual void VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
+    public virtual SqlExpression VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
     {
-
+        return sqlCollateExpression;
     }
-    public virtual void VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
+    public virtual SqlExpression VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
     {
-
+        return sqlConnectByExpression;
     }
-    public virtual void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
+    public virtual SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
-
+        return sqlDeleteExpression;
     }
-    public virtual void VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    public virtual SqlExpression VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
     {
-
+        return sqlExistsExpression;
     }
-    public virtual void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
+    public virtual SqlExpression VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
     {
-
+        return sqlFunctionCallExpression;
     }
-    public virtual void VisitSqlInExpression(SqlInExpression sqlInExpression)
+    public virtual SqlExpression VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
-
+        return sqlGroupByExpression;
     }
-    public virtual void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
+    public virtual SqlExpression VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
     {
-
+        return sqlHintExpression;
     }
-    public virtual void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    public virtual SqlExpression VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
     {
-
+        return sqlIdentifierExpression;
     }
-    public virtual void VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
+    public virtual SqlExpression VisitSqlInExpression(SqlInExpression sqlInExpression)
     {
-
+        return sqlInExpression;
     }
-    public virtual void VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
+    public virtual SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
-
+        return sqlInsertExpression;
     }
-    public virtual void VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
+    public virtual SqlExpression VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
     {
-
+        return sqlIntervalExpression;
     }
-    public virtual void VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
+    public virtual SqlExpression VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
     {
-
+        return sqlJoinTableExpression;
     }
-    public virtual void VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
+    public virtual SqlExpression VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
     {
-
+        return sqlLimitExpression;
     }
-    public virtual void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
+    public virtual SqlExpression VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
     {
-
+        return sqlNotExpression;
     }
-    public virtual void VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
+    public virtual SqlExpression VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
     {
-
+        return sqlNullExpression;
     }
-    public virtual void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
+    public virtual SqlExpression VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
     {
-
+        return sqlNumberExpression;
     }
-    public virtual void VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
+    public virtual SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
-
+        return sqlOrderByExpression;
     }
-    public virtual void VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
+    public virtual SqlExpression VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
     {
-
+        return sqlOrderByItemExpression;
     }
-    public virtual void VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
+    public virtual SqlExpression VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
     {
-
+        return sqlOverExpression;
     }
-    public virtual void VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
+    public virtual SqlExpression VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
     {
-
+        return sqlPartitionByExpression;
     }
-    public virtual void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    public virtual SqlExpression VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
     {
-
+        return sqlPivotTableExpression;
     }
-
-    public virtual void VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
+    public virtual SqlExpression VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
     {
-        
+        return sqlPropertyExpression;
     }
-
-    public virtual void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
+    public virtual SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
     {
-
+        return sqlReferenceTableExpression;
     }
-    public virtual void VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
+    public virtual SqlExpression VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
     {
-
+        return sqlRegexExpression;
     }
-    public virtual void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
+    public virtual SqlExpression VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
     {
-
+        return sqlReturningExpression;
     }
-    public virtual void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
+    public virtual SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
-
+        return sqlSelectExpression;
     }
-    public virtual void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
+    public virtual SqlExpression VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
     {
-
+        return sqlSelectItemExpression;
     }
-    public virtual void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    public virtual SqlExpression VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
-
+        return sqlSelectQueryExpression;
     }
-    public virtual void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    public virtual SqlExpression VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
-
+        return sqlStringExpression;
     }
-    public virtual void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
+    public virtual SqlExpression VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
-
+        return sqlTableExpression;
     }
-    public virtual void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
+    public virtual SqlExpression VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
     {
-
+        return sqlTimeUnitExpression;
     }
-    public virtual void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
+    public virtual SqlExpression VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
     {
-
+        return sqlTopExpression;
     }
-    public virtual void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
+    public virtual SqlExpression VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
-
+        return sqlUnionQueryExpression;
     }
-    public virtual void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
+    public virtual SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
-
+        return sqlUpdateExpression;
     }
-
-    public virtual void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    public virtual SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
     {
-       
+        return sqlVariableExpression;
     }
-
-    public virtual void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    public virtual SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
+        return sqlWithinGroupExpression;
     }
-
-    public virtual void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    public virtual SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
     {
-
+        return sqlWithSubQueryExpression;
     }
 }

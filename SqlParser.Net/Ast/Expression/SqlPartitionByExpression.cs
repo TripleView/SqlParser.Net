@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,9 +8,9 @@ public class SqlPartitionByExpression : SqlExpression
 {
     private List<SqlExpression> items;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlPartitionByExpression(this);
+        return visitor.VisitSqlPartitionByExpression(this);
     }
     public SqlPartitionByExpression()
     {

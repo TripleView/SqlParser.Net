@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -7,9 +7,9 @@ public class SqlIntervalExpression : SqlExpression
     private SqlExpression body;
     private SqlTimeUnitExpression unit;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlIntervalExpression(this);
+        return visitor.VisitSqlIntervalExpression(this);
     }
     public SqlIntervalExpression()
     {
@@ -17,7 +17,7 @@ public class SqlIntervalExpression : SqlExpression
     }
 
     /// <summary>
-    /// Time interval value;æ—¶é—´é—´éš”æ•°å€¼
+    /// Time interval value;Ê±¼ä¼ä¸ôÊıÖµ
     /// </summary>
     public SqlExpression Body
     {
@@ -33,7 +33,7 @@ public class SqlIntervalExpression : SqlExpression
     }
 
     /// <summary>
-    /// Unit,such as hour,For PostgreSQL, this is null;å•ä½,æ¯”å¦‚hour,å¯¹äºPostgreSQLï¼Œè¿™é‡Œä¸ºnull
+    /// Unit,such as hour,For PostgreSQL, this is null;µ¥Î»,±ÈÈçhour,¶ÔÓÚPostgreSQL£¬ÕâÀïÎªnull
     /// </summary>
     public SqlTimeUnitExpression Unit
     {

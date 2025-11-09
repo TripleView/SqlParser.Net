@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
@@ -26,9 +26,9 @@ public class SqlTimeUnitExpression : SqlExpression
         return Equals((SqlTimeUnitExpression)obj);
     }
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlTimeUnitExpression(this);
+        return visitor.VisitSqlTimeUnitExpression(this);
     }
 
     public override SqlExpression InternalClone()

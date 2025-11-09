@@ -44,9 +44,9 @@ public class SqlAllExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlAllExpression(this);
+		return visitor.VisitSqlAllExpression(this);
     }
 
     public override SqlExpression InternalClone()

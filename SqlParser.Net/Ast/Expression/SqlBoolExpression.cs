@@ -5,9 +5,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlBoolExpression : SqlExpression
 {
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlBoolExpression(this);
+        return visitor.VisitSqlBoolExpression(this);
     }
     public SqlBoolExpression()
     {

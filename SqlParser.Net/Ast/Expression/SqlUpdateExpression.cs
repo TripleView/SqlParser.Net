@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,9 +12,9 @@ public class SqlUpdateExpression : SqlExpression
     private SqlExpression from;
     private List<string> comments;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlUpdateExpression(this);
+        return visitor.VisitSqlUpdateExpression(this);
     }
     public SqlUpdateExpression()
     {

@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -6,9 +6,9 @@ public class SqlWithinGroupExpression : SqlExpression
 {
     private SqlOrderByExpression orderBy;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlWithinGroupExpression(this);
+        return visitor.VisitSqlWithinGroupExpression(this);
     }
 
     public SqlWithinGroupExpression()

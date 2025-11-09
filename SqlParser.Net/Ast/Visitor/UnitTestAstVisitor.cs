@@ -17,11 +17,12 @@ public class UnitTestAstVisitor : BaseAstVisitor
     {
         return sb.ToString();
     }
-    public override void VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
+    public override SqlExpression VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
     {
         AppendLine("new SqlAllColumnExpression()");
+        return sqlAllColumnExpression;
     }
-    public override void VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
+    public override SqlExpression VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
     {
         AppendLine("new SqlAllExpression()");
         AppendLine("{");
@@ -37,8 +38,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlAllExpression;
     }
-    public override void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
+    public override SqlExpression VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
     {
         AppendLine("new SqlAnyExpression()");
         AppendLine("{");
@@ -54,8 +56,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+
+        return sqlAnyExpression;
     }
-    public override void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
+    public override SqlExpression VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
     {
         AppendLine("new SqlBetweenAndExpression()");
         AppendLine("{");
@@ -92,8 +96,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlBetweenAndExpression;
     }
-    public override void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
+    public override SqlExpression VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
     {
         AppendLine("new SqlBinaryExpression()");
         AppendLine("{");
@@ -130,8 +135,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlBinaryExpression;
     }
-    public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
+    public override SqlExpression VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
         AppendLine("new SqlCaseExpression()");
         AppendLine("{");
@@ -172,8 +178,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlCaseExpression;
     }
-    public override void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
+    public override SqlExpression VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
     {
         AppendLine("new SqlCaseItemExpression()");
         AppendLine("{");
@@ -196,8 +203,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlCaseItemExpression;
     }
-    public override void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
+    public override SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
         var isFirst = numberOfLevels == 0;
         if (isFirst)
@@ -239,8 +247,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         {
             AppendLine("},");
         }
+        return sqlDeleteExpression;
     }
-    public override void VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
+    public override SqlExpression VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
     {
         AppendLine("new SqlExistsExpression()");
         AppendLine("{");
@@ -262,9 +271,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlExistsExpression;
     }
 
-    public override void VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
+    public override SqlExpression VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
     {
         AppendLine("new SqlFunctionCallExpression()");
         AppendLine("{");
@@ -340,12 +350,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlFunctionCallExpression;
     }
-    public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
+    public override SqlExpression VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
         if (!sqlGroupByExpression.HasValue())
         {
-            return;
+            return sqlGroupByExpression;
         }
         AppendLine("new SqlGroupByExpression()");
         AppendLine("{");
@@ -373,8 +384,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlGroupByExpression;
     }
-    public override void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
+    public override SqlExpression VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
     {
         AppendLine("new SqlIdentifierExpression()");
         AppendLine("{");
@@ -394,8 +406,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlIdentifierExpression;
     }
-    public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
+    public override SqlExpression VisitSqlInExpression(SqlInExpression sqlInExpression)
     {
         AppendLine("new SqlInExpression()");
         AppendLine("{");
@@ -444,8 +457,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlInExpression;
     }
-    public override void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
+    public override SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
         var isFirst = numberOfLevels == 0;
         if (isFirst)
@@ -531,8 +545,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         {
             AppendLine("},");
         }
+
+        return sqlInsertExpression;
     }
-    public override void VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
+    public override SqlExpression VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
     {
         AppendLine("new SqlJoinTableExpression()");
         AppendLine("{");
@@ -569,8 +585,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlJoinTableExpression;
     }
-    public override void VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
+    public override SqlExpression VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
     {
         AppendLine("new SqlLimitExpression()");
         AppendLine("{");
@@ -593,8 +610,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlLimitExpression;
     }
-    public override void VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
+    public override SqlExpression VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
     {
         AppendLine("new SqlNotExpression()");
         AppendLine("{");
@@ -610,12 +628,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlNotExpression;
     }
-    public override void VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
+    public override SqlExpression VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
     {
         AppendLine("new SqlNullExpression()");
+        return sqlNullExpression;
     }
-    public override void VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
+    public override SqlExpression VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
     {
         AppendLine("new SqlNumberExpression()");
         AppendLine("{");
@@ -626,6 +646,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
         });
         AppendLine("},");
+        return sqlNumberExpression;
     }
 
     private void HandleQualifiers(IQualifierExpression qualifierExpression)
@@ -649,11 +670,11 @@ public class UnitTestAstVisitor : BaseAstVisitor
             AppendLine($"RightQualifiers = \"{value}\",");
         }
     }
-    public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
+    public override SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
         if (!sqlOrderByExpression.HasValue())
         {
-            return;
+            return sqlOrderByExpression;
         }
         AppendLine("new SqlOrderByExpression()");
         AppendLine("{");
@@ -687,10 +708,11 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
 
         AppendLine("},");
+        return sqlOrderByExpression;
     }
 
 
-    public override void VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
+    public override SqlExpression VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
     {
         AppendLine("new SqlConnectByExpression()");
         AppendLine("{");
@@ -740,9 +762,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlConnectByExpression;
     }
 
-    public override void VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
+    public override SqlExpression VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
     {
         AppendLine("new SqlOrderByItemExpression()");
         AppendLine("{");
@@ -775,8 +798,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlOrderByItemExpression;
     }
-    public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
+    public override SqlExpression VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
     {
         AppendLine("new SqlOverExpression()");
         AppendLine("{");
@@ -799,12 +823,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlOverExpression;
     }
-    public override void VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
+    public override SqlExpression VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
     {
         if (!(sqlPartitionByExpression.Items != null && sqlPartitionByExpression.Items.Count > 0))
         {
-            return;
+            return sqlPartitionByExpression;
         }
         AppendLine("new SqlPartitionByExpression()");
         AppendLine("{");
@@ -828,8 +853,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlPartitionByExpression;
     }
-    public override void VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
+    public override SqlExpression VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
     {
         AppendLine("new SqlPivotTableExpression()");
         AppendLine("{");
@@ -885,8 +911,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlPivotTableExpression;
     }
-    public override void VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
+    public override SqlExpression VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
     {
         AppendLine("new SqlPropertyExpression()");
         AppendLine("{");
@@ -915,8 +942,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlPropertyExpression;
     }
-    public override void VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
+    public override SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
     {
         AppendLine("new SqlReferenceTableExpression()");
         AppendLine("{");
@@ -937,8 +965,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("}");
+        return sqlReferenceTableExpression;
     }
-    public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
+    public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
         var isFirst = numberOfLevels == 0;
         if (isFirst)
@@ -992,8 +1021,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         {
             AppendLine("},");
         }
+
+        return sqlSelectExpression;
     }
-    public override void VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
+    public override SqlExpression VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
     {
         AdvanceNext(() =>
         {
@@ -1014,6 +1045,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
             }
             AppendLine("},");
         });
+        return sqlSelectItemExpression;
     }
 
     private void AdvanceNext(Action action)
@@ -1022,7 +1054,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         action();
         numberOfLevels--;
     }
-    public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
+    public override SqlExpression VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
         AppendLine("new SqlSelectQueryExpression()");
         AppendLine("{");
@@ -1155,7 +1187,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
-
+        return sqlSelectQueryExpression;
     }
 
     private void AppendLine(string str)
@@ -1199,7 +1231,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
         sb.Append(str);
     }
-    public override void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
+    public override SqlExpression VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
         AppendLine("new SqlStringExpression()");
         AppendLine("{");
@@ -1223,9 +1255,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlStringExpression;
     }
 
-    public override void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    public override SqlExpression VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
     {
         AppendLine("new SqlBoolExpression()");
         AppendLine("{");
@@ -1235,9 +1268,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
             AppendLine($"Value = {sqlBoolExpression.Value.ToString().ToLowerInvariant()}");
         });
         AppendLine("},");
+        return sqlBoolExpression;
     }
 
-    public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
+    public override SqlExpression VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
         AppendLine("new SqlTableExpression()");
         AppendLine("{");
@@ -1288,8 +1322,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlTableExpression;
     }
-    public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
+    public override SqlExpression VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
         AppendLine("new SqlUnionQueryExpression()");
         AppendLine("{");
@@ -1321,8 +1356,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlUnionQueryExpression;
     }
-    public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
+    public override SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
         var isFirst = numberOfLevels == 0;
         if (isFirst)
@@ -1383,8 +1419,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         {
             AppendLine("},");
         }
+
+        return sqlUpdateExpression;
     }
-    public override void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
+    public override SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
     {
 
         AppendLine("new SqlVariableExpression()");
@@ -1415,8 +1453,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlVariableExpression;
     }
-    public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
+    public override SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
         AppendLine("new SqlWithinGroupExpression()");
         AppendLine("{");
@@ -1432,8 +1471,9 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlWithinGroupExpression;
     }
-    public override void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
+    public override SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
     {
 
         AppendLine("new SqlWithSubQueryExpression()");
@@ -1475,9 +1515,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlWithSubQueryExpression;
     }
 
-    public override void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    public override SqlExpression VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
     {
         AppendLine("new SqlTopExpression()");
         AppendLine("{");
@@ -1492,9 +1533,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlTopExpression;
     }
 
-    public override void VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    public override SqlExpression VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
     {
         AppendLine("new SqlHintExpression()");
         AppendLine("{");
@@ -1509,10 +1551,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
-
+        return sqlHintExpression;
     }
 
-    public override void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    public override SqlExpression VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
     {
         AppendLine("new SqlAtTimeZoneExpression()");
         AppendLine("{");
@@ -1536,9 +1578,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlAtTimeZoneExpression;
     }
 
-    public override void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    public override SqlExpression VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
     {
         AppendLine("new SqlIntervalExpression()");
         AppendLine("{");
@@ -1562,9 +1605,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlIntervalExpression;
     }
 
-    public override void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    public override SqlExpression VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
     {
         AppendLine("new SqlTimeUnitExpression()");
         AppendLine("{");
@@ -1578,9 +1622,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlTimeUnitExpression;
     }
 
-    public override void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
+    public override SqlExpression VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
     {
         AppendLine("new SqlCollateExpression()");
         AppendLine("{");
@@ -1595,9 +1640,10 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlCollateExpression;
     }
 
-    public override void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    public override SqlExpression VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
     {
         AppendLine("new SqlRegexExpression()");
         AppendLine("{");
@@ -1637,13 +1683,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
         });
 
         AppendLine("},");
+        return sqlRegexExpression;
     }
 
-    public override void VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
+    public override SqlExpression VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
     {
         if (!sqlReturningExpression.HasValue())
         {
-            return;
+            return sqlReturningExpression;
         }
         AppendLine("new SqlReturningExpression()");
         AppendLine("{");
@@ -1682,13 +1729,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlReturningExpression;
     }
 
-    public override void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    public override SqlExpression VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
     {
         if (!sqlArrayExpression.HasValue())
         {
-            return;
+            return sqlArrayExpression;
         }
         AppendLine("new SqlArrayExpression()");
         AppendLine("{");
@@ -1711,13 +1759,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
 
         AppendLine("},");
+        return sqlArrayExpression;
     }
 
-    public override void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    public override SqlExpression VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
     {
         if (sqlArrayIndexExpression.Body == null || sqlArrayIndexExpression.Index == null)
         {
-            return;
+            return sqlArrayIndexExpression;
         }
 
         AppendLine("new SqlArrayIndexExpression()");
@@ -1733,13 +1782,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
             sqlArrayIndexExpression.Index.Accept(this);
         });
         AppendLine("},");
+        return sqlArrayIndexExpression;
     }
 
-    public override void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    public override SqlExpression VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
     {
         if (sqlArraySliceExpression.Body == null)
         {
-            return;
+            return sqlArraySliceExpression;
         }
 
         AppendLine("new SqlArraySliceExpression()");
@@ -1766,5 +1816,6 @@ public class UnitTestAstVisitor : BaseAstVisitor
             });
         }
         AppendLine("},");
+        return sqlArraySliceExpression;
     }
 }

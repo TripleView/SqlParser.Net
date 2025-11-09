@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
@@ -10,9 +10,9 @@ public class SqlSelectExpression : SqlExpression
     private SqlOrderByExpression orderBy;
     private SqlLimitExpression limit;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlSelectExpression(this);
+        return visitor.VisitSqlSelectExpression(this);
     }
     public SqlSelectExpression()
     {

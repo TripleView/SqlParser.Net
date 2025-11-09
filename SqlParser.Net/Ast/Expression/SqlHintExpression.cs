@@ -45,9 +45,9 @@ public class SqlHintExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlHintExpression(this);
+        return visitor.VisitSqlHintExpression(this);
     }
 
     public override SqlExpression InternalClone()

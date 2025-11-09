@@ -5,7 +5,7 @@
 	  <LangVersion>latest</LangVersion>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	  <Title>SqlParser.Net</Title>
-	  <Version>1.1.15</Version>
+	  <Version>1.1.16</Version>
 	  <PackageProjectUrl>https://github.com/TripleView/SqlParser.Net</PackageProjectUrl>
 	  <Authors>TripleView</Authors>
 	  <RepositoryUrl>https://github.com/TripleView/SqlParser.Net.git</RepositoryUrl>

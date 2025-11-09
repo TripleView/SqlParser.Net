@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -6,9 +6,9 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
 {
     private SqlFunctionCallExpression functionCall;
     private SqlIdentifierExpression alias;
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlReferenceTableExpression(this);
+        return visitor.VisitSqlReferenceTableExpression(this);
     }
     public SqlReferenceTableExpression()
     {

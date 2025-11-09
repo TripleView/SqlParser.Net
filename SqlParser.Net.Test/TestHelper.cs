@@ -19,8 +19,9 @@ public class TestHelper
         var expressionList = typeof(SqlExpression).Assembly.DefinedTypes.Where(it => typeof(SqlExpression).IsAssignableFrom(it)&&it!=typeof(SqlExpression)).OrderBy(it=>it.Name).ToList();
         foreach (var typeInfo in expressionList)
         {
-            sb.Append($"    void Visit{typeInfo.Name}({typeInfo.Name} {typeInfo.Name.Substring(0, 1).ToLower() + typeInfo.Name.Substring(1)});\r\n");
-            sb2.Append($"    public virtual void Visit{typeInfo.Name}({typeInfo.Name} {typeInfo.Name.Substring(0, 1).ToLower() + typeInfo.Name.Substring(1)})\r\n    {{\r\n\r\n    }}\r\n");
+            var className = typeInfo.Name.Substring(0, 1).ToLower() + typeInfo.Name.Substring(1);
+            sb.Append($"    SqlExpression Visit{typeInfo.Name}({typeInfo.Name} {className});\r\n");
+            sb2.Append($"    public virtual SqlExpression Visit{typeInfo.Name}({typeInfo.Name} {className})\r\n    {{\r\n        return {className};\r\n    }}\r\n");
         }
 
         sb.Append("}");

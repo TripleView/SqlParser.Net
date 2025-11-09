@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,9 +8,9 @@ public class SqlOrderByExpression : SqlExpression
 {
     private List<SqlOrderByItemExpression> items;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlOrderByExpression(this);
+        return visitor.VisitSqlOrderByExpression(this);
     }
     public SqlOrderByExpression()
     {
@@ -36,7 +36,7 @@ public class SqlOrderByExpression : SqlExpression
 
     /// <summary>
     /// just for oracle ,such as:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e  CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID
-    /// ä»…oracleä½¿ç”¨ï¼Œä¾‹å¦‚sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e  CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID
+    /// ½öoracleÊ¹ÓÃ£¬ÀýÈçsql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e  CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID
     /// </summary>
     public bool IsSiblings { get; set; }
 

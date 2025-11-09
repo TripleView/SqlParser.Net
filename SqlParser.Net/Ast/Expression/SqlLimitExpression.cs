@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -7,9 +7,9 @@ public class SqlLimitExpression : SqlExpression
     private SqlExpression offset;
     private SqlExpression rowCount;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlLimitExpression(this);
+        return visitor.VisitSqlLimitExpression(this);
     }
     public SqlLimitExpression()
     {

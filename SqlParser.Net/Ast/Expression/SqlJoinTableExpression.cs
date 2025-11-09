@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -8,9 +8,9 @@ public class SqlJoinTableExpression : SqlExpression
     private SqlExpression right;
     private SqlExpression conditions;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlJoinTableExpression(this);
+        return visitor.VisitSqlJoinTableExpression(this);
     }
     public SqlJoinTableExpression()
     {

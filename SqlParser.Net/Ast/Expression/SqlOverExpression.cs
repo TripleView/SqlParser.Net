@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -7,9 +7,9 @@ public class SqlOverExpression : SqlExpression
     private SqlOrderByExpression orderBy;
     private SqlPartitionByExpression partitionBy;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlOverExpression(this);
+        return visitor.VisitSqlOverExpression(this);
     }
     public SqlOverExpression()
     {

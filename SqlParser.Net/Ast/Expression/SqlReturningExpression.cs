@@ -9,9 +9,9 @@ public class SqlReturningExpression : SqlExpression
     private List<SqlExpression> items;
     private List<SqlExpression> intoVariables;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlReturningExpression(this);
+        return visitor.VisitSqlReturningExpression(this);
     }
     public SqlReturningExpression()
     {

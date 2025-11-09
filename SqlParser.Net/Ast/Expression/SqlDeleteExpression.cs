@@ -9,9 +9,9 @@ public class SqlDeleteExpression : SqlExpression
     private SqlExpression table;
     private SqlExpression where;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlDeleteExpression(this);
+        return visitor.VisitSqlDeleteExpression(this);
     }
     public SqlDeleteExpression()
     {

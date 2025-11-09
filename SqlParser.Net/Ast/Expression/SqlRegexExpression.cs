@@ -1,9 +1,9 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 /// <summary>
 /// Regular Expressions
-/// æ­£åˆ™è¡¨è¾¾å¼
+/// ÕıÔò±í´ïÊ½
 /// </summary>
 public class SqlRegexExpression : SqlExpression, ICollateExpression
 {
@@ -14,9 +14,9 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
     private SqlExpression body;
 
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlRegexExpression(this);
+        return visitor.VisitSqlRegexExpression(this);
     }
     public SqlRegexExpression()
     {
@@ -25,13 +25,13 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
 
     /// <summary>
     /// Is it case sensitive
-    /// æ˜¯å¦åŒºåˆ†å¤§å°å†™
+    /// ÊÇ·ñÇø·Ö´óĞ¡Ğ´
     /// </summary>
     public bool IsCaseSensitive { get; set; }
 
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     public SqlCollateExpression Collate
     {

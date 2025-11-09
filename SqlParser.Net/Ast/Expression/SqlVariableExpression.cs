@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -6,13 +6,13 @@ public class SqlVariableExpression : SqlExpression, ICollateExpression
 {
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
 
     private SqlCollateExpression collate;
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlVariableExpression(this);
+        return visitor.VisitSqlVariableExpression(this);
     }
     public SqlVariableExpression()
     {
@@ -20,14 +20,14 @@ public class SqlVariableExpression : SqlExpression, ICollateExpression
     }
     /// <summary>
     /// Prefix eg. : or @
-    /// å‰ç¼€ï¼Œä¾‹å¦‚:æˆ–è€…@
+    /// Ç°×º£¬ÀıÈç:»òÕß@
     /// </summary>
     public string Prefix { get; set; }
 
     public string Name { get; set; }
     /// <summary>
     /// The collate clause is mainly used to specify string comparison and sorting rules.
-    /// collateå­å¥ä¸»è¦ç”¨äºæŒ‡å®šå­—ç¬¦ä¸²æ¯”è¾ƒå’Œæ’åºçš„è§„åˆ™
+    /// collate×Ó¾äÖ÷ÒªÓÃÓÚÖ¸¶¨×Ö·û´®±È½ÏºÍÅÅĞòµÄ¹æÔò
     /// </summary>
     public SqlCollateExpression Collate
     {

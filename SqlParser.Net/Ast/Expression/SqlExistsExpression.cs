@@ -6,9 +6,9 @@ public class SqlExistsExpression : SqlExpression
 {
     private SqlSelectExpression body;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlExistsExpression(this);
+        return visitor.VisitSqlExistsExpression(this);
     }
 
     public SqlExistsExpression()

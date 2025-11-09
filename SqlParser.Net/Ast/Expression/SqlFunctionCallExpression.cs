@@ -19,9 +19,9 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 
     private SqlCollateExpression collate;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlFunctionCallExpression(this);
+        return visitor.VisitSqlFunctionCallExpression(this);
     }
     public SqlFunctionCallExpression()
     {

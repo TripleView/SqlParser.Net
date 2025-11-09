@@ -1,4 +1,4 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Linq;
 using SqlParser.Net.Lexer;
@@ -19,9 +19,9 @@ public class SqlSelectQueryExpression : SqlExpression
     private SqlLimitExpression limit;
     private List<SqlHintExpression> hints;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlSelectQueryExpression(this);
+        return visitor.VisitSqlSelectQueryExpression(this);
     }
     public SqlSelectQueryExpression()
     {
@@ -33,7 +33,7 @@ public class SqlSelectQueryExpression : SqlExpression
 
     /// <summary>
     /// cte sub query
-    /// cteå…¬å…±è¡¨è¡¨è¾¾å¼å­æŸ¥è¯¢
+    /// cte¹«¹²±í±í´ïÊ½×Ó²éÑ¯
     /// </summary>
     public List<SqlWithSubQueryExpression> WithSubQuerys
     {
@@ -75,13 +75,13 @@ public class SqlSelectQueryExpression : SqlExpression
 
     /// <summary>
     /// SQL result set return options, such as all, distinct
-    /// sqlç»“æœé›†è¿”å›é€‰é¡¹ï¼Œä¾‹å¦‚allï¼Œdistinct
+    /// sql½á¹û¼¯·µ»ØÑ¡Ïî£¬ÀıÈçall£¬distinct
     /// </summary>
     public SqlResultSetReturnOption? ResultSetReturnOption { get; set; }
 
     /// <summary>
     /// sqlserver suport,such as sql: SELECT id,name into test14 from TEST t
-    /// sqlserver æ”¯æŒ,æ¯”å¦‚sql:  SELECT id,name into test14 from TEST t
+    /// sqlserver Ö§³Ö,±ÈÈçsql:  SELECT id,name into test14 from TEST t
     /// </summary>
     public SqlExpression Into
     {
@@ -110,7 +110,7 @@ public class SqlSelectQueryExpression : SqlExpression
     }
 
     /// <summary>
-    /// sqlserver æ”¯æŒ,æ¯”å¦‚sql:SELECT   TOP  100 * from test 
+    /// sqlserver Ö§³Ö,±ÈÈçsql:SELECT   TOP  100 * from test 
     /// </summary>
     public SqlTopExpression Top
     {
@@ -154,7 +154,7 @@ public class SqlSelectQueryExpression : SqlExpression
 
     /// <summary>
     /// just for oracle,such as sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
-    /// ä»…oracleä¸­æœ‰ç”¨ï¼Œä¾‹å¦‚sql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
+    /// ½öoracleÖĞÓĞÓÃ£¬ÀıÈçsql:SELECT EMPLOYEEID , MANAGERID , LEVEL FROM EMPLOYEE e START WITH MANAGERID IS NULL CONNECT BY NOCYCLE PRIOR EMPLOYEEID = MANAGERID ORDER SIBLINGS BY EMPLOYEEID ;
     /// </summary>
     public SqlConnectByExpression ConnectBy
     {

@@ -1,12 +1,12 @@
-ï»¿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
 public class SqlNumberExpression : SqlExpression, IQualifierExpression
 {
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlNumberExpression(this);
+        return visitor.VisitSqlNumberExpression(this);
     }
     public SqlNumberExpression()
     {
@@ -15,12 +15,12 @@ public class SqlNumberExpression : SqlExpression, IQualifierExpression
 
     /// <summary>
     /// Left Qualifiers
-    /// å·¦é™å®šç¬¦
+    /// ×óÏŞ¶¨·û
     /// </summary>
     public string LeftQualifiers { get; set; }
     /// <summary>
     /// right Qualifiers
-    /// å³é™å®šç¬¦
+    /// ÓÒÏŞ¶¨·û
     /// </summary>
     public string RightQualifiers { get; set; }
 

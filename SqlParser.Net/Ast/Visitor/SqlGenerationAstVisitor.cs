@@ -40,31 +40,34 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         return sb.ToString().Trim(' ');
     }
-    public override void VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
+    public override SqlExpression VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
     {
         AppendWithSpace("*");
+        return sqlAllColumnExpression;
     }
-    public override void VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
+    public override SqlExpression VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
     {
         Append("all");
         if (sqlAllExpression.Body != null)
         {
-            EnableParen(() => { sqlAllExpression.Body.Accept(this); });
+            EnableParen(() => { sqlAllExpression.Body = sqlAllExpression.Body.Accept(this); });
         }
+        return sqlAllExpression;
     }
-    public override void VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
+    public override SqlExpression VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
     {
         Append("any");
         if (sqlAnyExpression.Body != null)
         {
-            EnableParen(() => { sqlAnyExpression.Body.Accept(this); });
+            EnableParen(() => { sqlAnyExpression.Body = sqlAnyExpression.Body.Accept(this); });
         }
+        return sqlAnyExpression;
     }
-    public override void VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
+    public override SqlExpression VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
     {
         if (sqlBetweenAndExpression.Body != null)
         {
-            sqlBetweenAndExpression.Body.Accept(this);
+            sqlBetweenAndExpression.Body = sqlBetweenAndExpression.Body.Accept(this);
         }
 
         if (sqlBetweenAndExpression.IsNot)
@@ -74,24 +77,25 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         AppendWithSpace("between");
         if (sqlBetweenAndExpression.Begin != null)
         {
-            sqlBetweenAndExpression.Begin.Accept(this);
+            sqlBetweenAndExpression.Begin = sqlBetweenAndExpression.Begin.Accept(this);
         }
 
         AppendWithSpace("and");
 
         if (sqlBetweenAndExpression.End != null)
         {
-            sqlBetweenAndExpression.End.Accept(this);
+            sqlBetweenAndExpression.End = sqlBetweenAndExpression.End.Accept(this);
         }
 
+        return sqlBetweenAndExpression;
     }
-    public override void VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
+    public override SqlExpression VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
     {
         void internalAction()
         {
             if (sqlBinaryExpression.Left != null)
             {
-                sqlBinaryExpression.Left.Accept(this);
+                sqlBinaryExpression.Left = sqlBinaryExpression.Left.Accept(this);
             }
 
             if (sqlBinaryExpression.Operator != null)
@@ -100,12 +104,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
             if (sqlBinaryExpression.Right != null)
             {
-                sqlBinaryExpression.Right.Accept(this);
+                sqlBinaryExpression.Right = sqlBinaryExpression.Right.Accept(this);
             }
 
             if (sqlBinaryExpression.Collate != null)
             {
-                sqlBinaryExpression.Collate.Accept(this);
+                sqlBinaryExpression.Collate = (SqlCollateExpression)sqlBinaryExpression.Collate.Accept(this);
             }
         }
 
@@ -118,70 +122,78 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             EnableParen(internalAction);
         }
 
+        return sqlBinaryExpression;
     }
-    public override void VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
+    public override SqlExpression VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
     {
         Append("case");
 
         if (sqlCaseExpression.Value != null)
         {
-            sqlCaseExpression.Value.Accept(this);
+            sqlCaseExpression.Value = sqlCaseExpression.Value.Accept(this);
         }
 
         if (sqlCaseExpression.Items.HasValue())
         {
+            var newItems = new List<SqlCaseItemExpression>();
             foreach (var item in sqlCaseExpression.Items)
             {
-                item.Accept(this);
+                var newItem = (SqlCaseItemExpression)item.Accept(this);
+                newItems.Add(newItem);
             }
+
+            sqlCaseExpression.Items = newItems;
         }
 
         if (sqlCaseExpression.Else != null)
         {
             AppendWithSpace("else");
-            sqlCaseExpression.Else.Accept(this);
+            sqlCaseExpression.Else = sqlCaseExpression.Else.Accept(this);
         }
 
         AppendWithLeftSpace("end");
+
+        return sqlCaseExpression;
     }
-    public override void VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
+    public override SqlExpression VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
     {
 
         if (sqlCaseItemExpression.Condition != null)
         {
             AppendWithSpace("when");
-            sqlCaseItemExpression.Condition.Accept(this);
+            sqlCaseItemExpression.Condition = sqlCaseItemExpression.Condition.Accept(this);
         }
 
         if (sqlCaseItemExpression.Value != null)
         {
             AppendWithSpace("then");
-            sqlCaseItemExpression.Value.Accept(this);
+            sqlCaseItemExpression.Value = sqlCaseItemExpression.Value.Accept(this);
         }
-
+        return sqlCaseItemExpression;
     }
-    public override void VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
+    public override SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
         AppendWithRightSpace("delete");
         if (sqlDeleteExpression.Body != null)
         {
-            sqlDeleteExpression.Body.Accept(this);
+            sqlDeleteExpression.Body = sqlDeleteExpression.Body.Accept(this);
         }
 
         AppendWithSpace("from");
 
         if (sqlDeleteExpression.Table != null)
         {
-            sqlDeleteExpression.Table.Accept(this);
+            sqlDeleteExpression.Table = sqlDeleteExpression.Table.Accept(this);
         }
         if (sqlDeleteExpression.Where != null)
         {
             AppendWithSpace("where");
-            sqlDeleteExpression.Where.Accept(this);
+            sqlDeleteExpression.Where = sqlDeleteExpression.Where.Accept(this);
         }
 
+        return sqlDeleteExpression;
     }
-    public override void VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
+    public override SqlExpression VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
     {
         if (sqlExistsExpression.IsNot)
         {
@@ -194,23 +206,26 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             EnableParen(() =>
             {
-                sqlExistsExpression.Body.Accept(this);
+                sqlExistsExpression.Body = (SqlSelectExpression)sqlExistsExpression.Body.Accept(this);
             });
         }
 
+        return sqlExistsExpression;
     }
 
-    public override void VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
+    public override SqlExpression VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
     {
 
         if (sqlFunctionCallExpression.Name != null)
         {
-            sqlFunctionCallExpression.Name?.Accept(this);
+            sqlFunctionCallExpression.Name = (SqlIdentifierExpression)sqlFunctionCallExpression.Name.Accept(this);
         }
         if (sqlFunctionCallExpression.Arguments != null)
         {
+
             EnableParen(() =>
             {
+                var newArguments = new List<SqlExpression>();
                 for (var i = 0; i < sqlFunctionCallExpression.Arguments.Count; i++)
                 {
                     if (i == 0)
@@ -221,18 +236,20 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                         }
                     }
                     var argument = sqlFunctionCallExpression.Arguments[i];
-                    argument.Accept(this);
-
+                    var newArgument = argument.Accept(this);
+                    newArguments.Add(newArgument);
                     if (sqlFunctionCallExpression.CaseAsTargetType != null)
                     {
                         AppendWithSpace("as");
-                        Append($"{sqlFunctionCallExpression.CaseAsTargetType.Value}");
+                        sqlFunctionCallExpression.CaseAsTargetType =
+                            (SqlIdentifierExpression)sqlFunctionCallExpression.CaseAsTargetType.Accept(this);
+                        //Append($"{sqlFunctionCallExpression.CaseAsTargetType.Value}");
                     }
 
                     if (sqlFunctionCallExpression.FromSource != null)
                     {
                         AppendWithSpace($"from");
-                        sqlFunctionCallExpression.FromSource.Accept(this);
+                        sqlFunctionCallExpression.FromSource = sqlFunctionCallExpression.FromSource.Accept(this);
                     }
 
                     if (i < sqlFunctionCallExpression.Arguments.Count - 1)
@@ -240,6 +257,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                         AppendWithoutSpaces(",");
                     }
                 }
+
+                sqlFunctionCallExpression.Arguments = newArguments;
             });
         }
         else
@@ -249,47 +268,53 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlFunctionCallExpression.WithinGroup != null)
         {
-            sqlFunctionCallExpression.WithinGroup?.Accept(this);
+            sqlFunctionCallExpression.WithinGroup = (SqlWithinGroupExpression)sqlFunctionCallExpression.WithinGroup.Accept(this);
         }
 
         if (sqlFunctionCallExpression.Over != null)
         {
-            sqlFunctionCallExpression.Over.Accept(this);
+            sqlFunctionCallExpression.Over = (SqlOverExpression)sqlFunctionCallExpression.Over.Accept(this);
         }
 
         if (sqlFunctionCallExpression.Collate != null)
         {
-            sqlFunctionCallExpression.Collate?.Accept(this);
+            sqlFunctionCallExpression.Collate = (SqlCollateExpression)sqlFunctionCallExpression.Collate.Accept(this);
         }
+        return sqlFunctionCallExpression;
     }
-    public override void VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
+    public override SqlExpression VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
     {
         if (!sqlGroupByExpression.HasValue())
         {
-            return;
+            return sqlGroupByExpression;
         }
         AppendWithSpace("group by");
+
         if (sqlGroupByExpression.Items.HasValue())
         {
+            var newItems = new List<SqlExpression>();
             for (var i = 0; i < sqlGroupByExpression.Items.Count; i++)
             {
                 var item = sqlGroupByExpression.Items[i];
-                item.Accept(this);
+                var newItem = item.Accept(this);
+                newItems.Add(newItem);
                 if (i < sqlGroupByExpression.Items.Count - 1)
                 {
                     AppendWithoutSpaces(", ");
                 }
             }
+            sqlGroupByExpression.Items = newItems;
         }
 
         if (sqlGroupByExpression.Having != null)
         {
             AppendWithSpace("having");
-            sqlGroupByExpression.Having.Accept(this);
+            sqlGroupByExpression.Having = sqlGroupByExpression.Having.Accept(this);
         }
 
+        return sqlGroupByExpression;
     }
-    public override void VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
+    public override SqlExpression VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
     {
         if (!string.IsNullOrWhiteSpace(sqlIdentifierExpression.LeftQualifiers))
         {
@@ -302,14 +327,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlIdentifierExpression.Collate != null)
         {
-            sqlIdentifierExpression.Collate?.Accept(this);
+            sqlIdentifierExpression.Collate = (SqlCollateExpression)sqlIdentifierExpression.Collate.Accept(this);
         }
+        return sqlIdentifierExpression;
     }
-    public override void VisitSqlInExpression(SqlInExpression sqlInExpression)
+    public override SqlExpression VisitSqlInExpression(SqlInExpression sqlInExpression)
     {
         if (sqlInExpression.Body != null)
         {
-            sqlInExpression.Body.Accept(this);
+            sqlInExpression.Body = sqlInExpression.Body.Accept(this);
         }
 
         if (sqlInExpression.IsNot)
@@ -322,92 +348,105 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             EnableParen(() =>
             {
+                var newTargetList = new List<SqlExpression>();
                 for (var i = 0; i < sqlInExpression.TargetList.Count; i++)
                 {
                     var item = sqlInExpression.TargetList[i];
-                    item.Accept(this);
+                    var newItem = item.Accept(this);
+                    newTargetList.Add(newItem);
                     if (i < sqlInExpression.TargetList.Count - 1)
                     {
                         AppendWithoutSpaces(", ");
                     }
                 }
+                sqlInExpression.TargetList = newTargetList;
             });
         }
 
         if (sqlInExpression.SubQuery != null)
         {
-            sqlInExpression.SubQuery.Accept(this);
+            sqlInExpression.SubQuery = (SqlSelectExpression)sqlInExpression.SubQuery.Accept(this);
         }
+        return sqlInExpression;
     }
-    public override void VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
+    public override SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
         AppendWithRightSpace("insert into");
 
         if (sqlInsertExpression.Table != null)
         {
-            sqlInsertExpression.Table?.Accept(this);
+            sqlInsertExpression.Table = sqlInsertExpression.Table.Accept(this);
         }
 
         if (sqlInsertExpression.Columns.HasValue())
         {
             EnableParen(() =>
             {
+                var newColumns = new List<SqlExpression>();
                 for (var i = 0; i < sqlInsertExpression.Columns.Count; i++)
                 {
                     var item = sqlInsertExpression.Columns[i];
-                    item.Accept(this);
+                    var newItem = item.Accept(this);
+                    newColumns.Add(newItem);
                     if (i < sqlInsertExpression.Columns.Count - 1)
                     {
                         AppendWithoutSpaces(", ");
                     }
                 }
+                sqlInsertExpression.Columns = newColumns;
             });
         }
         if (sqlInsertExpression.ValuesList.HasValue())
         {
             AppendWithLeftSpace("values");
+            var newValuesList = new List<List<SqlExpression>>();
             for (var i = 0; i < sqlInsertExpression.ValuesList.Count; i++)
             {
                 var items = sqlInsertExpression.ValuesList[i];
+                var newItems = new List<SqlExpression>();
                 EnableParen((() =>
                 {
                     for (var j = 0; j < items.Count; j++)
                     {
                         var item = items[j];
-                        item.Accept(this);
+                        var newItem = item.Accept(this);
+                        newItems.Add(newItem);
                         if (j < items.Count - 1)
                         {
                             AppendWithoutSpaces(", ");
                         }
                     }
                 }));
-
+                newValuesList.Add(newItems);
 
                 if (i < sqlInsertExpression.ValuesList.Count - 1)
                 {
                     AppendWithoutSpaces(",");
                 }
             }
+            sqlInsertExpression.ValuesList = newValuesList;
 
         }
 
         if (sqlInsertExpression.FromSelect != null)
         {
             AppendSpace();
-            sqlInsertExpression.FromSelect?.Accept(this);
+            sqlInsertExpression.FromSelect = (SqlSelectExpression)sqlInsertExpression.FromSelect.Accept(this);
         }
 
         if (sqlInsertExpression.Returning != null)
         {
-            sqlInsertExpression.Returning?.Accept(this);
+            sqlInsertExpression.Returning = (SqlReturningExpression)sqlInsertExpression.Returning.Accept(this);
         }
+
+        return sqlInsertExpression;
     }
-    public override void VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
+    public override SqlExpression VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
     {
 
         if (sqlJoinTableExpression.Left != null)
         {
-            sqlJoinTableExpression.Left.Accept(this);
+            sqlJoinTableExpression.Left = sqlJoinTableExpression.Left.Accept(this);
         }
         if (sqlJoinTableExpression.JoinType != null)
         {
@@ -438,17 +477,18 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlJoinTableExpression.Right != null)
         {
-            sqlJoinTableExpression.Right.Accept(this);
+            sqlJoinTableExpression.Right = sqlJoinTableExpression.Right.Accept(this);
         }
 
         if (sqlJoinTableExpression.Conditions != null)
         {
             AppendWithSpace("on");
-            sqlJoinTableExpression.Conditions.Accept(this);
+            sqlJoinTableExpression.Conditions = sqlJoinTableExpression.Conditions.Accept(this);
         }
 
+        return sqlJoinTableExpression;
     }
-    public override void VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
+    public override SqlExpression VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
     {
         switch (dbType)
         {
@@ -456,7 +496,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 AppendWithSpace("fetch first");
                 if (sqlLimitExpression.RowCount != null)
                 {
-                    sqlLimitExpression.RowCount.Accept(this);
+                    sqlLimitExpression.RowCount = sqlLimitExpression.RowCount.Accept(this);
                 }
                 AppendWithLeftSpace("rows only");
                 break;
@@ -465,12 +505,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 AppendWithSpace("limit");
                 if (sqlLimitExpression.Offset != null)
                 {
-                    sqlLimitExpression.Offset.Accept(this);
+                    sqlLimitExpression.Offset = sqlLimitExpression.Offset.Accept(this);
                     AppendWithoutSpaces(", ");
                 }
                 if (sqlLimitExpression.RowCount != null)
                 {
-                    sqlLimitExpression.RowCount.Accept(this);
+                    sqlLimitExpression.RowCount = sqlLimitExpression.RowCount.Accept(this);
                 }
 
                 break;
@@ -478,12 +518,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 AppendWithSpace("OFFSET");
                 if (sqlLimitExpression.Offset != null)
                 {
-                    sqlLimitExpression.Offset.Accept(this);
+                    sqlLimitExpression.Offset = sqlLimitExpression.Offset.Accept(this);
                 }
                 AppendWithSpace("ROWS FETCH NEXT");
                 if (sqlLimitExpression.RowCount != null)
                 {
-                    sqlLimitExpression.RowCount.Accept(this);
+                    sqlLimitExpression.RowCount = sqlLimitExpression.RowCount.Accept(this);
                 }
                 AppendWithSpace("ROWS ONLY");
                 break;
@@ -492,37 +532,39 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 if (sqlLimitExpression.RowCount != null)
                 {
                     AppendWithSpace("limit");
-                    sqlLimitExpression.RowCount.Accept(this);
+                    sqlLimitExpression.RowCount = sqlLimitExpression.RowCount.Accept(this);
                 }
 
                 if (sqlLimitExpression.Offset != null)
                 {
                     AppendWithSpace("offset");
-                    sqlLimitExpression.Offset.Accept(this);
+                    sqlLimitExpression.Offset = sqlLimitExpression.Offset.Accept(this);
                 }
 
                 break;
         }
 
-
-
+        return sqlLimitExpression;
     }
-    public override void VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
+    public override SqlExpression VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
     {
         AppendWithSpace("not");
         if (sqlNotExpression.Body != null)
         {
             EnableParen(() =>
             {
-                sqlNotExpression.Body.Accept(this);
+                sqlNotExpression.Body = sqlNotExpression.Body.Accept(this);
             });
         }
+
+        return sqlNotExpression;
     }
-    public override void VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
+    public override SqlExpression VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
     {
         Append("null");
+        return sqlNullExpression;
     }
-    public override void VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
+    public override SqlExpression VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
     {
         if (!string.IsNullOrWhiteSpace(sqlNumberExpression.LeftQualifiers))
         {
@@ -532,12 +574,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             Append(sqlNumberExpression.Value.ToString());
         }
+        return sqlNumberExpression;
     }
-    public override void VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
+    public override SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
     {
         if (!sqlOrderByExpression.HasValue())
         {
-            return;
+            return sqlOrderByExpression;
         }
         if (sqlOrderByExpression.IsSiblings)
         {
@@ -550,25 +593,29 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlOrderByExpression.Items.HasValue())
         {
+            var newItems = new List<SqlOrderByItemExpression>();
             for (var i = 0; i < sqlOrderByExpression.Items.Count; i++)
             {
                 var item = sqlOrderByExpression.Items[i];
-                item.Accept(this);
+                var newItem = (SqlOrderByItemExpression)item.Accept(this);
+                newItems.Add(newItem);
                 if (i < sqlOrderByExpression.Items.Count - 1)
                 {
                     AppendWithoutSpaces(", ");
                 }
             }
-
+            sqlOrderByExpression.Items = newItems;
         }
+
+        return sqlOrderByExpression;
     }
 
-    public override void VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
+    public override SqlExpression VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
     {
         if (sqlConnectByExpression.StartWith != null)
         {
             AppendWithSpace("start with");
-            sqlConnectByExpression.StartWith.Accept(this);
+            sqlConnectByExpression.StartWith = sqlConnectByExpression.StartWith.Accept(this);
         }
 
         AppendWithSpace("connect by");
@@ -581,19 +628,21 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             AppendWithSpace("prior");
         }
 
-        sqlConnectByExpression.Body.Accept(this);
+        sqlConnectByExpression.Body = sqlConnectByExpression.Body.Accept(this);
 
         if (sqlConnectByExpression.OrderBy.HasValue())
         {
-            sqlConnectByExpression.OrderBy.Accept(this);
+            sqlConnectByExpression.OrderBy = (SqlOrderByExpression)sqlConnectByExpression.OrderBy.Accept(this);
         }
+
+        return sqlConnectByExpression;
     }
 
-    public override void VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
+    public override SqlExpression VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
     {
         if (sqlOrderByItemExpression.Body != null)
         {
-            sqlOrderByItemExpression.Body?.Accept(this);
+            sqlOrderByItemExpression.Body = sqlOrderByItemExpression.Body.Accept(this);
         }
 
         if (sqlOrderByItemExpression.OrderByType.HasValue)
@@ -604,49 +653,57 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             AppendWithLeftSpace(sqlOrderByItemExpression.NullsType == SqlOrderByNullsType.First ? "nulls first" : "nulls last");
         }
+
+        return sqlOrderByItemExpression;
     }
-    public override void VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
+    public override SqlExpression VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
     {
         AppendWithSpace("over");
         EnableParen((() =>
         {
             if (sqlOverExpression.PartitionBy != null)
             {
-                sqlOverExpression.PartitionBy.Accept(this);
+                sqlOverExpression.PartitionBy = (SqlPartitionByExpression)sqlOverExpression.PartitionBy.Accept(this);
             }
             if (sqlOverExpression.OrderBy.HasValue())
             {
-                sqlOverExpression.OrderBy.Accept(this);
+                sqlOverExpression.OrderBy = (SqlOrderByExpression)sqlOverExpression.OrderBy.Accept(this);
             }
         }));
-
+        return sqlOverExpression;
     }
-    public override void VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
+    public override SqlExpression VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
     {
         if (!(sqlPartitionByExpression.Items != null && sqlPartitionByExpression.Items.Count > 0))
         {
-            return;
+            return sqlPartitionByExpression;
         }
         AppendWithRightSpace("partition by");
 
         if (sqlPartitionByExpression.Items.HasValue())
         {
+            var newItems = new List<SqlExpression>();
             for (var i = 0; i < sqlPartitionByExpression.Items.Count; i++)
             {
                 var item = sqlPartitionByExpression.Items[i];
-                item.Accept(this);
+                var newItem = item.Accept(this);
+                newItems.Add(newItem);
                 if (i < sqlPartitionByExpression.Items.Count - 1)
                 {
                     AppendWithoutSpaces(", ");
                 }
             }
+
+            sqlPartitionByExpression.Items = newItems;
         }
+
+        return sqlPartitionByExpression;
     }
-    public override void VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
+    public override SqlExpression VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
     {
         if (sqlPivotTableExpression.SubQuery != null)
         {
-            sqlPivotTableExpression.SubQuery.Accept(this);
+            sqlPivotTableExpression.SubQuery = sqlPivotTableExpression.SubQuery.Accept(this);
         }
 
         AppendWithSpace("pivot");
@@ -654,27 +711,30 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             if (sqlPivotTableExpression.FunctionCall != null)
             {
-                sqlPivotTableExpression.FunctionCall.Accept(this);
+                sqlPivotTableExpression.FunctionCall = (SqlFunctionCallExpression)sqlPivotTableExpression.FunctionCall.Accept(this);
             }
             if (sqlPivotTableExpression.For != null)
             {
                 AppendWithSpace("for");
-                sqlPivotTableExpression.For.Accept(this);
+                sqlPivotTableExpression.For = sqlPivotTableExpression.For.Accept(this);
             }
             if (sqlPivotTableExpression.In != null)
             {
                 AppendWithSpace("in");
                 EnableParen(() =>
                 {
+                    var newItems = new List<SqlExpression>();
                     for (var i = 0; i < sqlPivotTableExpression.In.Count; i++)
                     {
                         var item = sqlPivotTableExpression.In[i];
-                        item.Accept(this);
+                        var newItem = item.Accept(this);
+                        newItems.Add(newItem);
                         if (i < sqlPivotTableExpression.In.Count - 1)
                         {
                             AppendWithoutSpaces(", ");
                         }
                     }
+                    sqlPivotTableExpression.In = newItems;
                 });
             }
         });
@@ -691,34 +751,37 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 AppendSpace();
             }
 
-            sqlPivotTableExpression.Alias.Accept(this);
+            sqlPivotTableExpression.Alias = (SqlIdentifierExpression)sqlPivotTableExpression.Alias.Accept(this);
         }
+
+        return sqlPivotTableExpression;
     }
-    public override void VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
+    public override SqlExpression VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
     {
 
         if (sqlPropertyExpression.Table != null)
         {
-            sqlPropertyExpression.Table?.Accept(this);
+            sqlPropertyExpression.Table = sqlPropertyExpression.Table.Accept(this);
             Append(".");
         }
 
         if (sqlPropertyExpression.Name != null)
         {
-            sqlPropertyExpression.Name?.Accept(this);
+            sqlPropertyExpression.Name = (SqlIdentifierExpression)sqlPropertyExpression.Name.Accept(this);
         }
 
         if (sqlPropertyExpression.Collate != null)
         {
-            sqlPropertyExpression.Collate?.Accept(this);
+            sqlPropertyExpression.Collate = (SqlCollateExpression)sqlPropertyExpression.Collate.Accept(this);
         }
 
+        return sqlPropertyExpression;
     }
-    public override void VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
+    public override SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
     {
         if (sqlReferenceTableExpression.FunctionCall != null)
         {
-            sqlReferenceTableExpression.FunctionCall?.Accept(this);
+            sqlReferenceTableExpression.FunctionCall = (SqlFunctionCallExpression)sqlReferenceTableExpression.FunctionCall.Accept(this);
         }
 
         if (sqlReferenceTableExpression.Alias != null)
@@ -727,10 +790,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 AppendWithSpace("as");
             }
-            sqlReferenceTableExpression.Alias?.Accept(this);
+            sqlReferenceTableExpression.Alias = (SqlIdentifierExpression)sqlReferenceTableExpression.Alias.Accept(this);
         }
+
+        return sqlReferenceTableExpression;
     }
-    public override void VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
+    public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
         if (sqlSelectExpression.Alias == null && (sb.Length == 0
             || sqlSelectExpression.Parent is SqlInsertExpression
@@ -740,7 +805,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             if (sqlSelectExpression.Query != null)
             {
-                sqlSelectExpression.Query?.Accept(this);
+                sqlSelectExpression.Query = sqlSelectExpression.Query.Accept(this);
             }
         }
         else
@@ -749,7 +814,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 if (sqlSelectExpression.Query != null)
                 {
-                    sqlSelectExpression.Query?.Accept(this);
+                    sqlSelectExpression.Query = sqlSelectExpression.Query.Accept(this);
                 }
             }, isInUpdateSetContext || sqlSelectExpression.Alias != null);
         }
@@ -764,27 +829,30 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 AppendSpace();
             }
-            sqlSelectExpression.Alias.Accept(this);
+            sqlSelectExpression.Alias = (SqlIdentifierExpression)sqlSelectExpression.Alias.Accept(this);
         }
 
         if (sqlSelectExpression.OrderBy.HasValue())
         {
-            sqlSelectExpression.OrderBy.Accept(this);
+            sqlSelectExpression.OrderBy = (SqlOrderByExpression)sqlSelectExpression.OrderBy.Accept(this);
         }
 
         if (sqlSelectExpression.Limit != null)
         {
-            sqlSelectExpression.Limit.Accept(this);
+            sqlSelectExpression.Limit = (SqlLimitExpression)sqlSelectExpression.Limit.Accept(this);
         }
+        return sqlSelectExpression;
     }
-    public override void VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
+    public override SqlExpression VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
     {
-        sqlSelectItemExpression.Body?.Accept(this);
+        sqlSelectItemExpression.Body = sqlSelectItemExpression.Body?.Accept(this);
         if (sqlSelectItemExpression.Alias != null)
         {
             AppendWithSpace("as");
-            sqlSelectItemExpression.Alias?.Accept(this);
+            sqlSelectItemExpression.Alias = (SqlIdentifierExpression)sqlSelectItemExpression.Alias.Accept(this);
         }
+
+        return sqlSelectItemExpression;
     }
 
     private void EnableParen(Action action, bool isForce = false)
@@ -801,20 +869,23 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         this.isInUpdateSetContext = false;
     }
 
-    public override void VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
+    public override SqlExpression VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
     {
         if (sqlSelectQueryExpression.WithSubQuerys.HasValue())
         {
             AppendWithRightSpace(" with");
+            var newWithSubQuerys = new List<SqlWithSubQueryExpression>();
             for (var i = 0; i < sqlSelectQueryExpression.WithSubQuerys.Count; i++)
             {
                 var item = sqlSelectQueryExpression.WithSubQuerys[i];
-                item.Accept(this);
+                var newItem = (SqlWithSubQueryExpression)item.Accept(this);
+                newWithSubQuerys.Add(newItem);
                 if (i < sqlSelectQueryExpression.WithSubQuerys.Count - 1)
                 {
                     AppendWithoutSpaces(", ");
                 }
             }
+            sqlSelectQueryExpression.WithSubQuerys = newWithSubQuerys;
             AppendSpace();
         }
 
@@ -840,74 +911,73 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlSelectQueryExpression.Top != null)
         {
-            sqlSelectQueryExpression.Top.Accept(this);
+            sqlSelectQueryExpression.Top = (SqlTopExpression)sqlSelectQueryExpression.Top.Accept(this);
         }
 
         if (sqlSelectQueryExpression.Columns.HasValue())
         {
+            var newColumns = new List<SqlSelectItemExpression>();
             for (var i = 0; i < sqlSelectQueryExpression.Columns.Count; i++)
             {
                 AppendSpace();
                 var item = sqlSelectQueryExpression.Columns[i];
-                item.Accept(this);
+                var newItem = (SqlSelectItemExpression)item.Accept(this);
+                newColumns.Add(newItem);
                 if (i < sqlSelectQueryExpression.Columns.Count - 1)
                 {
                     AppendWithoutSpaces(",");
                 }
             }
+            sqlSelectQueryExpression.Columns = newColumns;
         }
 
         if (sqlSelectQueryExpression.Into != null)
         {
             AppendWithSpace("into");
-            sqlSelectQueryExpression.Into.Accept(this);
+            sqlSelectQueryExpression.Into = sqlSelectQueryExpression.Into.Accept(this);
         }
         if (sqlSelectQueryExpression.From != null)
         {
             AppendWithSpace("from");
-            sqlSelectQueryExpression.From.Accept(this);
+            sqlSelectQueryExpression.From = sqlSelectQueryExpression.From.Accept(this);
         }
         if (sqlSelectQueryExpression.Where != null)
         {
             AppendWithSpace("where");
-            sqlSelectQueryExpression.Where.Accept(this);
+            sqlSelectQueryExpression.Where = sqlSelectQueryExpression.Where.Accept(this);
         }
 
         if (sqlSelectQueryExpression.GroupBy.HasValue())
         {
-            sqlSelectQueryExpression.GroupBy.Accept(this);
+            sqlSelectQueryExpression.GroupBy = (SqlGroupByExpression)sqlSelectQueryExpression.GroupBy.Accept(this);
         }
 
         if (sqlSelectQueryExpression.OrderBy.HasValue())
         {
-            sqlSelectQueryExpression.OrderBy.Accept(this);
+            sqlSelectQueryExpression.OrderBy = (SqlOrderByExpression)sqlSelectQueryExpression.OrderBy.Accept(this);
         }
 
         if (dbType == DbType.Oracle && sqlSelectQueryExpression.ConnectBy != null)
         {
-            sqlSelectQueryExpression.ConnectBy.Accept(this);
+            sqlSelectQueryExpression.ConnectBy = (SqlConnectByExpression)sqlSelectQueryExpression.ConnectBy.Accept(this);
         }
 
         if (sqlSelectQueryExpression.Limit != null)
         {
-            sqlSelectQueryExpression.Limit.Accept(this);
+            sqlSelectQueryExpression.Limit = (SqlLimitExpression)sqlSelectQueryExpression.Limit.Accept(this);
         }
         if (sqlSelectQueryExpression.Hints.HasValue())
         {
             foreach (var tableExpressionHint in sqlSelectQueryExpression.Hints)
             {
                 AppendSpace();
-                tableExpressionHint.Body?.Accept(this);
+                tableExpressionHint.Body = tableExpressionHint.Body?.Accept(this);
             }
         }
+
+        return sqlSelectQueryExpression;
     }
 
-    private void AppendWithSpace(Action action)
-    {
-        AppendSpace();
-        action();
-        AppendSpace();
-    }
 
     private void AppendWithSpace(string str)
     {
@@ -947,42 +1017,44 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append($"{str}");
     }
 
-    public override void VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    public override SqlExpression VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
     {
         if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
         {
             Append($"{sqlBoolExpression.Value.ToString().ToLowerInvariant()}");
         }
 
+        return sqlBoolExpression;
     }
 
-    public override void VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
+    public override SqlExpression VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
     {
         Append($"{(sqlStringExpression.IsUniCode ? "N" : "")}'{sqlStringExpression.Value.Replace("'", "''")}'");
         if (sqlStringExpression.Collate != null)
         {
-            sqlStringExpression.Collate?.Accept(this);
+            sqlStringExpression.Collate = (SqlCollateExpression)sqlStringExpression.Collate.Accept(this);
         }
+        return sqlStringExpression;
     }
-    public override void VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
+    public override SqlExpression VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
     {
         if (sqlTableExpression.Database != null)
         {
-            sqlTableExpression.Database?.Accept(this);
+            sqlTableExpression.Database = (SqlIdentifierExpression)sqlTableExpression.Database.Accept(this);
             Append(".");
         }
 
         if (sqlTableExpression.Schema != null)
         {
-            sqlTableExpression.Schema?.Accept(this);
+            sqlTableExpression.Schema = (SqlIdentifierExpression)sqlTableExpression.Schema.Accept(this);
             Append(".");
         }
 
-        sqlTableExpression.Name?.Accept(this);
+        sqlTableExpression.Name = (SqlIdentifierExpression)sqlTableExpression.Name?.Accept(this);
         if ((IsOracle || IsPgsql) && sqlTableExpression.DbLink != null)
         {
             AppendWithoutSpaces("@");
-            sqlTableExpression.DbLink?.Accept(this);
+            sqlTableExpression.DbLink = (SqlIdentifierExpression)sqlTableExpression.DbLink.Accept(this);
         }
         if (sqlTableExpression.Alias != null)
         {
@@ -995,7 +1067,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 AppendSpace();
             }
 
-            sqlTableExpression.Alias?.Accept(this);
+            sqlTableExpression.Alias = (SqlIdentifierExpression)sqlTableExpression.Alias.Accept(this);
         }
 
         if (sqlTableExpression.Hints.HasValue())
@@ -1003,12 +1075,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             foreach (var tableExpressionHint in sqlTableExpression.Hints)
             {
                 AppendSpace();
-                tableExpressionHint.Body?.Accept(this);
+                tableExpressionHint.Body = tableExpressionHint.Body?.Accept(this);
             }
         }
 
+        return sqlTableExpression;
     }
-    public override void VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
+    public override SqlExpression VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
         if (sb.Length > 0 && sb[sb.Length - 1] == '(')
         {
@@ -1029,13 +1102,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
+        return sqlUnionQueryExpression;
     }
 
     private void VisitSqlUnionQueryExpressionInternal(SqlUnionQueryExpression sqlUnionQueryExpression)
     {
         if (sqlUnionQueryExpression.Left != null)
         {
-            sqlUnionQueryExpression.Left.Accept(this);
+            sqlUnionQueryExpression.Left = sqlUnionQueryExpression.Left.Accept(this);
         }
 
         if (sqlUnionQueryExpression.UnionType != null)
@@ -1067,24 +1141,25 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
             AppendWithSpace(unionType);
         }
-        var right = sqlUnionQueryExpression.Right;
-        if (right != null)
+
+        if (sqlUnionQueryExpression.Right != null)
         {
-            right.Accept(this);
+            sqlUnionQueryExpression.Right = sqlUnionQueryExpression.Right.Accept(this);
         }
     }
 
-    public override void VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
+    public override SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
         sqlParseType = ParseType.Update;
         AppendWithRightSpace("update");
         if (sqlUpdateExpression.Table != null)
         {
-            sqlUpdateExpression.Table.Accept(this);
+            sqlUpdateExpression.Table = sqlUpdateExpression.Table.Accept(this);
         }
 
         if (sqlUpdateExpression.Items.HasValue())
         {
+            var newItems = new List<SqlExpression>();
             AppendWithSpace("set");
             for (var i = 0; i < sqlUpdateExpression.Items.Count; i++)
             {
@@ -1092,7 +1167,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 //item.Accept(this);
                 EnableUpdateSetContext(() =>
                 {
-                    item.Accept(this);
+                    var newItem = item.Accept(this);
+                    newItems.Add(newItem);
                 });
 
                 if (i < sqlUpdateExpression.Items.Count - 1)
@@ -1100,6 +1176,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                     AppendWithoutSpaces(", ");
                 }
             }
+            sqlUpdateExpression.Items = newItems;
         }
 
         if (IsSqlServer || IsPgsql || IsSqlite)
@@ -1107,19 +1184,20 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             if (sqlUpdateExpression.From != null)
             {
                 AppendWithSpace("from");
-                sqlUpdateExpression.From.Accept(this);
+                sqlUpdateExpression.From = sqlUpdateExpression.From.Accept(this);
             }
         }
 
         if (sqlUpdateExpression.Where != null)
         {
             AppendWithSpace("where");
-            sqlUpdateExpression.Where.Accept(this);
+            sqlUpdateExpression.Where = sqlUpdateExpression.Where.Accept(this);
         }
 
+        return sqlUpdateExpression;
 
     }
-    public override void VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
+    public override SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
     {
         if (sb.Length > 0)
         {
@@ -1139,42 +1217,48 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         if (sqlVariableExpression.Collate != null)
         {
-            sqlVariableExpression.Collate?.Accept(this);
+            sqlVariableExpression.Collate = (SqlCollateExpression)sqlVariableExpression.Collate.Accept(this);
         }
+
+        return sqlVariableExpression;
     }
-    public override void VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
+    public override SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
     {
         AppendWithLeftSpace("within group");
-        EnableParen((() =>
+        EnableParen(() =>
         {
             if (sqlWithinGroupExpression.OrderBy.HasValue())
             {
-                sqlWithinGroupExpression.OrderBy.Accept(this);
+                sqlWithinGroupExpression.OrderBy = (SqlOrderByExpression)sqlWithinGroupExpression.OrderBy.Accept(this);
             }
-        }));
+        });
+
+        return sqlWithinGroupExpression;
     }
-    public override void VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
+    public override SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
     {
         if (sqlWithSubQueryExpression.Alias != null)
         {
-            sqlWithSubQueryExpression.Alias.Accept(this);
+            sqlWithSubQueryExpression.Alias = (SqlIdentifierExpression)sqlWithSubQueryExpression.Alias.Accept(this);
         }
 
         if (sqlWithSubQueryExpression.Columns.HasValue())
         {
-            EnableParen((() =>
+            var newItems = new List<SqlIdentifierExpression>();
+            EnableParen(() =>
             {
                 for (var i = 0; i < sqlWithSubQueryExpression.Columns.Count; i++)
                 {
                     var item = sqlWithSubQueryExpression.Columns[i];
-                    item.Accept(this);
+                    var newItem = (SqlIdentifierExpression)item.Accept(this);
+                    newItems.Add(newItem);
                     if (i < sqlWithSubQueryExpression.Columns.Count - 1)
                     {
                         AppendWithoutSpaces(",");
                     }
                 }
-            }));
-
+            });
+            sqlWithSubQueryExpression.Columns = newItems;
         }
 
         AppendWithSpace("as");
@@ -1182,76 +1266,86 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             EnableParen(() =>
             {
-                sqlWithSubQueryExpression.FromSelect.Accept(this);
+                sqlWithSubQueryExpression.FromSelect = (SqlSelectExpression)sqlWithSubQueryExpression.FromSelect.Accept(this);
             });
         }
+
+        return sqlWithSubQueryExpression;
     }
 
-    public override void VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    public override SqlExpression VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
     {
         AppendWithSpace("top");
         if (sqlTopExpression.Body != null)
         {
-            sqlTopExpression.Body.Accept(this);
+            sqlTopExpression.Body = (SqlNumberExpression)sqlTopExpression.Body.Accept(this);
         }
+
+        return sqlTopExpression;
     }
 
-    public override void VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    public override SqlExpression VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
     {
         if (sqlHintExpression.Body != null)
         {
             AppendSpace();
-            sqlHintExpression.Body.Accept(this);
+            sqlHintExpression.Body = sqlHintExpression.Body.Accept(this);
         }
+        return sqlHintExpression;
     }
 
-    public override void VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    public override SqlExpression VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
     {
         if (sqlAtTimeZoneExpression.Body != null)
         {
-            sqlAtTimeZoneExpression.Body.Accept(this);
+            sqlAtTimeZoneExpression.Body = sqlAtTimeZoneExpression.Body.Accept(this);
         }
         AppendWithSpace("at time zone");
-        sqlAtTimeZoneExpression.TimeZone.Accept(this);
+        sqlAtTimeZoneExpression.TimeZone = (SqlStringExpression)sqlAtTimeZoneExpression.TimeZone.Accept(this);
+        return sqlAtTimeZoneExpression;
     }
 
-    public override void VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    public override SqlExpression VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
     {
         AppendWithSpace("interval");
         if (sqlIntervalExpression.Body != null)
         {
             AppendSpace();
-            sqlIntervalExpression.Body.Accept(this);
+            sqlIntervalExpression.Body = sqlIntervalExpression.Body.Accept(this);
         }
         if (sqlIntervalExpression.Unit != null)
         {
             AppendSpace();
-            sqlIntervalExpression.Unit.Accept(this);
+            sqlIntervalExpression.Unit = (SqlTimeUnitExpression)sqlIntervalExpression.Unit.Accept(this);
         }
+        return sqlIntervalExpression;
     }
 
-    public override void VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    public override SqlExpression VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
     {
         if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit))
         {
             Append(sqlTimeUnitExpression.Unit);
         }
+        return sqlTimeUnitExpression;
     }
 
-    public override void VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
+    public override SqlExpression VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
     {
         AppendWithSpace("collate");
         if (sqlCollateExpression.Body != null)
         {
-            sqlCollateExpression.Body.Accept(this);
+            sqlCollateExpression.Body = sqlCollateExpression.Body.Accept(this);
         }
+
+        return sqlCollateExpression;
     }
 
-    public override void VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    public override SqlExpression VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
     {
         if (sqlRegexExpression.Body != null)
         {
-            sqlRegexExpression.Body.Accept(this);
+            sqlRegexExpression.Body = sqlRegexExpression.Body.Accept(this);
         }
         if (IsPgsql)
         {
@@ -1271,113 +1365,127 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlRegexExpression.RegEx != null)
         {
-            sqlRegexExpression.RegEx.Accept(this);
+            sqlRegexExpression.RegEx = (SqlStringExpression)sqlRegexExpression.RegEx.Accept(this);
         }
         if (sqlRegexExpression.Collate != null)
         {
-            sqlRegexExpression.Collate.Accept(this);
+            sqlRegexExpression.Collate = (SqlCollateExpression)sqlRegexExpression.Collate.Accept(this);
         }
 
+        return sqlRegexExpression;
     }
 
-    public override void VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
+    public override SqlExpression VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
     {
         if (!sqlReturningExpression.HasValue())
         {
-            return;
+            return sqlReturningExpression;
         }
 
         if (sqlReturningExpression.Items.HasValue())
         {
+            var newItems = new List<SqlExpression>();
             AppendWithSpace("returning");
             for (var i = 0; i < sqlReturningExpression.Items.Count; i++)
             {
                 var item = sqlReturningExpression.Items[i];
-                item.Accept(this);
+                var newItem = item.Accept(this);
+                newItems.Add(newItem);
                 if (i < sqlReturningExpression.Items.Count - 1)
                 {
                     AppendWithoutSpaces(", ");
                 }
             }
-
+            sqlReturningExpression.Items = newItems;
         }
 
         if (sqlReturningExpression.IntoVariables.HasValue())
         {
             AppendWithSpace("into");
+            var newItems = new List<SqlExpression>();
             for (var i = 0; i < sqlReturningExpression.IntoVariables.Count; i++)
             {
                 var item = sqlReturningExpression.IntoVariables[i];
-                item.Accept(this);
+                var newItem = item.Accept(this);
+                newItems.Add(newItem);
                 if (i < sqlReturningExpression.IntoVariables.Count - 1)
                 {
                     AppendWithoutSpaces(", ");
                 }
             }
+            sqlReturningExpression.IntoVariables = newItems;
         }
+
+        return sqlReturningExpression;
     }
 
-    public override void VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    public override SqlExpression VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
     {
         if (!sqlArrayExpression.HasValue())
         {
-            return;
+            return sqlArrayExpression;
         }
 
         if (sqlArrayExpression.Items.HasValue())
         {
             Append("array[");
-
+            var newItems = new List<SqlExpression>();
             for (var i = 0; i < sqlArrayExpression.Items.Count; i++)
             {
                 var item = sqlArrayExpression.Items[i];
-                item.Accept(this);
+                var newItem = item.Accept(this);
+                newItems.Add(newItem);
                 if (i < sqlArrayExpression.Items.Count - 1)
                 {
                     AppendWithoutSpaces(",");
                 }
             }
+            sqlArrayExpression.Items = newItems;
             AppendWithoutSpaces("]");
         }
+
+        return sqlArrayExpression;
     }
 
-    public override void VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    public override SqlExpression VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
     {
         if (sqlArrayIndexExpression.Body == null || sqlArrayIndexExpression.Index == null)
         {
-            return;
+            return sqlArrayIndexExpression;
         }
 
         if (sqlArrayIndexExpression.Body is SqlArrayExpression)
         {
             Append("(");
-            sqlArrayIndexExpression.Body.Accept(this);
+            sqlArrayIndexExpression.Body = sqlArrayIndexExpression.Body.Accept(this);
             Append(")");
         }
         else
         {
-            sqlArrayIndexExpression.Body.Accept(this);
+            sqlArrayIndexExpression.Body = sqlArrayIndexExpression.Body.Accept(this);
         }
-        
+
         Append("[");
-        sqlArrayIndexExpression.Index.Accept(this);
+        sqlArrayIndexExpression.Index = (SqlNumberExpression)sqlArrayIndexExpression.Index.Accept(this);
         Append("]");
+        return sqlArrayIndexExpression;
     }
 
-    public override void VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    public override SqlExpression VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
     {
         if (sqlArraySliceExpression.Body == null)
         {
-            return;
+            return sqlArraySliceExpression;
         }
 
         Append("(");
-        sqlArraySliceExpression.Body.Accept(this);
+        sqlArraySliceExpression.Body = sqlArraySliceExpression.Body.Accept(this);
         Append(")");
         Append("[");
-        sqlArraySliceExpression.StartIndex?.Accept(this);
+        sqlArraySliceExpression.StartIndex = (SqlNumberExpression)sqlArraySliceExpression.StartIndex?.Accept(this);
         Append(":");
-        sqlArraySliceExpression.EndIndex?.Accept(this);
+        sqlArraySliceExpression.EndIndex = (SqlNumberExpression)sqlArraySliceExpression.EndIndex?.Accept(this);
         Append("]");
+        return sqlArraySliceExpression;
     }
 }

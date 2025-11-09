@@ -1,4 +1,4 @@
-﻿using SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,9 +12,9 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
     private SqlExpression forValue;
     private List<SqlExpression> inValue;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlPivotTableExpression(this);
+        return visitor.VisitSqlPivotTableExpression(this);
     }
     public SqlPivotTableExpression()
     {

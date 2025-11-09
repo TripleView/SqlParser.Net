@@ -6,9 +6,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlExpression : IAcceptVisitor, ICloneableExpression
 {
-    public virtual void Accept(IAstVisitor visitor)
+    public virtual SqlExpression Accept(IAstVisitor visitor)
     {
-
+        return this;
     }
 
     public Guid Id { get;private set; }

@@ -1,4 +1,4 @@
-ï»¿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using SqlParser.Net.Ast.Visitor;
 
@@ -13,9 +13,9 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
     private SqlIdentifierExpression dbLink;
     private List<SqlHintExpression> hints;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlTableExpression(this);
+        return visitor.VisitSqlTableExpression(this);
     }
     public SqlTableExpression()
     {
@@ -51,7 +51,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
 
     /// <summary>
     /// Schema,such as:select * from test.test
-    /// æ•°æ®åº“æ¨¡å¼,å¦‚select * from test.test
+    /// Êı¾İ¿âÄ£Ê½,Èçselect * from test.test
     /// </summary>
     public SqlIdentifierExpression Schema
     {
@@ -68,7 +68,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
 
     /// <summary>
     /// Database name, such as epf in [EPF].[dbo].[test]
-    /// æ•°æ®åº“åç§°,å¦‚[EPF].[dbo].[test]é‡Œçš„epf
+    /// Êı¾İ¿âÃû³Æ,Èç[EPF].[dbo].[test]ÀïµÄepf
     /// </summary>
     public SqlIdentifierExpression Database
     {
@@ -85,7 +85,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
 
     /// <summary>
     /// oracle support db link,such as:SELECT * FROM remote_table@remote_db_link;
-    /// oracleæ•°æ®åº“æ”¯æŒçš„dblink,ä¾‹å¦‚:SELECT * FROM remote_table@remote_db_link;
+    /// oracleÊı¾İ¿âÖ§³ÖµÄdblink,ÀıÈç:SELECT * FROM remote_table@remote_db_link;
     /// </summary>
     public SqlIdentifierExpression DbLink
     {
@@ -102,7 +102,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
 
     /// <summary>
     /// Hints are instructions for the query optimizer on how to execute a query.such as sql:select * from RouteData with(nolock)
-    /// Hints æ˜¯ç”¨äºæŒ‡å¯¼æŸ¥è¯¢ä¼˜åŒ–å™¨å¦‚ä½•æ‰§è¡ŒæŸ¥è¯¢çš„æŒ‡ä»¤,ä¾‹å¦‚sql:select * from RouteData with(nolock)
+    /// Hints ÊÇÓÃÓÚÖ¸µ¼²éÑ¯ÓÅ»¯Æ÷ÈçºÎÖ´ĞĞ²éÑ¯µÄÖ¸Áî,ÀıÈçsql:select * from RouteData with(nolock)
     /// </summary>
     public List<SqlHintExpression> Hints
     {

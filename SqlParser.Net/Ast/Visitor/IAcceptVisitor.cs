@@ -1,6 +1,8 @@
-﻿namespace SqlParser.Net.Ast.Visitor;
+using SqlParser.Net.Ast.Expression;
+
+namespace SqlParser.Net.Ast.Visitor;
 
 public interface IAcceptVisitor
 {
-    void Accept(IAstVisitor visitor);
+    SqlExpression Accept(IAstVisitor visitor);
 }

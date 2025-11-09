@@ -12,9 +12,9 @@ public class SqlInsertExpression : SqlExpression
     private List<List<SqlExpression>> valuesList;
     private SqlSelectExpression fromSelect;
     private SqlReturningExpression returning;
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlInsertExpression(this);
+        return visitor.VisitSqlInsertExpression(this);
     }
     public SqlInsertExpression()
     {

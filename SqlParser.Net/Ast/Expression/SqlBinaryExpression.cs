@@ -14,9 +14,9 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
 
     private SqlCollateExpression collate;
 
-    public override void Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor)
     {
-        visitor.VisitSqlBinaryExpression(this);
+        return visitor.VisitSqlBinaryExpression(this);
     }
 
 
