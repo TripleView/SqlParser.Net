@@ -1163,4 +1163,121 @@ public class UpdateTest
         var newSql = sqlAst.ToSql();
         Assert.Equal("update t3 set Id = 'aa' from t4 where (t3.Id = t4.Pid)", newSql);
     }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Pgsql)]
+    public void TestUpdate4(DbType dbType)
+    {
+        var sql = "WITH to_update AS (\r\n  SELECT id FROM source_table \r\n)\r\nupdate target_table set name='aaa' where id in (select id from to_update)";
+        var sqlAst = DbUtils.Parse(sql, dbType);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlUpdateExpression()
+        {
+            WithSubQuerys = new List<SqlWithSubQueryExpression>()
+    {
+        new SqlWithSubQueryExpression()
+        {
+            Alias = new SqlIdentifierExpression()
+            {
+                Value = "to_update",
+            },
+            FromSelect = new SqlSelectExpression()
+            {
+                Query = new SqlSelectQueryExpression()
+                {
+                    Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "id",
+                            },
+                        },
+                    },
+                    From = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "source_table",
+                        },
+                    },
+                },
+            },
+        },
+    },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "target_table",
+                },
+            },
+            Where = new SqlInExpression()
+            {
+                Body = new SqlIdentifierExpression()
+                {
+                    Value = "id",
+                },
+                SubQuery = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "id",
+                        },
+                    },
+                },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "to_update",
+                            },
+                        },
+                    },
+                },
+            },
+            Items = new List<SqlExpression>()
+    {
+        new SqlBinaryExpression()
+        {
+            Left = new SqlIdentifierExpression()
+            {
+                Value = "name",
+            },
+            Operator = SqlBinaryOperator.EqualTo,
+            Right = new SqlStringExpression()
+            {
+                Value = "aaa",
+            },
+        },
+    },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("with to_update as (select id from source_table) update target_table set name = 'aaa' where id in (select id from to_update)", newSql);
+    }
+
+    [Fact]
+    public void TestUpdate5()
+    {
+        var sql = "WITH to_update AS (\r\n  SELECT id FROM source_table \r\n)\r\nupdate target_table set name='aaa' where id in (select id from to_update)";
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        });
+    }
 }

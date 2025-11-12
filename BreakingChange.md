@@ -1,0 +1,1 @@
+1.1.16版本，重构了IAstVisitor接口里方法的返回值，从void变更为SqlExpression，目的是为了递归遍历sqlExpression的过程中可以实时替换它的子节点，在遍历完成后即可获得一个全新的SqlExpression，主要用在sql替换等场景中。

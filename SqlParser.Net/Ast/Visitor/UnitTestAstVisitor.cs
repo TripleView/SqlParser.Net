@@ -215,6 +215,24 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlDeleteExpression()");
         AppendLine("{");
 
+        if (sqlDeleteExpression.WithSubQuerys.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("WithSubQuerys = new List<SqlWithSubQueryExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlDeleteExpression.WithSubQuerys)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+
+                }
+                AppendLine("},");
+            });
+        }
+
         if (sqlDeleteExpression.Body != null)
         {
             AdvanceNext(() =>
@@ -469,6 +487,24 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
         AppendLine("new SqlInsertExpression()");
         AppendLine("{");
+
+        if (sqlInsertExpression.WithSubQuerys.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("WithSubQuerys = new List<SqlWithSubQueryExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlInsertExpression.WithSubQuerys)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+                }
+                AppendLine("},");
+            });
+        }
+
         if (sqlInsertExpression.Columns.HasValue())
         {
             AdvanceNext(() =>
@@ -1076,6 +1112,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine("},");
             });
         }
+
         if (sqlSelectQueryExpression.Columns.HasValue())
         {
             AdvanceNext(() =>
@@ -1368,6 +1405,22 @@ public class UnitTestAstVisitor : BaseAstVisitor
         AppendLine("new SqlUpdateExpression()");
         AppendLine("{");
 
+        if (sqlUpdateExpression.WithSubQuerys.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("WithSubQuerys = new List<SqlWithSubQueryExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlUpdateExpression.WithSubQuerys)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+                }
+                AppendLine("},");
+            });
+        }
 
         if (sqlUpdateExpression.Table != null)
         {

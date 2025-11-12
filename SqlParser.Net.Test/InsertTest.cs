@@ -749,4 +749,108 @@ public class InsertTest
             "insert into users(name, age) values(@name, @age) returning id, name as newName, age as newAge",
             newSql);
     }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Pgsql)]
+    public void TestInsert9(DbType dbType)
+    {
+        var sql = "with to_insert as (select name from source_table) insert into target_table(name) select name from to_insert";
+        var sqlAst = DbUtils.Parse(sql, dbType);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlInsertExpression()
+        {
+            WithSubQuerys = new List<SqlWithSubQueryExpression>()
+    {
+        new SqlWithSubQueryExpression()
+        {
+            Alias = new SqlIdentifierExpression()
+            {
+                Value = "to_insert",
+            },
+            FromSelect = new SqlSelectExpression()
+            {
+                Query = new SqlSelectQueryExpression()
+                {
+                    Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "name",
+                            },
+                        },
+                    },
+                    From = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "source_table",
+                        },
+                    },
+                },
+            },
+        },
+    },
+            Columns = new List<SqlExpression>()
+    {
+        new SqlIdentifierExpression()
+        {
+            Value = "name",
+        },
+    },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "target_table",
+                },
+            },
+            FromSelect = new SqlSelectExpression()
+            {
+                Query = new SqlSelectQueryExpression()
+                {
+                    Columns = new List<SqlSelectItemExpression>()
+            {
+                new SqlSelectItemExpression()
+                {
+                    Body = new SqlIdentifierExpression()
+                    {
+                        Value = "name",
+                    },
+                },
+            },
+                    From = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "to_insert",
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("with to_insert as (select name from source_table) insert into target_table(name) select name from to_insert", newSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.Oracle)]
+    [InlineData(DbType.MySql)]
+    public void TestInsert10(DbType dbType)
+    {
+        var sql = "with to_insert as (select name from source_table) insert into target_table(name) select name from to_insert";
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            var sqlAst = DbUtils.Parse(sql, dbType);
+        });
+    }
 }

@@ -11,7 +11,7 @@ public class SqlUpdateExpression : SqlExpression
     private SqlExpression where;
     private SqlExpression from;
     private List<string> comments;
-
+    private List<SqlWithSubQueryExpression> withSubQuerys;
     public override SqlExpression Accept(IAstVisitor visitor)
     {
         return visitor.VisitSqlUpdateExpression(this);
@@ -20,6 +20,30 @@ public class SqlUpdateExpression : SqlExpression
     {
         this.Type = SqlExpressionType.Update;
         this.Items = new List<SqlExpression>();
+        this.WithSubQuerys = new List<SqlWithSubQueryExpression>();
+    }
+
+    /// <summary>
+    /// cte sub query
+    /// cte公共表表达式子查询
+    /// </summary>
+    public List<SqlWithSubQueryExpression> WithSubQuerys
+    {
+        get => withSubQuerys;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            withSubQuerys = value;
+        }
     }
 
     public SqlExpression Table
@@ -108,6 +132,10 @@ public class SqlUpdateExpression : SqlExpression
             return false;
         }
 
+        if (!CompareTwoSqlExpressionList(WithSubQuerys, other.WithSubQuerys))
+        {
+            return false;
+        }
 
         return true;
 
@@ -139,6 +167,7 @@ public class SqlUpdateExpression : SqlExpression
         {
             DbType = this.DbType,
             Items = this.Items.Select(x => x.Clone()).ToList(),
+            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
             Where = this.Where.Clone(),
             Table = this.Table.Clone(),
             From = this.From.Clone(),

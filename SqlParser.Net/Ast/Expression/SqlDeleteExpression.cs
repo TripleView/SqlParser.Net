@@ -1,5 +1,6 @@
 using SqlParser.Net.Ast.Visitor;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
@@ -8,7 +9,7 @@ public class SqlDeleteExpression : SqlExpression
     private SqlExpression body;
     private SqlExpression table;
     private SqlExpression where;
-
+    private List<SqlWithSubQueryExpression> withSubQuerys;
     public override SqlExpression Accept(IAstVisitor visitor)
     {
         return visitor.VisitSqlDeleteExpression(this);
@@ -16,6 +17,7 @@ public class SqlDeleteExpression : SqlExpression
     public SqlDeleteExpression()
     {
         this.Type = SqlExpressionType.Delete;
+        this.WithSubQuerys = new List<SqlWithSubQueryExpression>();
     }
 
     /// <summary>
@@ -32,6 +34,29 @@ public class SqlDeleteExpression : SqlExpression
                 value.Parent = this;
             }
             body = value;
+        }
+    }
+
+    /// <summary>
+    /// cte sub query
+    /// cte公共表表达式子查询
+    /// </summary>
+    public List<SqlWithSubQueryExpression> WithSubQuerys
+    {
+        get => withSubQuerys;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            withSubQuerys = value;
         }
     }
 
@@ -80,6 +105,11 @@ public class SqlDeleteExpression : SqlExpression
             return false;
         }
 
+        if (!CompareTwoSqlExpressionList(WithSubQuerys, other.WithSubQuerys))
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -105,6 +135,7 @@ public class SqlDeleteExpression : SqlExpression
         {
             DbType = this.DbType,
             Table = this.Table.Clone(),
+            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
             Body = this.Body.Clone(),
             Where = this.Where.Clone(),
         };

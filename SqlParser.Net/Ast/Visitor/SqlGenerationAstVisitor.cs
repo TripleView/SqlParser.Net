@@ -173,6 +173,21 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
     {
+        if (sqlDeleteExpression.WithSubQuerys.HasValue())
+        {
+            AppendWithRightSpace("with");
+            for (var i = 0; i < sqlDeleteExpression.WithSubQuerys.Count; i++)
+            {
+                var item = sqlDeleteExpression.WithSubQuerys[i];
+                item.Accept(this);
+                if (i < sqlDeleteExpression.WithSubQuerys.Count - 1)
+                {
+                    AppendWithoutSpaces(", ");
+                }
+            }
+            AppendSpace();
+        }
+
         AppendWithRightSpace("delete");
         if (sqlDeleteExpression.Body != null)
         {
@@ -365,12 +380,34 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         if (sqlInExpression.SubQuery != null)
         {
-            sqlInExpression.SubQuery = (SqlSelectExpression)sqlInExpression.SubQuery.Accept(this);
+            EnableParen(() =>
+            {
+                sqlInExpression.SubQuery = (SqlSelectExpression)sqlInExpression.SubQuery.Accept(this);
+            });
         }
         return sqlInExpression;
     }
     public override SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
     {
+        if (sqlInsertExpression.WithSubQuerys.HasValue())
+        {
+            AppendWithRightSpace("with");
+            var newWithSubQueries = new List<SqlWithSubQueryExpression>();
+            for (var i = 0; i < sqlInsertExpression.WithSubQuerys.Count; i++)
+            {
+                var item = sqlInsertExpression.WithSubQuerys[i];
+                var newItem = (SqlWithSubQueryExpression)item.Accept(this);
+                newWithSubQueries.Add(newItem);
+                if (i < sqlInsertExpression.WithSubQuerys.Count - 1)
+                {
+                    AppendWithoutSpaces(", ");
+                }
+            }
+
+            sqlInsertExpression.WithSubQuerys = newWithSubQueries;
+            AppendSpace();
+        }
+
         AppendWithRightSpace("insert into");
 
         if (sqlInsertExpression.Table != null)
@@ -797,11 +834,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
     {
-        if (sqlSelectExpression.Alias == null && (sb.Length == 0
-            || sqlSelectExpression.Parent is SqlInsertExpression
-            || (IsSqlite && sqlSelectExpression.Parent is not SqlFunctionCallExpression)
-            || sqlSelectExpression.Query is SqlUnionQueryExpression
-            || sqlSelectExpression.Parent is SqlExistsExpression))
+        if (sqlSelectExpression.Alias == null
+            && (sb.Length == 0 || sqlSelectExpression.Parent is SqlInsertExpression
+                               || sqlSelectExpression.Parent is SqlInExpression
+                               || (IsSqlite && sqlSelectExpression.Parent is not SqlFunctionCallExpression)
+                               || sqlSelectExpression.Query is SqlUnionQueryExpression
+                               || sqlSelectExpression.Parent is SqlExistsExpression
+                               || sqlSelectExpression.Parent is SqlWithSubQueryExpression))
         {
             if (sqlSelectExpression.Query != null)
             {
@@ -1151,6 +1190,24 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
     {
         sqlParseType = ParseType.Update;
+        if (sqlUpdateExpression.WithSubQuerys.HasValue())
+        {
+            AppendWithRightSpace("with");
+            var newWithSubQueries = new List<SqlWithSubQueryExpression>();
+            for (var i = 0; i < sqlUpdateExpression.WithSubQuerys.Count; i++)
+            {
+                var item = sqlUpdateExpression.WithSubQuerys[i];
+                var newItem = (SqlWithSubQueryExpression)item.Accept(this);
+                newWithSubQueries.Add(newItem);
+                if (i < sqlUpdateExpression.WithSubQuerys.Count - 1)
+                {
+                    AppendWithoutSpaces(", ");
+                }
+            }
+            sqlUpdateExpression.WithSubQuerys = newWithSubQueries;
+            AppendSpace();
+        }
+
         AppendWithRightSpace("update");
         if (sqlUpdateExpression.Table != null)
         {

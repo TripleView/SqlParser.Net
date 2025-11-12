@@ -1,5 +1,6 @@
 using SqlParser.Net.Ast.Expression;
 using SqlParser.Net.Ast.Visitor;
+using System.Data;
 using System.Xml.Linq;
 using Xunit.Sdk;
 
@@ -237,5 +238,107 @@ public class DeleteTest
 
         var newSql = sqlAst.ToSql();
         Assert.Equal("delete t from T3 as t inner join T4 as t4 on (t.id = t4.Pid) where (t.id = 'abc')",newSql);
+    }
+
+    [Theory]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.Sqlite)]
+    [InlineData(DbType.Pgsql)]
+    public void TestDelete5(DbType dbType)
+    {
+        var sql = "WITH to_delete AS (  SELECT id FROM source_table ) DELETE from target_table where id in (select id from to_delete)";
+        var sqlAst = DbUtils.Parse(sql, dbType);
+
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlDeleteExpression()
+        {
+            WithSubQuerys = new List<SqlWithSubQueryExpression>()
+    {
+        new SqlWithSubQueryExpression()
+        {
+            Alias = new SqlIdentifierExpression()
+            {
+                Value = "to_delete",
+            },
+            FromSelect = new SqlSelectExpression()
+            {
+                Query = new SqlSelectQueryExpression()
+                {
+                    Columns = new List<SqlSelectItemExpression>()
+                    {
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "id",
+                            },
+                        },
+                    },
+                    From = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "source_table",
+                        },
+                    },
+                },
+            },
+        },
+    },
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "target_table",
+                },
+            },
+            Where = new SqlInExpression()
+            {
+                Body = new SqlIdentifierExpression()
+                {
+                    Value = "id",
+                },
+                SubQuery = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "id",
+                        },
+                    },
+                },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "to_delete",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("with to_delete as (select id from source_table) delete from target_table where id in (select id from to_delete)", newSql);
+    }
+
+    [Fact]
+    public void TestDelete6()
+    {
+        var sql = "WITH to_delete AS (  SELECT id FROM source_table ) DELETE from target_table where id in (select id from to_delete)";
+        Assert.Throws<SqlParsingErrorException>(() =>
+        {
+            var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
+        });
     }
 }

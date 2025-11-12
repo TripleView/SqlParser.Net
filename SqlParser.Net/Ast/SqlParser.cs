@@ -40,6 +40,7 @@ public class SqlParser
     private bool IsSqlite => this.dbType == DbType.Sqlite;
 
     private static Dictionary<Token, bool> splitTokenDics = new Dictionary<Token, bool>();
+    private ConcurrentDictionary<Guid, int> savePointMappings = new ConcurrentDictionary<Guid, int>();
     /// <summary>
     /// List of time units;时间单位列表
     /// </summary>
@@ -157,8 +158,24 @@ public class SqlParser
         //{
 
         //}));
+        var isCteSelect = false;
+        var isCteInsert = false;
+        var isCteUpdate = false;
+        var isCteDelete = false;
+        if (CheckNextToken(Token.With))
+        {
+            VirtualAdvance(() =>
+            {
+                AcceptWithSubQueryExpression();
+                isCteSelect = CheckNextToken(Token.Select);
+                isCteInsert = CheckNextToken(Token.Insert);
+                isCteUpdate = CheckNextToken(Token.Update);
+                isCteDelete = CheckNextToken(Token.Delete);
+            });
+        }
 
-        if (CheckNextToken(Token.Select) || CheckNextToken(Token.With) || CheckNextToken(Token.LeftParen))
+
+        if (CheckNextToken(Token.Select) || CheckNextToken(Token.LeftParen) || isCteSelect)
         {
             SqlParseType = ParseType.Select;
             var result = new SqlSelectExpression() { DbType = dbType, };
@@ -168,7 +185,7 @@ public class SqlParser
             CheckIfParsingIsComplete();
             return result;
         }
-        else if (CheckNextToken(Token.Update))
+        else if (CheckNextToken(Token.Update) || isCteUpdate)
         {
             SqlParseType = ParseType.Update;
             var result = AcceptUpdateExpression();
@@ -176,7 +193,7 @@ public class SqlParser
             CheckIfParsingIsComplete();
             return result;
         }
-        else if (CheckNextToken(Token.Delete))
+        else if (CheckNextToken(Token.Delete) || isCteDelete)
         {
             SqlParseType = ParseType.Delete;
             var result = AcceptDeleteExpression();
@@ -184,7 +201,7 @@ public class SqlParser
             CheckIfParsingIsComplete();
             return result;
         }
-        else if (CheckNextToken(Token.Insert))
+        else if (CheckNextToken(Token.Insert) || isCteInsert)
         {
             SqlParseType = ParseType.Insert;
             var result = AcceptInsertExpression();
@@ -276,8 +293,13 @@ public class SqlParser
 
     private SqlInsertExpression AcceptInsertExpression()
     {
-        AcceptOrThrowException(Token.Insert);
         var result = new SqlInsertExpression() { DbType = dbType };
+        if (IsPgsql || IsSqlite || IsSqlServer)
+        {
+            result.WithSubQuerys = AcceptWithSubQueryExpression();
+        }
+        AcceptOrThrowException(Token.Insert);
+
         AcceptOrThrowException(Token.Into);
         result.Table = AcceptTableExpression();
         result.Columns = AcceptInsertColumnsExpression();
@@ -489,8 +511,13 @@ public class SqlParser
 
     private SqlDeleteExpression AcceptDeleteExpression()
     {
-        AcceptOrThrowException(Token.Delete);
         var result = new SqlDeleteExpression() { DbType = dbType };
+        if (IsPgsql || IsMySql || IsSqlite || IsSqlServer)
+        {
+            result.WithSubQuerys = AcceptWithSubQueryExpression();
+        }
+
+        AcceptOrThrowException(Token.Delete);
         if (IsSqlServer || IsMySql)
         {
             if (CheckNextToken(Token.IdentifierString) && CheckNextNextToken(Token.From))
@@ -528,8 +555,12 @@ public class SqlParser
 
     private SqlUpdateExpression AcceptUpdateExpression()
     {
-        AcceptOrThrowException(Token.Update);
         var result = new SqlUpdateExpression() { DbType = dbType };
+        if (IsPgsql || IsMySql || IsSqlite || IsSqlServer)
+        {
+            result.WithSubQuerys = AcceptWithSubQueryExpression();
+        }
+        AcceptOrThrowException(Token.Update);
 
         if (IsMySql)
         {
@@ -1139,9 +1170,9 @@ public class SqlParser
     /// <param name="action"></param>
     private void VirtualAdvance(Action action)
     {
-        this.SavePoint();
+        var id = this.SavePoint();
         action();
-        this.RestoreSavePoint();
+        this.RestoreSavePoint(id);
     }
 
     private bool CheckNextIsLimit()
@@ -1386,7 +1417,10 @@ public class SqlParser
                 subQueryExpression.FromSelect = subQuery;
                 subQueryExpressions.Add(subQueryExpression);
 
-                if (CheckNextToken(Token.Select) || nextToken == null)
+                if (CheckNextToken(Token.Select)
+                    || nextToken == null
+                    || ((IsPgsql || IsMySql || IsSqlServer || IsSqlite) && (CheckNextToken(Token.Delete) || CheckNextToken(Token.Update)))
+                    || ((IsPgsql || IsSqlServer || IsSqlite) && (CheckNextToken(Token.Insert))))
                 {
                     break;
                 }
@@ -2259,55 +2293,31 @@ public class SqlParser
         return left;
     }
 
-    private int savePoint = -1;
-    private int savePoint2 = -1;
-    private bool SavePoint()
+
+    private Guid? SavePoint()
     {
         if (pos == tokens.Count - 1)
         {
-            savePoint = -1;
-            return false;
-        }
-        savePoint = pos;
-        return true;
-    }
-    private bool SavePoint2()
-    {
-        if (pos == tokens.Count - 1)
-        {
-            savePoint2 = -1;
-            return false;
-        }
-        savePoint2 = pos;
-        return true;
-    }
-    private void RestoreSavePoint()
-    {
-        if (savePoint != -1)
-        {
-            pos = savePoint;
-            if (pos - 1 >= 0)
-            {
-                currentToken = tokens[pos - 1];
-            }
-            nextToken = tokens[pos];
-            savePoint = -1;
-        }
-    }
-    private void RestoreSavePoint2()
-    {
-        if (savePoint2 != -1)
-        {
-            pos = savePoint2;
-            if (pos - 1 >= 0)
-            {
-                currentToken = tokens[pos - 1];
-            }
-            nextToken = tokens[pos];
-            savePoint2 = -1;
+            return null;
         }
 
+        var guid = Guid.NewGuid();
+        savePointMappings.TryAdd(guid, pos);
+        return guid;
     }
+    private void RestoreSavePoint(Guid? id)
+    {
+        if (id.HasValue && savePointMappings.TryGetValue(id.Value, out var tempSavePoint) && tempSavePoint != -1)
+        {
+            pos = tempSavePoint;
+            if (pos - 1 >= 0)
+            {
+                currentToken = tokens[pos - 1];
+            }
+            nextToken = tokens[pos];
+        }
+    }
+
     private bool AcceptKeywordAsIdentifier()
     {
         if (nextToken == null)
@@ -2333,30 +2343,31 @@ public class SqlParser
             Token.Union,
             Token.Except,
             Token.Intersect,
-            Token.With
+            Token.With,
+            Token.On
         };
 
         if (notAllowTokens.Any(it => CheckNextToken(it)))
         {
             return false;
         }
-        SavePoint();
+        var id = SavePoint();
         if (AcceptKeyword())
         {
             var name = GetCurrentTokenValue();
-            SavePoint2();
+            var id2 = SavePoint();
             if (AcceptAnyOne())
             {
 
                 if (currentToken?.IsToken(Token.Join) == true && (name.ToLowerInvariant() == "left" || name.ToLowerInvariant() == "right") || name.ToLowerInvariant() == "full" || name.ToLowerInvariant() == "cross" || name.ToLowerInvariant() == "inner")
                 {
-                    RestoreSavePoint();
+                    RestoreSavePoint(id);
                     return false;
                 }
 
                 if (notAllowTokens.Any(it => currentToken?.IsToken(it) == true) || currentToken?.TokenType == TokenType.Symbol || currentToken?.TokenType == TokenType.Operator)
                 {
-                    RestoreSavePoint2();
+                    RestoreSavePoint(id2);
                     return true;
                 }
 
@@ -2370,7 +2381,7 @@ public class SqlParser
                 };
                 if (joinTokens.Any(it => currentToken?.IsToken(it) == true))
                 {
-                    RestoreSavePoint2();
+                    RestoreSavePoint(id2);
                     return true;
                 }
             }
@@ -2380,7 +2391,7 @@ public class SqlParser
             }
 
         }
-        RestoreSavePoint();
+        RestoreSavePoint(id);
         return false;
     }
 
@@ -3182,10 +3193,11 @@ public class SqlParser
             //SELECT max((SELECT  d FROM test3 where a='a' )) FROM test3;
             var isHandle = false;
             var hasLeftParen = false;
+            Guid? id = null;
             if (CheckNextToken(Token.LeftParen))
             {
                 hasLeftParen = true;
-                this.SavePoint();
+                id = this.SavePoint();
                 var leftParenCount = 0;
                 while (true)
                 {
@@ -3225,7 +3237,7 @@ public class SqlParser
 
             if (hasLeftParen && !isHandle)
             {
-                this.RestoreSavePoint();
+                this.RestoreSavePoint(id);
             }
 
             if (isHandle == false)

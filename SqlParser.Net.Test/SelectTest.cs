@@ -10654,7 +10654,7 @@ order by temp.InxNbr";
         if (columns == "(name)")
         {
             expectSql =
-                "with c1(name) as ((select name from test t)), c2(name) as ((select name from test3 t3)) select * from c1 inner join c2 on (c1.name = c2.name)";
+                "with c1(name) as (select name from test t), c2(name) as (select name from test3 t3) select * from c1 inner join c2 on (c1.name = c2.name)";
             cteColumn = new List<SqlIdentifierExpression>()
             {
                 new SqlIdentifierExpression()
@@ -10666,7 +10666,7 @@ order by temp.InxNbr";
         else
         {
             expectSql =
-                "with c1 as ((select name from test t)), c2 as ((select name from test3 t3)) select * from c1 inner join c2 on (c1.name = c2.name)";
+                "with c1 as (select name from test t), c2 as (select name from test3 t3) select * from c1 inner join c2 on (c1.name = c2.name)";
         }
 
         var expect = new SqlSelectExpression()
@@ -18892,6 +18892,184 @@ order by temp.InxNbr";
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
             $"select (array[array[1,2],array[3,4],array[5,6]])[1:2]",
+            generationSql);
+    }
+
+    [Fact]
+    public void TestTableJoin()
+    {
+        var sql = @"SELECT * FROM mes_mo_parts left join mes_equipment as me on (me.id = mes_mo_parts.eq_id) left join msi on ((user_item_type = 'CLA') and (msi.thisid = mes_mo_parts.part_id))  WHERE ((mes_mo_parts.orgid = @orgid) and (mes_mo_parts.""mo"" = @billValue))";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlAllColumnExpression()
+            },
+        },
+                From = new SqlJoinTableExpression()
+                {
+                    Left = new SqlJoinTableExpression()
+                    {
+                        Left = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "mes_mo_parts",
+                            },
+                        },
+                        JoinType = SqlJoinType.LeftJoin,
+                        Right = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "mes_equipment",
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "me",
+                            },
+                        },
+                        Conditions = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "id",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "me",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "eq_id",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "mes_mo_parts",
+                                },
+                            },
+                        },
+                    },
+                    JoinType = SqlJoinType.LeftJoin,
+                    Right = new SqlTableExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "msi",
+                        },
+                    },
+                    Conditions = new SqlBinaryExpression()
+                    {
+                        Left = new SqlBinaryExpression()
+                        {
+                            Left = new SqlIdentifierExpression()
+                            {
+                                Value = "user_item_type",
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "CLA",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.And,
+                        Right = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "thisid",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "msi",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "part_id",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "mes_mo_parts",
+                                },
+                            },
+                        },
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "orgid",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "mes_mo_parts",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlVariableExpression()
+                        {
+                            Name = "orgid",
+                            Prefix = "@",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.And,
+                    Right = new SqlBinaryExpression()
+                    {
+                        Left = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "mo",
+                                LeftQualifiers = "\"",
+                                RightQualifiers = "\"",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "mes_mo_parts",
+                            },
+                        },
+                        Operator = SqlBinaryOperator.EqualTo,
+                        Right = new SqlVariableExpression()
+                        {
+                            Name = "billValue",
+                            Prefix = "@",
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from mes_mo_parts left join mes_equipment as me on (me.id = mes_mo_parts.eq_id) left join msi on ((user_item_type = 'CLA') and (msi.thisid = mes_mo_parts.part_id)) where ((mes_mo_parts.orgid = @orgid) and (mes_mo_parts.\"mo\" = @billValue))",
             generationSql);
     }
 }

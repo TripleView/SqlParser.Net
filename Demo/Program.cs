@@ -24,7 +24,9 @@ namespace Demo
 
             //SELECT ARRAY[1, 2, 3] AS int_array;
             //sql = "SELECT * FROM unnest(ARRAY[10, 20, 30])";
-            sql = "SELECT * FROM users WHERE tags && ARRAY['admin','vip'];";
+            sql = "WITH older_users AS (\r\n    SELECT id FROM users WHERE age > 25\r\n)\r\nUPDATE users\r\nSET age = age + 1\r\nFROM users\r\nJOIN older_users ON users.id = older_users.id;";
+            sql =
+                @"SELECT * FROM mes_mo_parts left join mes_equipment as me on (me.id = mes_mo_parts.eq_id) left join msi on ((user_item_type = 'CLA') and (msi.thisid = mes_mo_parts.part_id))  WHERE ((mes_mo_parts.orgid = @orgid) and (mes_mo_parts.""mo"" = @billValue))";
             var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
            
             var result = sqlAst.ToFormat();

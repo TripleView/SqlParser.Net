@@ -12,6 +12,7 @@ public class SqlInsertExpression : SqlExpression
     private List<List<SqlExpression>> valuesList;
     private SqlSelectExpression fromSelect;
     private SqlReturningExpression returning;
+    private List<SqlWithSubQueryExpression> withSubQuerys;
     public override SqlExpression Accept(IAstVisitor visitor)
     {
         return visitor.VisitSqlInsertExpression(this);
@@ -21,6 +22,30 @@ public class SqlInsertExpression : SqlExpression
         this.Type = SqlExpressionType.Insert;
         this.Columns = new List<SqlExpression>();
         this.ValuesList = new List<List<SqlExpression>>();
+        this.WithSubQuerys = new List<SqlWithSubQueryExpression>();
+    }
+
+    /// <summary>
+    /// cte sub query
+    /// cte公共表表达式子查询
+    /// </summary>
+    public List<SqlWithSubQueryExpression> WithSubQuerys
+    {
+        get => withSubQuerys;
+        set
+        {
+            if (value != null)
+            {
+                foreach (var expression in value)
+                {
+                    if (expression != null)
+                    {
+                        expression.Parent = this;
+                    }
+                }
+            }
+            withSubQuerys = value;
+        }
     }
 
     public SqlExpression Table
@@ -116,6 +141,10 @@ public class SqlInsertExpression : SqlExpression
 
     protected bool Equals(SqlInsertExpression other)
     {
+        if (!CompareTwoSqlExpressionList(WithSubQuerys, other.WithSubQuerys))
+        {
+            return false;
+        }
 
         if (!CompareTwoSqlExpressionList(Columns, other.Columns))
         {
@@ -205,6 +234,7 @@ public class SqlInsertExpression : SqlExpression
         {
             DbType = this.DbType,
             Columns = this.Columns.Select(x => x.Clone()).ToList(),
+            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
             Table = this.Table.Clone(),
             FromSelect = this.FromSelect.Clone(),
             ValuesList = this.ValuesList.Select(x => x.Select(y => y.Clone()).ToList()).ToList(),
