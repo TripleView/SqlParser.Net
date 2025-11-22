@@ -2623,6 +2623,11 @@ public class SqlParser
                 {
                     tempBody = AcceptFourArithmeticOperationsBaseOperationUnit();
                 }
+                else
+                {
+                    tempBody = AcceptSelectExpression();
+                }
+
             }
             else
             {

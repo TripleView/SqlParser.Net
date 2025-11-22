@@ -7659,12 +7659,16 @@ order by temp.InxNbr";
             generationSql);
     }
 
-    [Fact]
-    public void TestAny()
+    [Theory]
+    [InlineData(DbType.MySql)]
+    [InlineData(DbType.SqlServer)]
+    [InlineData(DbType.Oracle)]
+    [InlineData(DbType.Pgsql)]
+    public void TestAny(DbType dbType)
     {
         var sql = "select * from customer c where c.Age >any(select o.Quantity  from orderdetail o)";
         var sqlAst = new SqlExpression();
-        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); }));
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
         testOutputHelper.WriteLine("time:" + t);
         var unitTestAstVisitor = new UnitTestAstVisitor();
         sqlAst.Accept(unitTestAstVisitor);
@@ -7751,7 +7755,7 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.MySql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from customer as c where (c.Age > any((select o.Quantity from orderdetail as o)))",
+        Assert.Equal("select * from customer as c where (c.Age > any(select o.Quantity from orderdetail as o))",
             generationSql);
     }
 

@@ -59,7 +59,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("any");
         if (sqlAnyExpression.Body != null)
         {
-            EnableParen(() => { sqlAnyExpression.Body = sqlAnyExpression.Body.Accept(this); });
+            if (sqlAnyExpression.Body is SqlSelectExpression)
+            {
+                sqlAnyExpression.Body = sqlAnyExpression.Body.Accept(this);
+            }
+            else
+            {
+                EnableParen(() => { sqlAnyExpression.Body = sqlAnyExpression.Body.Accept(this); });
+            }
+            
         }
         return sqlAnyExpression;
     }
