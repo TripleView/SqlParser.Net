@@ -170,7 +170,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
     {
         unchecked
         {
-            return (Alias.GetHashCode() * 397) ^ Name.GetHashCode();
+            return ((Alias?.GetHashCode() ?? 0) * 397) ^ Name.GetHashCode();
         }
     }
 

@@ -293,15 +293,16 @@ public class SqlSelectQueryExpression : SqlExpression
     {
         unchecked
         {
-            var hashCode = WithSubQuerys.GetHashCode();
-            hashCode = (hashCode * 397) ^ Columns.GetHashCode();
-            hashCode = (hashCode * 397) ^ ResultSetReturnOption.GetHashCode();
-            hashCode = (hashCode * 397) ^ Into.GetHashCode();
-            hashCode = (hashCode * 397) ^ From.GetHashCode();
-            hashCode = (hashCode * 397) ^ Where.GetHashCode();
-            hashCode = (hashCode * 397) ^ GroupBy.GetHashCode();
-            hashCode = (hashCode * 397) ^ OrderBy.GetHashCode();
-            hashCode = (hashCode * 397) ^ Limit.GetHashCode();
+            var hashCode = WithSubQuerys?.GetHashCode() ?? 0;
+            hashCode = (hashCode * 397) ^ (Columns?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (ResultSetReturnOption?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (Into?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (From?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (Where?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (GroupBy?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (OrderBy?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (Limit?.GetHashCode() ?? 0);
+
             return hashCode;
         }
 
