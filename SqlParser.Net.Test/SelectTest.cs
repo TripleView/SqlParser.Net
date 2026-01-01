@@ -15346,6 +15346,48 @@ order by temp.InxNbr";
             generationSql);
     }
 
+    [Theory]
+    [InlineData("#")]
+    [InlineData("##")]
+    [InlineData("###")]
+    [InlineData("#@")]
+    [InlineData("#$")]
+    public void TestSelect10(string hash)
+    {
+        var sql = $@"select * from {hash}test;";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = $"{hash}test",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            $"select * from {hash}test",
+            generationSql);
+    }
 
     [Fact]
     public void TestLogical()

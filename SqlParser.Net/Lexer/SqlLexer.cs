@@ -481,14 +481,15 @@ public class SqlLexer
     }
     private bool AcceptIdentifierOrKeyword()
     {
-        if (AcceptLetters() || ((IsMySql || IsPgsql || IsSqlServer || IsSqlite) && Accept('_')))
+        if (AcceptLetters() || ((IsMySql || IsPgsql || IsSqlServer || IsSqlite) && Accept('_')) ||
+            (IsSqlServer && Accept('#')))
         {
             var startIndex = pos - 1;
             var sb = new StringBuilder();
             var ch = GetCurrentCharValue();
             sb.Append(ch);
             var i = 0;
-            while (AcceptLetters() || Accept('_') || AcceptDigits())
+            while (AcceptLetters() || Accept('_') || AcceptDigits() || (IsSqlServer && (Accept('#') || Accept('@') || Accept('$'))))
             {
                 if (i >= whileMaximumNumberOfLoops)
                 {
@@ -749,7 +750,7 @@ public class SqlLexer
                 UpdateTokenPosition(ref token);
                 tokens.Add(token);
             }
-           
+
             return true;
         }
         if (Accept('^'))
@@ -1072,7 +1073,6 @@ public class SqlLexer
             tokenDic.TryAdd("Next".ToLowerInvariant(), Token.Next);
             tokenDic.TryAdd("Top".ToLowerInvariant(), Token.Top);
             tokenDic.TryAdd("Option".ToLowerInvariant(), Token.Option);
-
         }
 
         if (dbType == DbType.Pgsql)
