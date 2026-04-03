@@ -26,10 +26,6 @@ public class SqlExistsExpression : SqlExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }

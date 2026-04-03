@@ -22,10 +22,6 @@ public class SqlJoinTableExpression : SqlExpression
         get => left;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             left = value;
         }
     }
@@ -37,10 +33,6 @@ public class SqlJoinTableExpression : SqlExpression
         get => right;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             right = value;
         }
     }
@@ -50,10 +42,6 @@ public class SqlJoinTableExpression : SqlExpression
         get => conditions;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             conditions = value;
         }
     }

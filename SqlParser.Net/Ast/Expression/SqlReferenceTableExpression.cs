@@ -20,10 +20,6 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
         get => functionCall;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             functionCall = value;
         }
     }
@@ -33,10 +29,6 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
         get => alias;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             alias = value;
         }
     }

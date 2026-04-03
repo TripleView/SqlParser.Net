@@ -21,10 +21,6 @@ public class SqlOverExpression : SqlExpression
         get => orderBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             orderBy = value;
         }
     }
@@ -34,10 +30,6 @@ public class SqlOverExpression : SqlExpression
         get => partitionBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             partitionBy = value;
         }
     }

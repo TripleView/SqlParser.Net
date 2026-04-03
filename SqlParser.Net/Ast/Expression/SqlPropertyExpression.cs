@@ -31,10 +31,6 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
         get => collate;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             collate = value;
         }
     }
@@ -47,10 +43,6 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
         get => name;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             name = value;
         }
     }
@@ -60,10 +52,6 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
         get => table;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             table = value;
         }
     }

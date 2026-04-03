@@ -31,10 +31,6 @@ public class SqlInExpression : SqlExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }
@@ -44,17 +40,6 @@ public class SqlInExpression : SqlExpression
         get => targetList;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-
-                }
-            }
             targetList = value;
         }
     }
@@ -64,10 +49,6 @@ public class SqlInExpression : SqlExpression
         get => subQuery;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             subQuery = value;
         }
     }

@@ -27,10 +27,6 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         get => alias;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             alias = value;
         }
     }
@@ -40,10 +36,6 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         get => subQuery;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             subQuery = value;
         }
     }
@@ -53,10 +45,6 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         get => functionCall;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             functionCall = value;
         }
     }
@@ -66,10 +54,6 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         get => forValue;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             forValue = value;
         }
     }
@@ -79,16 +63,6 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         get => inValue;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             inValue = value;
         }
     }

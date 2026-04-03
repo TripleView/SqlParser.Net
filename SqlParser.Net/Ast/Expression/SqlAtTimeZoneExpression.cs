@@ -24,10 +24,6 @@ public class SqlAtTimeZoneExpression : SqlExpression
         get => timeZone;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             timeZone = value;
         }
     }
@@ -37,10 +33,6 @@ public class SqlAtTimeZoneExpression : SqlExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }

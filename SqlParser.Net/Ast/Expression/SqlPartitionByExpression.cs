@@ -23,16 +23,6 @@ public class SqlPartitionByExpression : SqlExpression
         get => items;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             items = value;
         }
     }

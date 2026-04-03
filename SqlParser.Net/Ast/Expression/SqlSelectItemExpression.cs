@@ -21,10 +21,6 @@ public class SqlSelectItemExpression : SqlExpression, IAliasExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }
@@ -34,10 +30,6 @@ public class SqlSelectItemExpression : SqlExpression, IAliasExpression
         get => alias;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             alias = value;
         }
     }

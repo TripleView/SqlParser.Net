@@ -25,13 +25,6 @@ public class SqlReturningExpression : SqlExpression
         get => items;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    expression.Parent = this;
-                }
-            }
             items = value;
         }
     }
@@ -41,13 +34,6 @@ public class SqlReturningExpression : SqlExpression
         get => intoVariables;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    expression.Parent = this;
-                }
-            }
             intoVariables = value;
         }
     }

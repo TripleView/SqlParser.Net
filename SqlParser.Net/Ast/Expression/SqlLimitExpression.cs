@@ -21,10 +21,6 @@ public class SqlLimitExpression : SqlExpression
         get => offset;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             offset = value;
         }
     }
@@ -34,10 +30,6 @@ public class SqlLimitExpression : SqlExpression
         get => rowCount;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             rowCount = value;
         }
     }

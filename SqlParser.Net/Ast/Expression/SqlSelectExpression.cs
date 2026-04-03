@@ -24,10 +24,6 @@ public class SqlSelectExpression : SqlExpression
         get => query;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             query = value;
         }
     }
@@ -37,10 +33,6 @@ public class SqlSelectExpression : SqlExpression
         get => alias;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             alias = value;
         }
     }
@@ -51,10 +43,6 @@ public class SqlSelectExpression : SqlExpression
         get => orderBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             orderBy = value;
         }
     }
@@ -64,10 +52,6 @@ public class SqlSelectExpression : SqlExpression
         get => limit;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             limit = value;
         }
     }

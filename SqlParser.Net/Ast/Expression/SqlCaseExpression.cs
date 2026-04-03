@@ -29,16 +29,6 @@ public class SqlCaseExpression : SqlExpression
         get => items;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             items = value;
         }
     }
@@ -48,10 +38,6 @@ public class SqlCaseExpression : SqlExpression
         get => elseValue;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             elseValue = value;
         }
     }
@@ -61,10 +47,6 @@ public class SqlCaseExpression : SqlExpression
         get => value;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             this.value = value;
         }
     }

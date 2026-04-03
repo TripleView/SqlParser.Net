@@ -40,16 +40,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => withSubQuerys;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             withSubQuerys = value;
         }
     }
@@ -59,16 +49,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => columns;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             columns = value;
         }
     }
@@ -88,10 +68,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => into;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             into = value;
         }
     }
@@ -101,10 +77,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => from;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             from = value;
         }
     }
@@ -117,11 +89,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => top;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
-
             top = value;
         }
     }
@@ -131,10 +98,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => where;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             where = value;
         }
     }
@@ -144,10 +107,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => groupBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             groupBy = value;
         }
     }
@@ -161,10 +120,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => connectBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             connectBy = value;
         }
     }
@@ -175,10 +130,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => orderBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             orderBy = value;
         }
     }
@@ -188,10 +139,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => limit;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             limit = value;
         }
     }
@@ -201,16 +148,6 @@ public class SqlSelectQueryExpression : SqlExpression
         get => hints;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             hints = value;
         }
     }

@@ -32,16 +32,6 @@ public class SqlUpdateExpression : SqlExpression
         get => withSubQuerys;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             withSubQuerys = value;
         }
     }
@@ -51,10 +41,6 @@ public class SqlUpdateExpression : SqlExpression
         get => table;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             table = value;
         }
     }
@@ -64,16 +50,6 @@ public class SqlUpdateExpression : SqlExpression
         get => items;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             items = value;
         }
     }
@@ -83,10 +59,6 @@ public class SqlUpdateExpression : SqlExpression
         get => where;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             where = value;
         }
     }
@@ -96,10 +68,6 @@ public class SqlUpdateExpression : SqlExpression
         get => from;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             from = value;
         }
     }

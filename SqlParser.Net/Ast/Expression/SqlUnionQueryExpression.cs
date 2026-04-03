@@ -21,10 +21,6 @@ public class SqlUnionQueryExpression : SqlExpression
         get => left;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             left = value;
         }
     }
@@ -36,10 +32,6 @@ public class SqlUnionQueryExpression : SqlExpression
         get => right;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             right = value;
         }
     }

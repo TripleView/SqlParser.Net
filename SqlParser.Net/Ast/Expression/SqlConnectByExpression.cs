@@ -28,10 +28,6 @@ public class SqlConnectByExpression : SqlExpression
         get => startWith;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             startWith = value;
         }
     }
@@ -41,10 +37,6 @@ public class SqlConnectByExpression : SqlExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }
@@ -54,10 +46,6 @@ public class SqlConnectByExpression : SqlExpression
         get => orderBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             orderBy = value;
         }
     }

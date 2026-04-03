@@ -21,10 +21,6 @@ public class SqlWithinGroupExpression : SqlExpression
         get => orderBy;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             orderBy = value;
         }
     }

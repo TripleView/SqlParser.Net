@@ -40,12 +40,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     {
         return sb.ToString().Trim(' ');
     }
-    public override SqlExpression VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression)
+    public override SqlExpression VisitSqlAllColumnExpression(SqlAllColumnExpression sqlAllColumnExpression, VisitContext context = null)
     {
         AppendWithSpace("*");
         return sqlAllColumnExpression;
     }
-    public override SqlExpression VisitSqlAllExpression(SqlAllExpression sqlAllExpression)
+    public override SqlExpression VisitSqlAllExpression(SqlAllExpression sqlAllExpression, VisitContext context = null)
     {
         Append("all");
         if (sqlAllExpression.Body != null)
@@ -54,7 +54,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlAllExpression;
     }
-    public override SqlExpression VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression)
+    public override SqlExpression VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression, VisitContext context = null)
     {
         Append("any");
         if (sqlAnyExpression.Body != null)
@@ -71,7 +71,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlAnyExpression;
     }
-    public override SqlExpression VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression)
+    public override SqlExpression VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression, VisitContext context = null)
     {
         if (sqlBetweenAndExpression.Body != null)
         {
@@ -97,7 +97,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlBetweenAndExpression;
     }
-    public override SqlExpression VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression)
+    public override SqlExpression VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression, VisitContext context = null)
     {
         void internalAction()
         {
@@ -121,7 +121,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
-        if (sqlBinaryExpression.Parent is SqlConnectByExpression || (sqlBinaryExpression.Parent is SqlUpdateExpression && isInUpdateSetContext))
+        if (context.Parent is SqlConnectByExpression || (context.Parent is SqlUpdateExpression && isInUpdateSetContext))
         {
             internalAction();
         }
@@ -132,7 +132,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlBinaryExpression;
     }
-    public override SqlExpression VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression)
+    public override SqlExpression VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression, VisitContext context = null)
     {
         Append("case");
 
@@ -163,7 +163,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlCaseExpression;
     }
-    public override SqlExpression VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression)
+    public override SqlExpression VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression, VisitContext context = null)
     {
 
         if (sqlCaseItemExpression.Condition != null)
@@ -179,7 +179,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlCaseItemExpression;
     }
-    public override SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression)
+    public override SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression, VisitContext context = null)
     {
         if (sqlDeleteExpression.WithSubQuerys.HasValue())
         {
@@ -216,7 +216,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlDeleteExpression;
     }
-    public override SqlExpression VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression)
+    public override SqlExpression VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression, VisitContext context = null)
     {
         if (sqlExistsExpression.IsNot)
         {
@@ -236,7 +236,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlExistsExpression;
     }
 
-    public override SqlExpression VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression)
+    public override SqlExpression VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression, VisitContext context = null)
     {
 
         if (sqlFunctionCallExpression.Name != null)
@@ -305,7 +305,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlFunctionCallExpression;
     }
-    public override SqlExpression VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression)
+    public override SqlExpression VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression, VisitContext context = null)
     {
         if (!sqlGroupByExpression.HasValue())
         {
@@ -337,7 +337,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlGroupByExpression;
     }
-    public override SqlExpression VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression)
+    public override SqlExpression VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression, VisitContext context = null)
     {
         if (!string.IsNullOrWhiteSpace(sqlIdentifierExpression.LeftQualifiers))
         {
@@ -354,7 +354,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlIdentifierExpression;
     }
-    public override SqlExpression VisitSqlInExpression(SqlInExpression sqlInExpression)
+    public override SqlExpression VisitSqlInExpression(SqlInExpression sqlInExpression, VisitContext context = null)
     {
         if (sqlInExpression.Body != null)
         {
@@ -395,7 +395,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlInExpression;
     }
-    public override SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression)
+    public override SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression, VisitContext context = null)
     {
         if (sqlInsertExpression.WithSubQuerys.HasValue())
         {
@@ -486,7 +486,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlInsertExpression;
     }
-    public override SqlExpression VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression)
+    public override SqlExpression VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression, VisitContext context = null)
     {
 
         if (sqlJoinTableExpression.Left != null)
@@ -533,7 +533,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlJoinTableExpression;
     }
-    public override SqlExpression VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression)
+    public override SqlExpression VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression, VisitContext context = null)
     {
         switch (dbType)
         {
@@ -591,7 +591,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlLimitExpression;
     }
-    public override SqlExpression VisitSqlNotExpression(SqlNotExpression sqlNotExpression)
+    public override SqlExpression VisitSqlNotExpression(SqlNotExpression sqlNotExpression, VisitContext context = null)
     {
         AppendWithSpace("not");
         if (sqlNotExpression.Body != null)
@@ -604,12 +604,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlNotExpression;
     }
-    public override SqlExpression VisitSqlNullExpression(SqlNullExpression sqlNullExpression)
+    public override SqlExpression VisitSqlNullExpression(SqlNullExpression sqlNullExpression, VisitContext context = null)
     {
         Append("null");
         return sqlNullExpression;
     }
-    public override SqlExpression VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression)
+    public override SqlExpression VisitSqlNumberExpression(SqlNumberExpression sqlNumberExpression, VisitContext context = null)
     {
         if (!string.IsNullOrWhiteSpace(sqlNumberExpression.LeftQualifiers))
         {
@@ -621,7 +621,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlNumberExpression;
     }
-    public override SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression)
+    public override SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression, VisitContext context = null)
     {
         if (!sqlOrderByExpression.HasValue())
         {
@@ -655,7 +655,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlOrderByExpression;
     }
 
-    public override SqlExpression VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression)
+    public override SqlExpression VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression, VisitContext context = null)
     {
         if (sqlConnectByExpression.StartWith != null)
         {
@@ -683,7 +683,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlConnectByExpression;
     }
 
-    public override SqlExpression VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression)
+    public override SqlExpression VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression, VisitContext context = null)
     {
         if (sqlOrderByItemExpression.Body != null)
         {
@@ -701,7 +701,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlOrderByItemExpression;
     }
-    public override SqlExpression VisitSqlOverExpression(SqlOverExpression sqlOverExpression)
+    public override SqlExpression VisitSqlOverExpression(SqlOverExpression sqlOverExpression, VisitContext context = null)
     {
         AppendWithSpace("over");
         EnableParen((() =>
@@ -717,7 +717,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }));
         return sqlOverExpression;
     }
-    public override SqlExpression VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression)
+    public override SqlExpression VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression, VisitContext context = null)
     {
         if (!(sqlPartitionByExpression.Items != null && sqlPartitionByExpression.Items.Count > 0))
         {
@@ -744,7 +744,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlPartitionByExpression;
     }
-    public override SqlExpression VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression)
+    public override SqlExpression VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression, VisitContext context = null)
     {
         if (sqlPivotTableExpression.SubQuery != null)
         {
@@ -801,7 +801,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlPivotTableExpression;
     }
-    public override SqlExpression VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression)
+    public override SqlExpression VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression, VisitContext context = null)
     {
 
         if (sqlPropertyExpression.Table != null)
@@ -822,7 +822,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlPropertyExpression;
     }
-    public override SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression)
+    public override SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression, VisitContext context = null)
     {
         if (sqlReferenceTableExpression.FunctionCall != null)
         {
@@ -840,15 +840,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlReferenceTableExpression;
     }
-    public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression)
+    public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression, VisitContext context = null)
     {
         if (sqlSelectExpression.Alias == null
-            && (sb.Length == 0 || sqlSelectExpression.Parent is SqlInsertExpression
-                               || sqlSelectExpression.Parent is SqlInExpression
-                               || (IsSqlite && sqlSelectExpression.Parent is not SqlFunctionCallExpression)
+            && (sb.Length == 0 || context.Parent is SqlInsertExpression
+                               || context.Parent is SqlInExpression
+                               || (IsSqlite && context.Parent is not SqlFunctionCallExpression)
                                || sqlSelectExpression.Query is SqlUnionQueryExpression
-                               || sqlSelectExpression.Parent is SqlExistsExpression
-                               || sqlSelectExpression.Parent is SqlWithSubQueryExpression))
+                               || context.Parent is SqlExistsExpression
+                               || context.Parent is SqlWithSubQueryExpression))
         {
             if (sqlSelectExpression.Query != null)
             {
@@ -890,7 +890,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlSelectExpression;
     }
-    public override SqlExpression VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression)
+    public override SqlExpression VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression, VisitContext context = null)
     {
         sqlSelectItemExpression.Body = sqlSelectItemExpression.Body?.Accept(this);
         if (sqlSelectItemExpression.Alias != null)
@@ -916,7 +916,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         this.isInUpdateSetContext = false;
     }
 
-    public override SqlExpression VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression)
+    public override SqlExpression VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression, VisitContext context = null)
     {
         if (sqlSelectQueryExpression.WithSubQuerys.HasValue())
         {
@@ -1064,7 +1064,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append($"{str}");
     }
 
-    public override SqlExpression VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression)
+    public override SqlExpression VisitSqlBoolExpression(SqlBoolExpression sqlBoolExpression, VisitContext context = null)
     {
         if (dbType == DbType.MySql || dbType == DbType.Pgsql || dbType == DbType.Sqlite)
         {
@@ -1074,7 +1074,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlBoolExpression;
     }
 
-    public override SqlExpression VisitSqlStringExpression(SqlStringExpression sqlStringExpression)
+    public override SqlExpression VisitSqlStringExpression(SqlStringExpression sqlStringExpression, VisitContext context = null)
     {
         Append($"{(sqlStringExpression.IsUniCode ? "N" : "")}'{sqlStringExpression.Value.Replace("'", "''")}'");
         if (sqlStringExpression.Collate != null)
@@ -1083,7 +1083,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlStringExpression;
     }
-    public override SqlExpression VisitSqlTableExpression(SqlTableExpression sqlTableExpression)
+    public override SqlExpression VisitSqlTableExpression(SqlTableExpression sqlTableExpression, VisitContext context = null)
     {
         if (sqlTableExpression.Database != null)
         {
@@ -1128,7 +1128,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlTableExpression;
     }
-    public override SqlExpression VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression)
+    public override SqlExpression VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression, VisitContext context = null)
     {
         if (sb.Length > 0 && sb[sb.Length - 1] == '(')
         {
@@ -1195,7 +1195,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
     }
 
-    public override SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression)
+    public override SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression, VisitContext context = null)
     {
         sqlParseType = ParseType.Update;
         if (sqlUpdateExpression.WithSubQuerys.HasValue())
@@ -1262,7 +1262,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlUpdateExpression;
 
     }
-    public override SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression)
+    public override SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression, VisitContext context = null)
     {
         if (sb.Length > 0)
         {
@@ -1287,7 +1287,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlVariableExpression;
     }
-    public override SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression)
+    public override SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression, VisitContext context = null)
     {
         AppendWithLeftSpace("within group");
         EnableParen(() =>
@@ -1300,7 +1300,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         return sqlWithinGroupExpression;
     }
-    public override SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression)
+    public override SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression, VisitContext context = null)
     {
         if (sqlWithSubQueryExpression.Alias != null)
         {
@@ -1338,7 +1338,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlWithSubQueryExpression;
     }
 
-    public override SqlExpression VisitSqlTopExpression(SqlTopExpression sqlTopExpression)
+    public override SqlExpression VisitSqlTopExpression(SqlTopExpression sqlTopExpression, VisitContext context = null)
     {
         AppendWithSpace("top");
         if (sqlTopExpression.Body != null)
@@ -1349,7 +1349,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlTopExpression;
     }
 
-    public override SqlExpression VisitSqlHintExpression(SqlHintExpression sqlHintExpression)
+    public override SqlExpression VisitSqlHintExpression(SqlHintExpression sqlHintExpression, VisitContext context = null)
     {
         if (sqlHintExpression.Body != null)
         {
@@ -1359,7 +1359,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlHintExpression;
     }
 
-    public override SqlExpression VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression)
+    public override SqlExpression VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression, VisitContext context = null)
     {
         if (sqlAtTimeZoneExpression.Body != null)
         {
@@ -1370,7 +1370,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlAtTimeZoneExpression;
     }
 
-    public override SqlExpression VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression)
+    public override SqlExpression VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression, VisitContext context = null)
     {
         AppendWithSpace("interval");
         if (sqlIntervalExpression.Body != null)
@@ -1386,7 +1386,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlIntervalExpression;
     }
 
-    public override SqlExpression VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression)
+    public override SqlExpression VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression, VisitContext context = null)
     {
         if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit))
         {
@@ -1395,7 +1395,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlTimeUnitExpression;
     }
 
-    public override SqlExpression VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression)
+    public override SqlExpression VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression, VisitContext context = null)
     {
         AppendWithSpace("collate");
         if (sqlCollateExpression.Body != null)
@@ -1406,7 +1406,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlCollateExpression;
     }
 
-    public override SqlExpression VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression)
+    public override SqlExpression VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression, VisitContext context = null)
     {
         if (sqlRegexExpression.Body != null)
         {
@@ -1440,7 +1440,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlRegexExpression;
     }
 
-    public override SqlExpression VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression)
+    public override SqlExpression VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression, VisitContext context = null)
     {
         if (!sqlReturningExpression.HasValue())
         {
@@ -1484,7 +1484,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlReturningExpression;
     }
 
-    public override SqlExpression VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression)
+    public override SqlExpression VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression, VisitContext context = null)
     {
         if (!sqlArrayExpression.HasValue())
         {
@@ -1512,7 +1512,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlArrayExpression;
     }
 
-    public override SqlExpression VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression)
+    public override SqlExpression VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression, VisitContext context = null)
     {
         if (sqlArrayIndexExpression.Body == null || sqlArrayIndexExpression.Index == null)
         {
@@ -1536,7 +1536,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         return sqlArrayIndexExpression;
     }
 
-    public override SqlExpression VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression)
+    public override SqlExpression VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression, VisitContext context = null)
     {
         if (sqlArraySliceExpression.Body == null)
         {

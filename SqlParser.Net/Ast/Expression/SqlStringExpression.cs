@@ -31,10 +31,6 @@ public class SqlStringExpression : SqlExpression, ICollateExpression
         get => collate;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             collate = value;
         }
     }

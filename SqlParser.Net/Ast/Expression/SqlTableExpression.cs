@@ -28,10 +28,6 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         get => alias;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             alias = value;
         }
     }
@@ -41,10 +37,6 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         get => name;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             name = value;
         }
     }
@@ -58,10 +50,6 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         get => schema;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             schema = value;
         }
     }
@@ -75,10 +63,6 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         get => database;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             database = value;
         }
     }
@@ -92,10 +76,6 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         get => dbLink;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             dbLink = value;
         }
     }
@@ -109,17 +89,6 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
         get => hints;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
-
             hints = value;
         }
     }

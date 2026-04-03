@@ -20,8 +20,8 @@ public class TestHelper
         foreach (var typeInfo in expressionList)
         {
             var className = typeInfo.Name.Substring(0, 1).ToLower() + typeInfo.Name.Substring(1);
-            sb.Append($"    SqlExpression Visit{typeInfo.Name}({typeInfo.Name} {className});\r\n");
-            sb2.Append($"    public virtual SqlExpression Visit{typeInfo.Name}({typeInfo.Name} {className})\r\n    {{\r\n        return {className};\r\n    }}\r\n");
+            sb.Append($"    SqlExpression Visit{typeInfo.Name}({typeInfo.Name} {className}, VisitContext context = null);\r\n");
+            sb2.Append($"    public virtual SqlExpression Visit{typeInfo.Name}({typeInfo.Name} {className}, VisitContext context = null)\r\n    {{\r\n        return {className};\r\n    }}\r\n");
         }
 
         sb.Append("}");

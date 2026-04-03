@@ -11,14 +11,10 @@ public class SqlExpression : IAcceptVisitor, ICloneableExpression
         return this;
     }
 
-    public Guid Id { get;private set; }
+    public Guid Id { get; private set; }
 
     public virtual SqlExpressionType Type { get; protected set; }
-    /// <summary>
-    /// Parent Expression
-    /// 父级表达式
-    /// </summary>
-    public SqlExpression Parent { get; set; }
+
     /// <summary>
     /// Database Type
     /// 数据库类型
@@ -27,7 +23,7 @@ public class SqlExpression : IAcceptVisitor, ICloneableExpression
 
     public SqlExpression()
     {
-        this.Id=Guid.NewGuid();
+        this.Id = Guid.NewGuid();
     }
     /// <summary>
     /// Compare 2 SqlExpressions for equality
@@ -108,7 +104,7 @@ public class SqlExpression : IAcceptVisitor, ICloneableExpression
         {
             return "";
         }
-        return base.ToString()+";sql:"+ ToSql();
+        return base.ToString() + ";sql:" + ToSql();
     }
 
     /// <summary>

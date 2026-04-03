@@ -23,13 +23,6 @@ public class SqlOrderByExpression : SqlExpression
         get => items;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    expression.Parent = this;
-                }
-            }
             items = value;
         }
     }

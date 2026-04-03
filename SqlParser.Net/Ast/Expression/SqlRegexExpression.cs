@@ -38,10 +38,6 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
         get => collate;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             collate = value;
         }
     }
@@ -51,10 +47,6 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
         get => regEx;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             regEx = value;
         }
     }
@@ -63,10 +55,6 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }

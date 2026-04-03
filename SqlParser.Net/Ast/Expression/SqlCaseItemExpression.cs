@@ -24,10 +24,6 @@ public class SqlCaseItemExpression : SqlExpression
         get => condition;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             condition = value;
         }
     }
@@ -37,10 +33,6 @@ public class SqlCaseItemExpression : SqlExpression
         get => value;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             this.value = value;
         }
     }

@@ -24,16 +24,6 @@ public class SqlGroupByExpression : SqlExpression
         get => items;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             items = value;
         }
     }
@@ -43,10 +33,6 @@ public class SqlGroupByExpression : SqlExpression
         get => having;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             having = value;
         }
     }

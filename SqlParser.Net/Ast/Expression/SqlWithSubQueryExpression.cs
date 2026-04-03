@@ -26,10 +26,6 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
         get => alias;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             alias = value;
         }
     }
@@ -39,16 +35,6 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
         get => columns;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             columns = value;
         }
     }
@@ -58,10 +44,6 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
         get => fromSelect;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             fromSelect = value;
         }
     }

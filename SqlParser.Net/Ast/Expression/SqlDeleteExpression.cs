@@ -29,10 +29,6 @@ public class SqlDeleteExpression : SqlExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }
@@ -46,16 +42,6 @@ public class SqlDeleteExpression : SqlExpression
         get => withSubQuerys;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             withSubQuerys = value;
         }
     }
@@ -65,10 +51,6 @@ public class SqlDeleteExpression : SqlExpression
         get => table;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             table = value;
         }
     }
@@ -78,10 +60,6 @@ public class SqlDeleteExpression : SqlExpression
         get => where;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             where = value;
         }
     }

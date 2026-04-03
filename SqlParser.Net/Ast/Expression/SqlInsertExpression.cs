@@ -34,16 +34,6 @@ public class SqlInsertExpression : SqlExpression
         get => withSubQuerys;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             withSubQuerys = value;
         }
     }
@@ -53,10 +43,6 @@ public class SqlInsertExpression : SqlExpression
         get => table;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             table = value;
         }
     }
@@ -65,10 +51,6 @@ public class SqlInsertExpression : SqlExpression
         get => returning;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             returning = value;
         }
     }
@@ -77,16 +59,6 @@ public class SqlInsertExpression : SqlExpression
         get => columns;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             columns = value;
         }
     }
@@ -100,23 +72,6 @@ public class SqlInsertExpression : SqlExpression
         get => valuesList;
         set
         {
-            if (value != null)
-            {
-                foreach (var expressions in value)
-                {
-                    if (expressions != null)
-                    {
-                        foreach (var expression in expressions)
-                        {
-                            if (expression != null)
-                            {
-                                expression.Parent = this;
-                            }
-                        }
-                    }
-                }
-            }
-
             valuesList = value;
         }
     }
@@ -129,10 +84,6 @@ public class SqlInsertExpression : SqlExpression
         get => fromSelect;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             fromSelect = value;
         }
     }

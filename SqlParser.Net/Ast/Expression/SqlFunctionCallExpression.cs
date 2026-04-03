@@ -34,16 +34,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => arguments;
         set
         {
-            if (value != null)
-            {
-                foreach (var expression in value)
-                {
-                    if (expression != null)
-                    {
-                        expression.Parent = this;
-                    }
-                }
-            }
             arguments = value;
         }
     }
@@ -53,10 +43,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => name;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             name = value;
         }
     }
@@ -70,10 +56,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => collate;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             collate = value;
         }
     }
@@ -87,10 +69,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => caseAsTargetType;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             caseAsTargetType = value;
         }
     }
@@ -104,10 +82,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => fromSource;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             fromSource = value;
         }
     }
@@ -122,10 +96,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => over;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             over = value;
         }
     }
@@ -135,10 +105,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         get => withinGroup;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             withinGroup = value;
         }
     }

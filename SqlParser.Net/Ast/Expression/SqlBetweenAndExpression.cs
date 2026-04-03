@@ -30,10 +30,7 @@ public class SqlBetweenAndExpression : SqlExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
+            
             body = value;
         }
     }
@@ -43,10 +40,6 @@ public class SqlBetweenAndExpression : SqlExpression
         get => begin;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             begin = value;
         }
     }
@@ -56,10 +49,6 @@ public class SqlBetweenAndExpression : SqlExpression
         get => end;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             end = value;
         }
     }

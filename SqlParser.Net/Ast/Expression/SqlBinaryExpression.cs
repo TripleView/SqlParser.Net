@@ -30,10 +30,6 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
         get => left;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             left = value;
         }
     }
@@ -43,10 +39,6 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
         get => right;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             right = value;
         }
     }
@@ -62,10 +54,6 @@ public class SqlBinaryExpression : SqlExpression, ICollateExpression
         get => collate;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             collate = value;
         }
     }

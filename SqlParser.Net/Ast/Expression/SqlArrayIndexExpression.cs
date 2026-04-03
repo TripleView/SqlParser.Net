@@ -24,10 +24,6 @@ public class SqlArrayIndexExpression : SqlExpression, IArrayRelatedExpression
         get => body;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             body = value;
         }
     }
@@ -37,10 +33,6 @@ public class SqlArrayIndexExpression : SqlExpression, IArrayRelatedExpression
         get => index;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             index = value;
         }
     }

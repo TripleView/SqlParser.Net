@@ -40,10 +40,6 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
         get => collate;
         set
         {
-            if (value != null)
-            {
-                value.Parent = this;
-            }
             collate = value;
         }
     }
