@@ -13,9 +13,9 @@ public class SqlPropertyExpression : SqlExpression, ICollateExpression
 
     private SqlCollateExpression collate;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlPropertyExpression(this);
+        return visitor.VisitSqlPropertyExpression(this, context);
     }
     public SqlPropertyExpression()
     {

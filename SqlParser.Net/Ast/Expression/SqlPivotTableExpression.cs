@@ -12,9 +12,9 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
     private SqlExpression forValue;
     private List<SqlExpression> inValue;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlPivotTableExpression(this);
+        return visitor.VisitSqlPivotTableExpression(this, context);
     }
     public SqlPivotTableExpression()
     {

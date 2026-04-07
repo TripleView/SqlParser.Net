@@ -42,9 +42,9 @@ public class SqlTopExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlTopExpression(this);
+        return visitor.VisitSqlTopExpression(this, context);
     }
 
     public override SqlExpression InternalClone()

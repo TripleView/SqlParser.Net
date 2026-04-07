@@ -1280,4 +1280,47 @@ public class UpdateTest
             var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
         });
     }
+
+    [Fact]
+    public void TestUpdate6()
+    {
+        var sql = "UPDATE myuser SET email = null WHERE name is not null";
+        var sqlAst = DbUtils.Parse(sql, DbType.MySql);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlUpdateExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "myuser",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlIdentifierExpression()
+                {
+                    Value = "name",
+                },
+                Operator = SqlBinaryOperator.IsNot,
+                Right = new SqlNullExpression()
+            },
+            Items = new List<SqlExpression>()
+            {
+                new SqlBinaryExpression()
+                {
+                    Left = new SqlIdentifierExpression()
+                    {
+                        Value = "email",
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlNullExpression()
+                },
+            },
+        };
+        Assert.True(sqlAst.Equals(expect));
+        var newSql = sqlAst.ToSql();
+        Assert.Equal("update myuser set email = null where (name is not null)", newSql);
+    }
 }

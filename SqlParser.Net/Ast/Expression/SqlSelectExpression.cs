@@ -10,9 +10,9 @@ public class SqlSelectExpression : SqlExpression
     private SqlOrderByExpression orderBy;
     private SqlLimitExpression limit;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlSelectExpression(this);
+        return visitor.VisitSqlSelectExpression(this, context);
     }
     public SqlSelectExpression()
     {

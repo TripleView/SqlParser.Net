@@ -4,9 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlNumberExpression : SqlExpression, IQualifierExpression
 {
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlNumberExpression(this);
+        return visitor.VisitSqlNumberExpression(this, context);
     }
     public SqlNumberExpression()
     {

@@ -6,9 +6,9 @@ public class SqlOrderByItemExpression : SqlExpression
 {
     private SqlExpression body;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlOrderByItemExpression(this);
+        return visitor.VisitSqlOrderByItemExpression(this, context);
     }
     public SqlOrderByItemExpression()
     {

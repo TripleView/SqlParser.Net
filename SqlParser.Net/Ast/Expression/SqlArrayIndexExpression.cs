@@ -10,9 +10,9 @@ public class SqlArrayIndexExpression : SqlExpression, IArrayRelatedExpression
     private SqlExpression body;
     private SqlNumberExpression index;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlArrayIndexExpression(this);
+        return visitor.VisitSqlArrayIndexExpression(this, context);
     }
     public SqlArrayIndexExpression()
     {

@@ -6,7 +6,7 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlExpression : IAcceptVisitor, ICloneableExpression
 {
-    public virtual SqlExpression Accept(IAstVisitor visitor)
+    public virtual SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
         return this;
     }

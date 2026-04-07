@@ -9,9 +9,9 @@ public class SqlBetweenAndExpression : SqlExpression
     private SqlExpression begin;
     private SqlExpression end;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlBetweenAndExpression(this);
+        return visitor.VisitSqlBetweenAndExpression(this, context);
     }
     public SqlBetweenAndExpression()
     {

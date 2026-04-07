@@ -11,9 +11,9 @@ public class SqlArraySliceExpression : SqlExpression, IArrayRelatedExpression
     private SqlExpression body;
     private SqlNumberExpression startIndex;
     private SqlNumberExpression endIndex;
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlArraySliceExpression(this);
+        return visitor.VisitSqlArraySliceExpression(this, context);
     }
     public SqlArraySliceExpression()
     {

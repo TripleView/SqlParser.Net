@@ -10,9 +10,9 @@ public class SqlStringExpression : SqlExpression, ICollateExpression
     /// </summary>
 
     private SqlCollateExpression collate;
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlStringExpression(this);
+        return visitor.VisitSqlStringExpression(this, context);
     }
     public SqlStringExpression()
     {

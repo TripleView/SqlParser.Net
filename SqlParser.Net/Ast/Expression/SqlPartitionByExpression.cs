@@ -8,9 +8,9 @@ public class SqlPartitionByExpression : SqlExpression
 {
     private List<SqlExpression> items;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlPartitionByExpression(this);
+        return visitor.VisitSqlPartitionByExpression(this, context);
     }
     public SqlPartitionByExpression()
     {

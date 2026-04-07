@@ -19,9 +19,9 @@ public class SqlSelectQueryExpression : SqlExpression
     private SqlLimitExpression limit;
     private List<SqlHintExpression> hints;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlSelectQueryExpression(this);
+        return visitor.VisitSqlSelectQueryExpression(this, context);
     }
     public SqlSelectQueryExpression()
     {

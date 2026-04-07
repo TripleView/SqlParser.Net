@@ -40,9 +40,9 @@ public class SqlCollateExpression : SqlExpression
     {
         return Body.GetHashCode();
     }
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlCollateExpression(this);
+        return visitor.VisitSqlCollateExpression(this, context);
     }
 
     public override SqlExpression InternalClone()

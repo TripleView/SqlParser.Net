@@ -8,9 +8,9 @@ public class SqlJoinTableExpression : SqlExpression
     private SqlExpression right;
     private SqlExpression conditions;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlJoinTableExpression(this);
+        return visitor.VisitSqlJoinTableExpression(this, context);
     }
     public SqlJoinTableExpression()
     {

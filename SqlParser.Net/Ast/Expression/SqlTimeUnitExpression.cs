@@ -26,9 +26,9 @@ public class SqlTimeUnitExpression : SqlExpression
         return Equals((SqlTimeUnitExpression)obj);
     }
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlTimeUnitExpression(this);
+        return visitor.VisitSqlTimeUnitExpression(this, context);
     }
 
     public override SqlExpression InternalClone()

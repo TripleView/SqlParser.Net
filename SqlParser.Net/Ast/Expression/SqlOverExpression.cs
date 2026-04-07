@@ -7,9 +7,9 @@ public class SqlOverExpression : SqlExpression
     private SqlOrderByExpression orderBy;
     private SqlPartitionByExpression partitionBy;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlOverExpression(this);
+        return visitor.VisitSqlOverExpression(this, context);
     }
     public SqlOverExpression()
     {

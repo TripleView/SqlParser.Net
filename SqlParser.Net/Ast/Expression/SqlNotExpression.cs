@@ -6,9 +6,9 @@ public class SqlNotExpression : SqlExpression
 {
     private SqlExpression body;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlNotExpression(this);
+        return visitor.VisitSqlNotExpression(this, context);
     }
 
     public SqlNotExpression()

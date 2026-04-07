@@ -6,9 +6,9 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
 {
     private SqlFunctionCallExpression functionCall;
     private SqlIdentifierExpression alias;
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlReferenceTableExpression(this);
+        return visitor.VisitSqlReferenceTableExpression(this, context);
     }
     public SqlReferenceTableExpression()
     {

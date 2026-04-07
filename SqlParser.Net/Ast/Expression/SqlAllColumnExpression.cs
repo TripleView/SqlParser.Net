@@ -4,9 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlAllColumnExpression : SqlExpression
 {
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-       return visitor.VisitSqlAllColumnExpression(this);
+       return visitor.VisitSqlAllColumnExpression(this, context);
     }
     public SqlAllColumnExpression()
     {

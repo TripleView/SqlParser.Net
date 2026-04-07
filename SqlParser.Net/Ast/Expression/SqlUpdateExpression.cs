@@ -12,9 +12,9 @@ public class SqlUpdateExpression : SqlExpression
     private SqlExpression from;
     private List<string> comments;
     private List<SqlWithSubQueryExpression> withSubQuerys;
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlUpdateExpression(this);
+        return visitor.VisitSqlUpdateExpression(this, context);
     }
     public SqlUpdateExpression()
     {

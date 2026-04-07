@@ -10,9 +10,9 @@ public class SqlConnectByExpression : SqlExpression
     private SqlExpression body;
     private SqlOrderByExpression orderBy;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlConnectByExpression(this);
+        return visitor.VisitSqlConnectByExpression(this, context);
     }
     public SqlConnectByExpression()
     {

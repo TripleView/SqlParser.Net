@@ -10,9 +10,9 @@ public class SqlInExpression : SqlExpression
     private List<SqlExpression> targetList;
     private SqlSelectExpression subQuery;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlInExpression(this);
+        return visitor.VisitSqlInExpression(this, context);
     }
 
     public SqlInExpression()

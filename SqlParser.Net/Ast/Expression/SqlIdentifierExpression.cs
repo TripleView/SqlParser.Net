@@ -11,9 +11,9 @@ public class SqlIdentifierExpression : SqlExpression, IQualifierExpression, ICol
 
     private SqlCollateExpression collate;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlIdentifierExpression(this);
+        return visitor.VisitSqlIdentifierExpression(this, context);
     }
     public SqlIdentifierExpression()
     {

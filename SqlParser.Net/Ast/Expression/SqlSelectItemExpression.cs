@@ -7,9 +7,9 @@ public class SqlSelectItemExpression : SqlExpression, IAliasExpression
     private SqlExpression body;
     private SqlIdentifierExpression alias;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlSelectItemExpression(this);
+        return visitor.VisitSqlSelectItemExpression(this, context);
     }
     public SqlSelectItemExpression()
     {

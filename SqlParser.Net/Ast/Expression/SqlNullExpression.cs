@@ -4,9 +4,9 @@ namespace SqlParser.Net.Ast.Expression;
 
 public class SqlNullExpression : SqlExpression
 {
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlNullExpression(this);
+        return visitor.VisitSqlNullExpression(this, context);
     }
     public SqlNullExpression()
     {

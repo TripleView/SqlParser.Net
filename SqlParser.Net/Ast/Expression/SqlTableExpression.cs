@@ -13,9 +13,9 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
     private SqlIdentifierExpression dbLink;
     private List<SqlHintExpression> hints;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlTableExpression(this);
+        return visitor.VisitSqlTableExpression(this, context);
     }
     public SqlTableExpression()
     {

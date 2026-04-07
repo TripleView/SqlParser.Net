@@ -8,9 +8,9 @@ public class SqlCaseItemExpression : SqlExpression
     private SqlExpression condition;
     private SqlExpression value;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlCaseItemExpression(this);
+        return visitor.VisitSqlCaseItemExpression(this, context);
     }
     public SqlCaseItemExpression()
     {

@@ -7,9 +7,9 @@ public class SqlAnyExpression : SqlExpression
 {
     private SqlExpression body;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlAnyExpression(this);
+        return visitor.VisitSqlAnyExpression(this, context);
     }
     public SqlAnyExpression()
     {

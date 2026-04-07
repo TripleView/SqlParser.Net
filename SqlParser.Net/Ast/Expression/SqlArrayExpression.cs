@@ -11,9 +11,9 @@ public class SqlArrayExpression : SqlExpression, IArrayRelatedExpression
 {
     private List<SqlExpression> items;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlArrayExpression(this);
+        return visitor.VisitSqlArrayExpression(this, context);
     }
     public SqlArrayExpression()
     {

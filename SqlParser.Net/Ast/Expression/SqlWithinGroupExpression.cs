@@ -6,9 +6,9 @@ public class SqlWithinGroupExpression : SqlExpression
 {
     private SqlOrderByExpression orderBy;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlWithinGroupExpression(this);
+        return visitor.VisitSqlWithinGroupExpression(this, context);
     }
 
     public SqlWithinGroupExpression()

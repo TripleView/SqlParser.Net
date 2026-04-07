@@ -7,9 +7,9 @@ public class SqlUnionQueryExpression : SqlExpression
     private SqlExpression left;
     private SqlExpression right;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlUnionQueryExpression(this);
+        return visitor.VisitSqlUnionQueryExpression(this, context);
     }
     public SqlUnionQueryExpression()
     {

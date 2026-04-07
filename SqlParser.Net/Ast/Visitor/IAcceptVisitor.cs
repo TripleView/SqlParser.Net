@@ -4,5 +4,5 @@ namespace SqlParser.Net.Ast.Visitor;
 
 public interface IAcceptVisitor
 {
-    SqlExpression Accept(IAstVisitor visitor);
+    SqlExpression Accept(IAstVisitor visitor, VisitContext context = null);
 }

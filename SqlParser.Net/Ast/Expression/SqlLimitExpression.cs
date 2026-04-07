@@ -7,9 +7,9 @@ public class SqlLimitExpression : SqlExpression
     private SqlExpression offset;
     private SqlExpression rowCount;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlLimitExpression(this);
+        return visitor.VisitSqlLimitExpression(this, context);
     }
     public SqlLimitExpression()
     {

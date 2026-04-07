@@ -12,9 +12,9 @@ public class SqlCaseExpression : SqlExpression
     private SqlExpression elseValue;
     private SqlExpression value;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlCaseExpression(this);
+        return visitor.VisitSqlCaseExpression(this, context);
     }
     public SqlCaseExpression()
     {

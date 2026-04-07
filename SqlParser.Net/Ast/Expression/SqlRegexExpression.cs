@@ -14,9 +14,9 @@ public class SqlRegexExpression : SqlExpression, ICollateExpression
     private SqlExpression body;
 
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlRegexExpression(this);
+        return visitor.VisitSqlRegexExpression(this, context);
     }
     public SqlRegexExpression()
     {

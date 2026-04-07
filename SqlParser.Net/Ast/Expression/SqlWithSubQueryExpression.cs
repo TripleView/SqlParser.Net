@@ -11,9 +11,9 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
     private List<SqlIdentifierExpression> columns;
     private SqlSelectExpression fromSelect;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlWithSubQueryExpression(this);
+        return visitor.VisitSqlWithSubQueryExpression(this, context);
     }
     public SqlWithSubQueryExpression()
     {

@@ -7,9 +7,9 @@ public class SqlIntervalExpression : SqlExpression
     private SqlExpression body;
     private SqlTimeUnitExpression unit;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlIntervalExpression(this);
+        return visitor.VisitSqlIntervalExpression(this, context);
     }
     public SqlIntervalExpression()
     {

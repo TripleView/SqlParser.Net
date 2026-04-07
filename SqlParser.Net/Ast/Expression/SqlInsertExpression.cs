@@ -13,9 +13,9 @@ public class SqlInsertExpression : SqlExpression
     private SqlSelectExpression fromSelect;
     private SqlReturningExpression returning;
     private List<SqlWithSubQueryExpression> withSubQuerys;
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlInsertExpression(this);
+        return visitor.VisitSqlInsertExpression(this, context);
     }
     public SqlInsertExpression()
     {

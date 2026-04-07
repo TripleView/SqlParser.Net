@@ -8,9 +8,9 @@ public class SqlOrderByExpression : SqlExpression
 {
     private List<SqlOrderByItemExpression> items;
 
-    public override SqlExpression Accept(IAstVisitor visitor)
+    public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
-        return visitor.VisitSqlOrderByExpression(this);
+        return visitor.VisitSqlOrderByExpression(this, context);
     }
     public SqlOrderByExpression()
     {
