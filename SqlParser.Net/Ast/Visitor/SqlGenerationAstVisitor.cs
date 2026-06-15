@@ -12,11 +12,8 @@ namespace SqlParser.Net.Ast.Visitor;
 public class SqlGenerationAstVisitor : BaseAstVisitor
 {
     private StringBuilder sb = new StringBuilder();
-    private string fourSpace = "    ";
-    private int numberOfLevels = 0;
 
     private DbType dbType = DbType.MySql;
-    private bool addParen = true;
     private bool IsOracle => this.dbType == DbType.Oracle;
     private bool IsSqlServer => this.dbType == DbType.SqlServer;
     private bool IsPgsql => this.dbType == DbType.Pgsql;
@@ -24,16 +21,57 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     private bool IsMySql => this.dbType == DbType.MySql;
     private bool IsSqlite => this.dbType == DbType.Sqlite;
 
-    private ParseType sqlParseType;
 
     private bool isInUpdateSetContext = false;
-
-    private CommonContext commonContext = new CommonContext();
+    /// <summary>
+    /// 调用链
+    /// </summary>
+    private List<SqlExpressionType> callStack = new List<SqlExpressionType>();
 
     //private HashSet<char> delimiters = new HashSet<char>() { '.',',','(',')'};
     public SqlGenerationAstVisitor(DbType dbType)
     {
         this.dbType = dbType;
+    }
+
+    private void AddCallStackItem(SqlExpressionType sqlExpressionType)
+    {
+        callStack.Add(sqlExpressionType);
+    }
+
+    private void RemoveCallStackLastItem()
+    {
+        if (callStack.Count > 0)
+        {
+            callStack.RemoveAt(callStack.Count - 1);
+        }
+    }
+
+    private bool SearchFromBottom(SqlExpressionType sqlExpressionType)
+    {
+        if (callStack.Count > 0)
+        {
+            for (var i = callStack.Count - 1; i >= 0; i--)
+            {
+                if (callStack[i] == sqlExpressionType)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private bool isDelete => CheckFirstItem(SqlExpressionType.Delete);
+    private bool isUpdate => CheckFirstItem(SqlExpressionType.Update);
+    private bool isInsert => CheckFirstItem(SqlExpressionType.Insert);
+    private bool CheckFirstItem(SqlExpressionType sqlExpressionType)
+    {
+        if (callStack.Count > 0)
+        {
+            return callStack[0] == sqlExpressionType;
+        }
+        return false;
     }
 
     public string GetResult()
@@ -47,15 +85,19 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override SqlExpression VisitSqlAllExpression(SqlAllExpression sqlAllExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.All);
         Append("all");
         if (sqlAllExpression.Body != null)
         {
             EnableParen(() => { sqlAllExpression.Body = sqlAllExpression.Body.Accept(this); });
         }
+
+        RemoveCallStackLastItem();
         return sqlAllExpression;
     }
     public override SqlExpression VisitSqlAnyExpression(SqlAnyExpression sqlAnyExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Any);
         Append("any");
         if (sqlAnyExpression.Body != null)
         {
@@ -69,10 +111,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
 
         }
+
+        RemoveCallStackLastItem();
         return sqlAnyExpression;
     }
     public override SqlExpression VisitSqlBetweenAndExpression(SqlBetweenAndExpression sqlBetweenAndExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.BetweenAnd);
         if (sqlBetweenAndExpression.Body != null)
         {
             sqlBetweenAndExpression.Body = sqlBetweenAndExpression.Body.Accept(this);
@@ -95,15 +140,21 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlBetweenAndExpression.End = sqlBetweenAndExpression.End.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlBetweenAndExpression;
     }
     public override SqlExpression VisitSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Binary);
         void internalAction()
         {
+            if (context != null && context.Parent is not SqlDeleteExpression)
+            {
+                context = null;
+            }
             if (sqlBinaryExpression.Left != null)
             {
-                sqlBinaryExpression.Left = sqlBinaryExpression.Left.Accept(this);
+                sqlBinaryExpression.Left = sqlBinaryExpression.Left.Accept(this, context);
             }
 
             if (sqlBinaryExpression.Operator != null)
@@ -112,7 +163,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
             if (sqlBinaryExpression.Right != null)
             {
-                sqlBinaryExpression.Right = sqlBinaryExpression.Right.Accept(this);
+                sqlBinaryExpression.Right = sqlBinaryExpression.Right.Accept(this, context);
             }
 
             if (sqlBinaryExpression.Collate != null)
@@ -130,14 +181,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             EnableParen(internalAction);
         }
 
+        RemoveCallStackLastItem();
         return sqlBinaryExpression;
     }
     public override SqlExpression VisitSqlCaseExpression(SqlCaseExpression sqlCaseExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Case);
         Append("case");
 
         if (sqlCaseExpression.Value != null)
         {
+            AppendSpace();
             sqlCaseExpression.Value = sqlCaseExpression.Value.Accept(this);
         }
 
@@ -161,11 +215,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
         AppendWithLeftSpace("end");
 
+        RemoveCallStackLastItem();
         return sqlCaseExpression;
     }
     public override SqlExpression VisitSqlCaseItemExpression(SqlCaseItemExpression sqlCaseItemExpression, VisitContext context = null)
     {
-
+        callStack.Add(SqlExpressionType.CaseItem);
         if (sqlCaseItemExpression.Condition != null)
         {
             AppendWithSpace("when");
@@ -177,10 +232,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             AppendWithSpace("then");
             sqlCaseItemExpression.Value = sqlCaseItemExpression.Value.Accept(this);
         }
+
+        RemoveCallStackLastItem();
         return sqlCaseItemExpression;
     }
     public override SqlExpression VisitSqlDeleteExpression(SqlDeleteExpression sqlDeleteExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Delete);
+        context = new VisitContext()
+        {
+            Parent = sqlDeleteExpression
+        };
         if (sqlDeleteExpression.WithSubQuerys.HasValue())
         {
             AppendWithRightSpace("with");
@@ -199,25 +261,28 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         AppendWithRightSpace("delete");
         if (sqlDeleteExpression.Body != null)
         {
-            sqlDeleteExpression.Body = sqlDeleteExpression.Body.Accept(this);
+            RemoveCallStackLastItem();
+            sqlDeleteExpression.Body = sqlDeleteExpression.Body.Accept(this, context);
         }
 
         AppendWithSpace("from");
 
         if (sqlDeleteExpression.Table != null)
         {
-            sqlDeleteExpression.Table = sqlDeleteExpression.Table.Accept(this);
+            sqlDeleteExpression.Table = sqlDeleteExpression.Table.Accept(this, context);
         }
         if (sqlDeleteExpression.Where != null)
         {
             AppendWithSpace("where");
-            sqlDeleteExpression.Where = sqlDeleteExpression.Where.Accept(this);
+            sqlDeleteExpression.Where = sqlDeleteExpression.Where.Accept(this, context);
         }
 
+        RemoveCallStackLastItem();
         return sqlDeleteExpression;
     }
     public override SqlExpression VisitSqlExistsExpression(SqlExistsExpression sqlExistsExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Exists);
         context = new VisitContext()
         {
             Parent = sqlExistsExpression
@@ -237,11 +302,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             });
         }
 
+        RemoveCallStackLastItem();
         return sqlExistsExpression;
     }
 
     public override SqlExpression VisitSqlFunctionCallExpression(SqlFunctionCallExpression sqlFunctionCallExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.FunctionCall);
         context = new VisitContext()
         {
             Parent = sqlFunctionCallExpression
@@ -310,12 +377,15 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlFunctionCallExpression.Collate = (SqlCollateExpression)sqlFunctionCallExpression.Collate.Accept(this);
         }
+        RemoveCallStackLastItem();
         return sqlFunctionCallExpression;
     }
     public override SqlExpression VisitSqlGroupByExpression(SqlGroupByExpression sqlGroupByExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.GroupBy);
         if (!sqlGroupByExpression.HasValue())
         {
+            RemoveCallStackLastItem();
             return sqlGroupByExpression;
         }
         AppendWithSpace("group by");
@@ -342,10 +412,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlGroupByExpression.Having = sqlGroupByExpression.Having.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlGroupByExpression;
     }
     public override SqlExpression VisitSqlIdentifierExpression(SqlIdentifierExpression sqlIdentifierExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Identifier);
         if (!string.IsNullOrWhiteSpace(sqlIdentifierExpression.LeftQualifiers))
         {
             Append(sqlIdentifierExpression.LeftQualifiers + sqlIdentifierExpression.Value + sqlIdentifierExpression.RightQualifiers);
@@ -359,10 +431,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlIdentifierExpression.Collate = (SqlCollateExpression)sqlIdentifierExpression.Collate.Accept(this);
         }
+        RemoveCallStackLastItem();
         return sqlIdentifierExpression;
     }
     public override SqlExpression VisitSqlInExpression(SqlInExpression sqlInExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.In);
         context = new VisitContext()
         {
             Parent = sqlInExpression
@@ -404,10 +478,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 sqlInExpression.SubQuery = (SqlSelectExpression)sqlInExpression.SubQuery.Accept(this, context);
             });
         }
+        RemoveCallStackLastItem();
         return sqlInExpression;
     }
     public override SqlExpression VisitSqlInsertExpression(SqlInsertExpression sqlInsertExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Insert);
         context = new VisitContext()
         {
             Parent = sqlInsertExpression
@@ -499,10 +575,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlInsertExpression.Returning = (SqlReturningExpression)sqlInsertExpression.Returning.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlInsertExpression;
     }
     public override SqlExpression VisitSqlJoinTableExpression(SqlJoinTableExpression sqlJoinTableExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.JoinTable);
 
         if (sqlJoinTableExpression.Left != null)
         {
@@ -546,10 +624,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlJoinTableExpression.Conditions = sqlJoinTableExpression.Conditions.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlJoinTableExpression;
     }
     public override SqlExpression VisitSqlLimitExpression(SqlLimitExpression sqlLimitExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Limit);
         switch (dbType)
         {
             case DbType.Oracle:
@@ -604,10 +684,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 break;
         }
 
+        RemoveCallStackLastItem();
         return sqlLimitExpression;
     }
     public override SqlExpression VisitSqlNotExpression(SqlNotExpression sqlNotExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Not);
+
         AppendWithSpace("not");
         if (sqlNotExpression.Body != null)
         {
@@ -617,6 +700,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             });
         }
 
+        RemoveCallStackLastItem();
         return sqlNotExpression;
     }
     public override SqlExpression VisitSqlNullExpression(SqlNullExpression sqlNullExpression, VisitContext context = null)
@@ -638,8 +722,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.OrderBy);
+
         if (!sqlOrderByExpression.HasValue())
         {
+            RemoveCallStackLastItem();
             return sqlOrderByExpression;
         }
         if (sqlOrderByExpression.IsSiblings)
@@ -667,11 +754,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlOrderByExpression.Items = newItems;
         }
 
+        RemoveCallStackLastItem();
         return sqlOrderByExpression;
     }
 
     public override SqlExpression VisitSqlConnectByExpression(SqlConnectByExpression sqlConnectByExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.ConnectBy);
         context = new VisitContext()
         {
             Parent = sqlConnectByExpression
@@ -699,11 +788,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlConnectByExpression.OrderBy = (SqlOrderByExpression)sqlConnectByExpression.OrderBy.Accept(this, context);
         }
 
+        RemoveCallStackLastItem();
         return sqlConnectByExpression;
     }
 
     public override SqlExpression VisitSqlOrderByItemExpression(SqlOrderByItemExpression sqlOrderByItemExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.OrderByItem);
+
         if (sqlOrderByItemExpression.Body != null)
         {
             sqlOrderByItemExpression.Body = sqlOrderByItemExpression.Body.Accept(this);
@@ -718,10 +810,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             AppendWithLeftSpace(sqlOrderByItemExpression.NullsType == SqlOrderByNullsType.First ? "nulls first" : "nulls last");
         }
 
+        RemoveCallStackLastItem();
         return sqlOrderByItemExpression;
     }
     public override SqlExpression VisitSqlOverExpression(SqlOverExpression sqlOverExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Over);
+
         AppendWithSpace("over");
         EnableParen((() =>
         {
@@ -734,12 +829,16 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
                 sqlOverExpression.OrderBy = (SqlOrderByExpression)sqlOverExpression.OrderBy.Accept(this);
             }
         }));
+        RemoveCallStackLastItem();
         return sqlOverExpression;
     }
     public override SqlExpression VisitSqlPartitionByExpression(SqlPartitionByExpression sqlPartitionByExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.PartitionBy);
+
         if (!(sqlPartitionByExpression.Items != null && sqlPartitionByExpression.Items.Count > 0))
         {
+            RemoveCallStackLastItem();
             return sqlPartitionByExpression;
         }
         AppendWithRightSpace("partition by");
@@ -761,10 +860,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlPartitionByExpression.Items = newItems;
         }
 
+        RemoveCallStackLastItem();
         return sqlPartitionByExpression;
     }
     public override SqlExpression VisitSqlPivotTableExpression(SqlPivotTableExpression sqlPivotTableExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.PivotTable);
+
         if (sqlPivotTableExpression.SubQuery != null)
         {
             sqlPivotTableExpression.SubQuery = sqlPivotTableExpression.SubQuery.Accept(this);
@@ -818,16 +920,19 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlPivotTableExpression.Alias = (SqlIdentifierExpression)sqlPivotTableExpression.Alias.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlPivotTableExpression;
     }
     public override SqlExpression VisitSqlPropertyExpression(SqlPropertyExpression sqlPropertyExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Property);
 
-        if (sqlPropertyExpression.Table != null)
+        if (sqlPropertyExpression.Table != null && CheckTableOrPropertyNeedTableAlias())
         {
             sqlPropertyExpression.Table = sqlPropertyExpression.Table.Accept(this);
             Append(".");
         }
+
 
         if (sqlPropertyExpression.Name != null)
         {
@@ -839,10 +944,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlPropertyExpression.Collate = (SqlCollateExpression)sqlPropertyExpression.Collate.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlPropertyExpression;
     }
     public override SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.ReferenceTable);
+
         if (sqlReferenceTableExpression.FunctionCall != null)
         {
             sqlReferenceTableExpression.FunctionCall = (SqlFunctionCallExpression)sqlReferenceTableExpression.FunctionCall.Accept(this);
@@ -857,10 +965,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlReferenceTableExpression.Alias = (SqlIdentifierExpression)sqlReferenceTableExpression.Alias.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlReferenceTableExpression;
     }
     public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Select);
+
         if (sqlSelectExpression.Alias == null
             && (sb.Length == 0 || context?.Parent is SqlInsertExpression
                                || context?.Parent is SqlInExpression
@@ -907,10 +1018,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         {
             sqlSelectExpression.Limit = (SqlLimitExpression)sqlSelectExpression.Limit.Accept(this);
         }
+        RemoveCallStackLastItem();
         return sqlSelectExpression;
     }
     public override SqlExpression VisitSqlSelectItemExpression(SqlSelectItemExpression sqlSelectItemExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.SelectItem);
+
         sqlSelectItemExpression.Body = sqlSelectItemExpression.Body?.Accept(this);
         if (sqlSelectItemExpression.Alias != null)
         {
@@ -918,6 +1032,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlSelectItemExpression.Alias = (SqlIdentifierExpression)sqlSelectItemExpression.Alias.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlSelectItemExpression;
     }
 
@@ -937,6 +1052,8 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     public override SqlExpression VisitSqlSelectQueryExpression(SqlSelectQueryExpression sqlSelectQueryExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.SelectQuery);
+
         if (sqlSelectQueryExpression.WithSubQuerys.HasValue())
         {
             AppendWithRightSpace(" with");
@@ -1041,6 +1158,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
+        RemoveCallStackLastItem();
         return sqlSelectQueryExpression;
     }
 
@@ -1102,8 +1220,20 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
         return sqlStringExpression;
     }
+
+    /// <summary>
+    /// 判断表和字段是否需要别名
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckTableOrPropertyNeedTableAlias()
+    {
+        return !isDelete || (isDelete && SearchFromBottom(SqlExpressionType.Select));
+    }
+
     public override SqlExpression VisitSqlTableExpression(SqlTableExpression sqlTableExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Table);
+
         if (sqlTableExpression.Database != null)
         {
             sqlTableExpression.Database = (SqlIdentifierExpression)sqlTableExpression.Database.Accept(this);
@@ -1122,7 +1252,9 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             AppendWithoutSpaces("@");
             sqlTableExpression.DbLink = (SqlIdentifierExpression)sqlTableExpression.DbLink.Accept(this);
         }
-        if (sqlTableExpression.Alias != null)
+
+        //delete语句中无需别名
+        if (sqlTableExpression.Alias != null && CheckTableOrPropertyNeedTableAlias())
         {
             if (!IsOracle)
             {
@@ -1145,10 +1277,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
+        RemoveCallStackLastItem();
         return sqlTableExpression;
     }
     public override SqlExpression VisitSqlUnionQueryExpression(SqlUnionQueryExpression sqlUnionQueryExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.UnionQuery);
+
         context = new VisitContext()
         {
             Parent = sqlUnionQueryExpression
@@ -1172,11 +1307,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         }
 
+        RemoveCallStackLastItem();
         return sqlUnionQueryExpression;
     }
 
     private void VisitSqlUnionQueryExpressionInternal(SqlUnionQueryExpression sqlUnionQueryExpression, VisitContext context = null)
     {
+
         if (sqlUnionQueryExpression.Left != null)
         {
             sqlUnionQueryExpression.Left = sqlUnionQueryExpression.Left.Accept(this, context);
@@ -1220,11 +1357,12 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
 
     public override SqlExpression VisitSqlUpdateExpression(SqlUpdateExpression sqlUpdateExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Update);
+
         context = new VisitContext()
         {
             Parent = sqlUpdateExpression
         };
-        sqlParseType = ParseType.Update;
         if (sqlUpdateExpression.WithSubQuerys.HasValue())
         {
             AppendWithRightSpace("with");
@@ -1286,11 +1424,14 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlUpdateExpression.Where = sqlUpdateExpression.Where.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlUpdateExpression;
 
     }
     public override SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Variable);
+
         if (sb.Length > 0)
         {
             var lastChar = sb[sb.Length - 1];
@@ -1312,10 +1453,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlVariableExpression.Collate = (SqlCollateExpression)sqlVariableExpression.Collate.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlVariableExpression;
     }
     public override SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.WithinGroup);
+
         AppendWithLeftSpace("within group");
         EnableParen(() =>
         {
@@ -1325,10 +1469,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             }
         });
 
+        RemoveCallStackLastItem();
         return sqlWithinGroupExpression;
     }
     public override SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.WithSubQuery);
+
         context = new VisitContext()
         {
             Parent = sqlWithSubQueryExpression
@@ -1366,43 +1513,55 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             });
         }
 
+        RemoveCallStackLastItem();
         return sqlWithSubQueryExpression;
     }
 
     public override SqlExpression VisitSqlTopExpression(SqlTopExpression sqlTopExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Top);
+
         AppendWithSpace("top");
         if (sqlTopExpression.Body != null)
         {
             sqlTopExpression.Body = (SqlNumberExpression)sqlTopExpression.Body.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlTopExpression;
     }
 
     public override SqlExpression VisitSqlHintExpression(SqlHintExpression sqlHintExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Hint);
+
         if (sqlHintExpression.Body != null)
         {
             AppendSpace();
             sqlHintExpression.Body = sqlHintExpression.Body.Accept(this);
         }
+        RemoveCallStackLastItem();
         return sqlHintExpression;
     }
 
     public override SqlExpression VisitSqlAtTimeZoneExpression(SqlAtTimeZoneExpression sqlAtTimeZoneExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.AtTimeZone);
+
         if (sqlAtTimeZoneExpression.Body != null)
         {
             sqlAtTimeZoneExpression.Body = sqlAtTimeZoneExpression.Body.Accept(this);
         }
         AppendWithSpace("at time zone");
         sqlAtTimeZoneExpression.TimeZone = (SqlStringExpression)sqlAtTimeZoneExpression.TimeZone.Accept(this);
+        RemoveCallStackLastItem();
         return sqlAtTimeZoneExpression;
     }
 
     public override SqlExpression VisitSqlIntervalExpression(SqlIntervalExpression sqlIntervalExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Interval);
+
         AppendWithSpace("interval");
         if (sqlIntervalExpression.Body != null)
         {
@@ -1414,31 +1573,40 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             AppendSpace();
             sqlIntervalExpression.Unit = (SqlTimeUnitExpression)sqlIntervalExpression.Unit.Accept(this);
         }
+        RemoveCallStackLastItem();
         return sqlIntervalExpression;
     }
 
     public override SqlExpression VisitSqlTimeUnitExpression(SqlTimeUnitExpression sqlTimeUnitExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.TimeUnit);
+
         if (!string.IsNullOrWhiteSpace(sqlTimeUnitExpression.Unit))
         {
             Append(sqlTimeUnitExpression.Unit);
         }
+        RemoveCallStackLastItem();
         return sqlTimeUnitExpression;
     }
 
     public override SqlExpression VisitSqlCollateExpression(SqlCollateExpression sqlCollateExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Collate);
+
         AppendWithSpace("collate");
         if (sqlCollateExpression.Body != null)
         {
             sqlCollateExpression.Body = sqlCollateExpression.Body.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlCollateExpression;
     }
 
     public override SqlExpression VisitSqlRegexExpression(SqlRegexExpression sqlRegexExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Regex);
+
         if (sqlRegexExpression.Body != null)
         {
             sqlRegexExpression.Body = sqlRegexExpression.Body.Accept(this);
@@ -1468,13 +1636,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlRegexExpression.Collate = (SqlCollateExpression)sqlRegexExpression.Collate.Accept(this);
         }
 
+        RemoveCallStackLastItem();
         return sqlRegexExpression;
     }
 
     public override SqlExpression VisitSqlReturningExpression(SqlReturningExpression sqlReturningExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Returning);
+
         if (!sqlReturningExpression.HasValue())
         {
+            RemoveCallStackLastItem();
             return sqlReturningExpression;
         }
 
@@ -1512,13 +1684,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             sqlReturningExpression.IntoVariables = newItems;
         }
 
+        RemoveCallStackLastItem();
         return sqlReturningExpression;
     }
 
     public override SqlExpression VisitSqlArrayExpression(SqlArrayExpression sqlArrayExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.Array);
+
         if (!sqlArrayExpression.HasValue())
         {
+            RemoveCallStackLastItem();
             return sqlArrayExpression;
         }
 
@@ -1540,13 +1716,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             AppendWithoutSpaces("]");
         }
 
+        RemoveCallStackLastItem();
         return sqlArrayExpression;
     }
 
     public override SqlExpression VisitSqlArrayIndexExpression(SqlArrayIndexExpression sqlArrayIndexExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.ArrayIndex);
+
         if (sqlArrayIndexExpression.Body == null || sqlArrayIndexExpression.Index == null)
         {
+            RemoveCallStackLastItem();
             return sqlArrayIndexExpression;
         }
 
@@ -1564,13 +1744,17 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("[");
         sqlArrayIndexExpression.Index = (SqlNumberExpression)sqlArrayIndexExpression.Index.Accept(this);
         Append("]");
+        RemoveCallStackLastItem();
         return sqlArrayIndexExpression;
     }
 
     public override SqlExpression VisitSqlArraySliceExpression(SqlArraySliceExpression sqlArraySliceExpression, VisitContext context = null)
     {
+        callStack.Add(SqlExpressionType.ArraySlice);
+
         if (sqlArraySliceExpression.Body == null)
         {
+            RemoveCallStackLastItem();
             return sqlArraySliceExpression;
         }
 
@@ -1582,6 +1766,7 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append(":");
         sqlArraySliceExpression.EndIndex = (SqlNumberExpression)sqlArraySliceExpression.EndIndex?.Accept(this);
         Append("]");
+        RemoveCallStackLastItem();
         return sqlArraySliceExpression;
     }
 }

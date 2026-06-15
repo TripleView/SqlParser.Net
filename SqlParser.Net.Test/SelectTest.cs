@@ -1755,7 +1755,7 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select case(('1' || cast(cast('01' as bit varying) as varchar)) = '1') when ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) then ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) end from test as a inner join test2 as b on ((('1' = ('1' || cast(cast('01' as bit varying) as varchar))) and ('2' = ('1' || cast(cast('01' as bit varying) as varchar)))) or (('1' || cast(cast('01' as bit varying) as varchar)) = '1')) left join test3 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) right join test4 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) full join test5 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) where ('2' = ('1' || cast(cast('01' as bit varying) as varchar))) group by ('1' || cast(cast('01' as bit varying) as varchar)) order by ('1' || cast(cast('01' as bit varying) as varchar)) limit cast(cast(1 as smallint) as float8) offset 1", generationSql);
+        Assert.Equal("select case (('1' || cast(cast('01' as bit varying) as varchar)) = '1') when ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) then ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) end from test as a inner join test2 as b on ((('1' = ('1' || cast(cast('01' as bit varying) as varchar))) and ('2' = ('1' || cast(cast('01' as bit varying) as varchar)))) or (('1' || cast(cast('01' as bit varying) as varchar)) = '1')) left join test3 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) right join test4 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) full join test5 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) where ('2' = ('1' || cast(cast('01' as bit varying) as varchar))) group by ('1' || cast(cast('01' as bit varying) as varchar)) order by ('1' || cast(cast('01' as bit varying) as varchar)) limit cast(cast(1 as smallint) as float8) offset 1", generationSql);
     }
 
     [Theory]
@@ -8487,9 +8487,97 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select case(select name from test5 fetch first 1 rows only) when 'a' then 1 else 2 end from test5 t",
+            "select case (select name from test5 fetch first 1 rows only) when 'a' then 1 else 2 end from test5 t",
             generationSql);
     }
+
+    [Fact]
+    public void TestCaseValueThen3()
+    {
+        var sql =
+            $"select case a.city when '4276a4b28080450dab41420407a683e4' then '1' when '5b355c4a62f643908acb5315acf769fc' then '2'  else '0' end from address a ";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() =>
+        {
+            sqlAst = DbUtils.Parse(sql, DbType.Oracle, ((l, s) => { testOutputHelper.WriteLine(s + ":" + l); }));
+        }));
+        testOutputHelper.WriteLine("time:" + t);
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+        {
+            new SqlSelectItemExpression()
+            {
+                Body = new SqlCaseExpression()
+                {
+                    Items = new List<SqlCaseItemExpression>()
+                    {
+                        new SqlCaseItemExpression()
+                        {
+                            Condition = new SqlStringExpression()
+                            {
+                                Value = "4276a4b28080450dab41420407a683e4",
+                            },
+                            Value = new SqlStringExpression()
+                            {
+                                Value = "1",
+                            },
+                        },
+                        new SqlCaseItemExpression()
+                        {
+                            Condition = new SqlStringExpression()
+                            {
+                                Value = "5b355c4a62f643908acb5315acf769fc",
+                            },
+                            Value = new SqlStringExpression()
+                            {
+                                Value = "2",
+                            },
+                        },
+                    },
+                    Else = new SqlStringExpression()
+                    {
+                        Value = "0",
+                    },
+                    Value = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "city",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                        },
+                    },
+                },
+            },
+        },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "address",
+                    },
+                    Alias = new SqlIdentifierExpression()
+                    {
+                        Value = "a",
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select case a.city when '4276a4b28080450dab41420407a683e4' then '1' when '5b355c4a62f643908acb5315acf769fc' then '2' else '0' end from address a",
+            generationSql);
+    }
+
 
     [Fact]
     public void TestSelectInto()
@@ -19118,4 +19206,5 @@ order by temp.InxNbr";
             $"select * from mes_mo_parts left join mes_equipment as me on (me.id = mes_mo_parts.eq_id) left join msi on ((user_item_type = 'CLA') and (msi.thisid = mes_mo_parts.part_id)) where ((mes_mo_parts.orgid = @orgid) and (mes_mo_parts.\"mo\" = @billValue))",
             generationSql);
     }
+
 }

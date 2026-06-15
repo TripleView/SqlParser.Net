@@ -3,3 +3,5 @@
 1.1.19版本移除SqlExpression中的Parent属性，原因是父子expression容易循环引用，导致内存泄露，改为在AstVisitor的方法中添加VisitContext上下文
 受此影响，如果你有自定义的AstVisitor，我这边提供了快速正则替换，源:public override SqlExpression (\S{1,})\((\S{1,}) (\S{1,})\)替换为 public override SqlExpression $1($2 $3, VisitContext context = null)
 IAcceptVisitor接口的方法Accept(IAstVisitor visitor, VisitContext context = null)添加了VisitContext上下文，受此影响，如果你有自定义的sqlExpression, 我这边提供了快速正则替换，源:return (visitor.\S{1,})\(this\)替换为return $1(this, context)
+
+1.1.20版本发现1.1.19版本的实现方式有问题，所以再次移除VisitContext上下文，在SqlGenerationAstVisitor中采用callStack调用栈的方式来进行上下文识别

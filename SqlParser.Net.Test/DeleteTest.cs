@@ -42,6 +42,7 @@ public class DeleteTest
 
 
         Assert.True(sqlAst.Equals(expect));
+        var newSql = expect.ToSql(DbType.MySql);
     }
     [Fact]
     public void TestDeleteCheckIfParsingIsComplete()
@@ -340,5 +341,192 @@ public class DeleteTest
         {
             var sqlAst = DbUtils.Parse(sql, DbType.Oracle);
         });
+    }
+
+
+    [Fact]
+    public void TestDelete7()
+    {
+        var expect = new SqlDeleteExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "NullableTable",
+                    LeftQualifiers = "[",
+                    RightQualifiers = "]",
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "p0",
+                    LeftQualifiers = "[",
+                    RightQualifiers = "]",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Id",
+                            LeftQualifiers = "[",
+                            RightQualifiers = "]",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "p0",
+                            LeftQualifiers = "[",
+                            RightQualifiers = "]",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlVariableExpression()
+                    {
+                        Name = "y1",
+                        Prefix = "@",
+                    },
+                },
+                Operator = SqlBinaryOperator.And,
+                Right = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
+                    {
+                        Name = new SqlIdentifierExpression()
+                        {
+                            Value = "Double2",
+                            LeftQualifiers = "[",
+                            RightQualifiers = "]",
+                        },
+                        Table = new SqlIdentifierExpression()
+                        {
+                            Value = "p0",
+                            LeftQualifiers = "[",
+                            RightQualifiers = "]",
+                        },
+                    },
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlVariableExpression()
+                    {
+                        Name = "y0",
+                        Prefix = "@",
+                    },
+                },
+            },
+        };
+        var sql = expect.ToSql(DbType.SqlServer);
+        Assert.Equal("delete from [NullableTable] where (([Id] = @y1) and ([Double2] = @y0))", sql);
+    }
+
+    [Fact]
+    public void TestDelete8()
+    {
+        var sql = "delete from \"NullableTable\" where \"Id\" = (select a.\"ID\"  from \"Address\" a where a.\"City\"='fj')";
+
+        var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+        var s = sqlAst.ToFormat();
+        var expect = new SqlDeleteExpression()
+        {
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "NullableTable",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "p0",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "Id",
+                        LeftQualifiers = "\"",
+                        RightQualifiers = "\"",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "p0",
+                        LeftQualifiers = "\"",
+                        RightQualifiers = "\"",
+                    },
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlSelectExpression()
+                {
+                    Query = new SqlSelectQueryExpression()
+                    {
+                        Columns = new List<SqlSelectItemExpression>()
+                        {
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "ID",
+                                        LeftQualifiers = "\"",
+                                        RightQualifiers = "\"",
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                },
+                            },
+                        },
+                        From = new SqlTableExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Address",
+                                LeftQualifiers = "\"",
+                                RightQualifiers = "\"",
+                            },
+                            Alias = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
+                        Where = new SqlBinaryExpression()
+                        {
+                            Left = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "City",
+                                    LeftQualifiers = "\"",
+                                    RightQualifiers = "\"",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                            },
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlStringExpression()
+                            {
+                                Value = "fj",
+                            },
+                        },
+                    },
+                },
+            },
+
+        };
+
+        var newSql = expect.ToSql(DbType.Pgsql);
+        Assert.Equal("delete from \"NullableTable\" where (\"Id\" = (select a.\"ID\" from \"Address\" as a where (a.\"City\" = 'fj')))", newSql);
     }
 }
