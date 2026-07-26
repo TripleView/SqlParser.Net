@@ -153,7 +153,7 @@ public class SqlTableExpression : SqlExpression, IAliasExpression
             Schema = this.Schema.Clone(),
             Alias = this.Alias.Clone(),
             Name = this.Name.Clone(),
-            Hints = this.Hints.Select(x => (SqlHintExpression)x.Clone()).ToList(),
+            Hints = this.Hints?.Select(x => (SqlHintExpression)x.Clone()).ToList() ?? new List<SqlHintExpression>(),
         };
         return result;
     }

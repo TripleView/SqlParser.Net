@@ -59,7 +59,7 @@ public class SqlArrayExpression : SqlExpression, IArrayRelatedExpression
         var result = new SqlArrayExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => x.Clone()).ToList(),
+            Items = this.Items?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
         };
         return result;
     }

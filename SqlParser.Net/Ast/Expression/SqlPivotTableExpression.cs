@@ -115,7 +115,7 @@ public class SqlPivotTableExpression : SqlExpression, IAliasExpression
         var result = new SqlPivotTableExpression()
         {
             DbType = this.DbType,
-            In = this.In.Select(x => x.Clone()).ToList(),
+            In = this.In?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
             Alias = this.Alias.Clone(),
             SubQuery = this.SubQuery.Clone(),
             FunctionCall = this.FunctionCall.Clone(),

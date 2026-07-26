@@ -184,11 +184,11 @@ public class SqlInsertExpression : SqlExpression
         var result = new SqlInsertExpression()
         {
             DbType = this.DbType,
-            Columns = this.Columns.Select(x => x.Clone()).ToList(),
-            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
+            Columns = this.Columns?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
+            WithSubQuerys = this.WithSubQuerys?.Select(x => x.Clone()).ToList() ?? new List<SqlWithSubQueryExpression>(),
             Table = this.Table.Clone(),
             FromSelect = this.FromSelect.Clone(),
-            ValuesList = this.ValuesList.Select(x => x.Select(y => y.Clone()).ToList()).ToList(),
+            ValuesList = this.ValuesList?.Select(x => x?.Select(y => y.Clone()).ToList() ?? new List<SqlExpression>()).ToList() ?? new List<List<SqlExpression>>(),
             Returning = this.Returning.Clone(),
         };
         return result;

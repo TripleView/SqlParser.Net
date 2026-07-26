@@ -71,9 +71,9 @@ public class SqlGroupByExpression : SqlExpression
         var result = new SqlGroupByExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => x.Clone()).ToList(),
+            Items = this.Items?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
             Having = this.Having.Clone(),
-           
+
         };
         return result;
     }

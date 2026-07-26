@@ -92,7 +92,7 @@ public class SqlWithSubQueryExpression : SqlExpression, IAliasExpression
         var result = new SqlWithSubQueryExpression()
         {
             DbType = this.DbType,
-            Columns = this.Columns.Select(x => x.Clone()).ToList(),
+            Columns = this.Columns?.Select(x => x.Clone()).ToList() ?? new List<SqlIdentifierExpression>(),
             FromSelect = this.FromSelect.Clone(),
             Alias = this.Alias.Clone(),
         };

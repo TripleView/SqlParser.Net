@@ -754,64 +754,64 @@ public class UpdateTest
         }
 
         var expect = new SqlUpdateExpression()
+        {
+            Table = new SqlJoinTableExpression()
             {
-                Table = new SqlJoinTableExpression()
+                Left = new SqlTableExpression()
                 {
-                    Left = new SqlTableExpression()
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "t3",
+                    },
+                },
+                JoinType = joinType,
+                Right = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "T4",
+                    },
+                },
+                Conditions = new SqlBinaryExpression()
+                {
+                    Left = new SqlPropertyExpression()
                     {
                         Name = new SqlIdentifierExpression()
+                        {
+                            Value = "id",
+                        },
+                        Table = new SqlIdentifierExpression()
                         {
                             Value = "t3",
                         },
                     },
-                    JoinType = joinType,
-                    Right = new SqlTableExpression()
+                    Operator = SqlBinaryOperator.EqualTo,
+                    Right = new SqlPropertyExpression()
                     {
                         Name = new SqlIdentifierExpression()
                         {
-                            Value = "T4",
+                            Value = "Pid",
                         },
-                    },
-                    Conditions = new SqlBinaryExpression()
-                    {
-                        Left = new SqlPropertyExpression()
+                        Table = new SqlIdentifierExpression()
                         {
-                            Name = new SqlIdentifierExpression()
-                            {
-                                Value = "id",
-                            },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "t3",
-                            },
-                        },
-                        Operator = SqlBinaryOperator.EqualTo,
-                        Right = new SqlPropertyExpression()
-                        {
-                            Name = new SqlIdentifierExpression()
-                            {
-                                Value = "Pid",
-                            },
-                            Table = new SqlIdentifierExpression()
-                            {
-                                Value = "t4",
-                            },
+                            Value = "t4",
                         },
                     },
                 },
-                Where = new SqlBinaryExpression()
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlNumberExpression()
                 {
-                    Left = new SqlNumberExpression()
-                    {
-                        Value = 1M,
-                    },
-                    Operator = SqlBinaryOperator.EqualTo,
-                    Right = new SqlNumberExpression()
-                    {
-                        Value = 1M,
-                    },
+                    Value = 1M,
                 },
-                Items = new List<SqlExpression>()
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlNumberExpression()
+                {
+                    Value = 1M,
+                },
+            },
+            Items = new List<SqlExpression>()
     {
         new SqlBinaryExpression()
         {
@@ -833,7 +833,7 @@ public class UpdateTest
             },
         },
     },
-            };
+        };
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -1321,6 +1321,107 @@ public class UpdateTest
         };
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
+        Assert.Equal("update myuser set email = null where (name is not null)", newSql);
+    }
+
+
+    [Fact]
+    public void TestUpdate7()
+    {
+        var expect = new SqlUpdateExpression()
+        {
+            DbType = DbType.Pgsql,
+            Table = new SqlTableExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "OrderHeader",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+                Alias = new SqlIdentifierExpression()
+                {
+                    Value = "p0",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+            },
+            Where = new SqlBinaryExpression()
+            {
+                Left = new SqlPropertyExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "OrderNo",
+                        LeftQualifiers = "\"",
+                        RightQualifiers = "\"",
+                    },
+                    Table = new SqlIdentifierExpression()
+                    {
+                        Value = "p0",
+                        LeftQualifiers = "\"",
+                        RightQualifiers = "\"",
+                    },
+                },
+                Operator = SqlBinaryOperator.EqualTo,
+                Right = new SqlVariableExpression()
+                {
+                    Name = "y0",
+                    Prefix = "@",
+                },
+            },
+            Items = new List<SqlExpression>()
+    {
+        new SqlBinaryExpression()
+        {
+            Left = new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "State",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "p0",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+            },
+            Operator = SqlBinaryOperator.EqualTo,
+            Right = new SqlNumberExpression()
+            {
+                Value = 2M,
+            },
+        },
+        new SqlBinaryExpression()
+        {
+            Left = new SqlPropertyExpression()
+            {
+                Name = new SqlIdentifierExpression()
+                {
+                    Value = "CustomerId",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+                Table = new SqlIdentifierExpression()
+                {
+                    Value = "p0",
+                    LeftQualifiers = "\"",
+                    RightQualifiers = "\"",
+                },
+            },
+            Operator = SqlBinaryOperator.EqualTo,
+            Right = new SqlNumberExpression()
+            {
+                Value = 1M,
+            },
+        },
+    },
+        };
+
+        var newSql = expect.ToSql();
         Assert.Equal("update myuser set email = null where (name is not null)", newSql);
     }
 }

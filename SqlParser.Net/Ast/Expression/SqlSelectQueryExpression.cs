@@ -251,8 +251,8 @@ public class SqlSelectQueryExpression : SqlExpression
         {
             DbType = this.DbType,
             Into = this.Into.Clone(),
-            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
-            Columns = this.Columns.Select(x => x.Clone()).ToList(),
+            WithSubQuerys = this.WithSubQuerys?.Select(x => x.Clone()).ToList() ?? new List<SqlWithSubQueryExpression>(),
+            Columns = this.Columns?.Select(x => x.Clone()).ToList() ?? new List<SqlSelectItemExpression>(),
             ResultSetReturnOption = this.ResultSetReturnOption,
             Top = this.Top.Clone(),
             From = this.From.Clone(),
@@ -261,7 +261,7 @@ public class SqlSelectQueryExpression : SqlExpression
             OrderBy = this.OrderBy.Clone(),
             Limit = this.Limit.Clone(),
             ConnectBy = this.ConnectBy.Clone(),
-            Hints = this.Hints.Select(x => x.Clone()).ToList(),
+            Hints = this.Hints?.Select(x => x.Clone()).ToList() ?? new List<SqlHintExpression>(),
         };
         return result;
     }

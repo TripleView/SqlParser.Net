@@ -176,7 +176,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         var result = new SqlFunctionCallExpression()
         {
             DbType = this.DbType,
-            Arguments = this.Arguments.Select(x => x.Clone()).ToList(),
+            Arguments = this.Arguments?.Select(x => x.Clone()).ToList()??new List<SqlExpression>(),
             Name = this.Name.Clone(),
             Over = this.Over.Clone(),
             IsDistinct = this.IsDistinct,

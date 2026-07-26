@@ -72,8 +72,8 @@ public class SqlReturningExpression : SqlExpression
         var result = new SqlReturningExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => x.Clone()).ToList(),
-            IntoVariables = this.IntoVariables.Select(x => x.Clone()).ToList(),
+            Items = this.Items?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
+            IntoVariables = this.IntoVariables?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
         };
         return result;
     }

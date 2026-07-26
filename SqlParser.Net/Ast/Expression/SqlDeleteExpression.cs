@@ -113,7 +113,7 @@ public class SqlDeleteExpression : SqlExpression
         {
             DbType = this.DbType,
             Table = this.Table.Clone(),
-            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
+            WithSubQuerys = this.WithSubQuerys?.Select(x => x.Clone()).ToList() ?? new List<SqlWithSubQueryExpression>(),
             Body = this.Body.Clone(),
             Where = this.Where.Clone(),
         };

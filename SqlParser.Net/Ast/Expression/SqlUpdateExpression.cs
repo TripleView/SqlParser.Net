@@ -134,8 +134,8 @@ public class SqlUpdateExpression : SqlExpression
         var result = new SqlUpdateExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => x.Clone()).ToList(),
-            WithSubQuerys = this.WithSubQuerys.Select(x => x.Clone()).ToList(),
+            Items = this.Items?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
+            WithSubQuerys = this.WithSubQuerys?.Select(x => x.Clone()).ToList() ?? new List<SqlWithSubQueryExpression>(),
             Where = this.Where.Clone(),
             Table = this.Table.Clone(),
             From = this.From.Clone(),

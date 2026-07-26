@@ -91,7 +91,7 @@ public class SqlCaseExpression : SqlExpression
         var result = new SqlCaseExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x=>(SqlCaseItemExpression)x.Clone()).ToList(),
+            Items = this.Items?.Select(x => (SqlCaseItemExpression)x.Clone()).ToList() ?? new List<SqlCaseItemExpression>(),
             Else = this.Else.Clone(),
             Value = this.Value.Clone(),
         };

@@ -99,7 +99,7 @@ public class SqlInExpression : SqlExpression
         var result = new SqlInExpression()
         {
             DbType = this.DbType,
-            TargetList = this.TargetList.Select(x => x.Clone()).ToList(),
+            TargetList = this.TargetList?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
             Body = this.Body.Clone(),
             SubQuery = this.SubQuery.Clone(),
             IsNot = IsNot

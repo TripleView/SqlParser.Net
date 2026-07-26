@@ -67,7 +67,7 @@ public class SqlOrderByExpression : SqlExpression
         var result = new SqlOrderByExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => x.Clone()).ToList(),
+            Items = this.Items?.Select(x => x.Clone()).ToList() ?? new List<SqlOrderByItemExpression>(),
             IsSiblings = IsSiblings
         };
         return result;

@@ -54,7 +54,7 @@ public class SqlPartitionByExpression : SqlExpression
         var result = new SqlPartitionByExpression()
         {
             DbType = this.DbType,
-            Items = this.Items.Select(x => x.Clone()).ToList(),
+            Items = this.Items?.Select(x => x.Clone()).ToList() ?? new List<SqlExpression>(),
         };
         return result;
     }
