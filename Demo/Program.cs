@@ -31,7 +31,49 @@ SET u.name = o.name
 FROM users AS u
 JOIN orders AS o ON o.user_id = u.id
 WHERE o.id = 100;";
-            var sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
+
+            sql = @"   SELECT DISTINCT ON (stance)
+     *
+FROM articles
+ORDER BY stance, created_at DESC;";
+            sql = @"SELECT
+    u.id,
+    x.*
+FROM users AS u
+INNER JOIN LATERAL (
+    SELECT *
+    FROM orders
+    WHERE orders.user_id = u.id
+) AS x
+ON TRUE;";
+
+            sql = @"SELECT
+    c.customer_id,
+    c.customer_name,
+    latest_order.order_id,
+    latest_order.order_no,
+    latest_order.amount,
+    latest_order.order_time
+FROM customers c
+CROSS JOIN LATERAL (
+    SELECT
+        o.order_id,
+        o.order_no,
+        o.amount,
+        o.order_time
+    FROM orders o
+    WHERE o.customer_id = c.customer_id
+      AND o.order_status = 'PAID'
+    ORDER BY o.order_time DESC, o.order_id DESC
+    LIMIT 1
+) AS latest_order
+ORDER BY c.customer_id;";
+
+            sql = "select cast('2023-10-15' as TIMESTAMP WITH TIME ZONE)";
+            var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
+
+
+
            
             var result = sqlAst.ToFormat();
 

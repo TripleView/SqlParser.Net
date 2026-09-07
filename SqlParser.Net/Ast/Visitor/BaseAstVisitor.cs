@@ -203,4 +203,14 @@ public class BaseAstVisitor : IAstVisitor
     {
         return sqlWithSubQueryExpression;
     }
+
+    public virtual SqlExpression VisitSqlDistinctOnExpression(SqlDistinctOnExpression sqlDistinctOnExpression, VisitContext context = null)
+    {
+        return sqlDistinctOnExpression;
+    }
+
+    public virtual SqlExpression VisitSqlCastAsExpressionExpression(SqlCastAsExpression sqlCastAsExpression, VisitContext context = null)
+    {
+        throw new System.NotImplementedException();
+    }
 }

@@ -2,10 +2,15 @@ using SqlParser.Net.Ast.Visitor;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
+public class SqlReferenceTableExpression : SqlExpression, IAliasExpression, ILateralExpression
 {
     private SqlFunctionCallExpression functionCall;
     private SqlIdentifierExpression alias;
+    /// <summary>
+    /// The LATERAL Modifier in PostgreSQL
+    /// pgsql÷–µƒlateral–ﬁ Œ
+    /// </summary>
+    public bool? IsLateral { set; get; }
     public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
         return visitor.VisitSqlReferenceTableExpression(this, context);
@@ -35,6 +40,11 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
 
     protected bool Equals(SqlReferenceTableExpression other)
     {
+        if (IsLateral != other.IsLateral)
+        {
+            return false;
+        }
+
         if (!CompareTwoSqlExpression(Alias, other.Alias))
         {
             return false;
@@ -66,6 +76,7 @@ public class SqlReferenceTableExpression : SqlExpression, IAliasExpression
             DbType = this.DbType,
             FunctionCall = this.FunctionCall.Clone(),
             Alias = this.Alias.Clone(),
+            IsLateral = this.IsLateral
         };
         return result;
     }

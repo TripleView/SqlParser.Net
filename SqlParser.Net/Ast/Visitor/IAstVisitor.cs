@@ -56,4 +56,7 @@ public interface IAstVisitor
     SqlExpression VisitSqlVariableExpression(SqlVariableExpression sqlVariableExpression, VisitContext context = null);
     SqlExpression VisitSqlWithinGroupExpression(SqlWithinGroupExpression sqlWithinGroupExpression, VisitContext context = null);
     SqlExpression VisitSqlWithSubQueryExpression(SqlWithSubQueryExpression sqlWithSubQueryExpression, VisitContext context = null);
+    SqlExpression VisitSqlDistinctOnExpression(SqlDistinctOnExpression sqlDistinctOnExpression, VisitContext context = null);
+
+    SqlExpression VisitSqlCastAsExpressionExpression(SqlCastAsExpression sqlCastAsExpression, VisitContext context = null);
 }

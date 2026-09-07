@@ -58,7 +58,12 @@ public class SqlSelectQueryExpression : SqlExpression
     /// sql结果集返回选项，例如all，distinct
     /// </summary>
     public SqlResultSetReturnOption? ResultSetReturnOption { get; set; }
+    /// <summary>
+    /// DISTINCT ON Statement in PostgreSQL
+    /// pgsql中的distinct on语句
+    /// </summary>
 
+    public SqlDistinctOnExpression DistinctOn { get; set; }
     /// <summary>
     /// sqlserver suport,such as sql: SELECT id,name into test14 from TEST t
     /// sqlserver 支持,比如sql:  SELECT id,name into test14 from TEST t
@@ -173,7 +178,10 @@ public class SqlSelectQueryExpression : SqlExpression
         {
             return false;
         }
-
+        if (!CompareTwoSqlExpression(DistinctOn, other.DistinctOn))
+        {
+            return false;
+        }
         //--
         if (!CompareTwoSqlExpression(Top, other.Top))
         {
@@ -235,6 +243,7 @@ public class SqlSelectQueryExpression : SqlExpression
             hashCode = (hashCode * 397) ^ (ResultSetReturnOption?.GetHashCode() ?? 0);
             hashCode = (hashCode * 397) ^ (Into?.GetHashCode() ?? 0);
             hashCode = (hashCode * 397) ^ (From?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (DistinctOn?.GetHashCode() ?? 0);
             hashCode = (hashCode * 397) ^ (Where?.GetHashCode() ?? 0);
             hashCode = (hashCode * 397) ^ (GroupBy?.GetHashCode() ?? 0);
             hashCode = (hashCode * 397) ^ (OrderBy?.GetHashCode() ?? 0);
@@ -255,6 +264,7 @@ public class SqlSelectQueryExpression : SqlExpression
             Columns = this.Columns?.Select(x => x.Clone()).ToList() ?? new List<SqlSelectItemExpression>(),
             ResultSetReturnOption = this.ResultSetReturnOption,
             Top = this.Top.Clone(),
+            DistinctOn = this.DistinctOn.Clone(),
             From = this.From.Clone(),
             Where = this.Where.Clone(),
             GroupBy = this.GroupBy.Clone(),

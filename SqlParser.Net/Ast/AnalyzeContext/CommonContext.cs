@@ -13,4 +13,9 @@ public class CommonContext
     /// 在pgsql的array内的层数
     /// </summary>
     public int IsInPgSqlArrayIndex { get; set; }
+    /// <summary>
+    /// Determine Whether It Is Within an insert Statement
+    /// 判断是否在insert语句内
+    /// </summary>
+    public bool IsInInsert { get; set; }
 }

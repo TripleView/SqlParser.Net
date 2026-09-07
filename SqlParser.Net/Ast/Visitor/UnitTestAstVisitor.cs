@@ -984,6 +984,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
     {
         AppendLine("new SqlReferenceTableExpression()");
         AppendLine("{");
+        if (sqlReferenceTableExpression.IsLateral.HasValue)
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine($"IsLateral = {(sqlReferenceTableExpression.IsLateral == true ? "true" : "false")},");
+            });
+        }
         if (sqlReferenceTableExpression.FunctionCall != null)
         {
             AdvanceNext(() =>
@@ -1000,7 +1007,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 sqlReferenceTableExpression.Alias?.Accept(this);
             });
         }
-        AppendLine("}");
+        AppendLine("},");
         return sqlReferenceTableExpression;
     }
     public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression, VisitContext context = null)
@@ -1013,7 +1020,13 @@ public class UnitTestAstVisitor : BaseAstVisitor
 
         AppendLine("new SqlSelectExpression()");
         AppendLine("{");
-
+        if (sqlSelectExpression.IsLateral.HasValue)
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine($"IsLateral = {(sqlSelectExpression.IsLateral == true ? "true" : "false")},");
+            });
+        }
         if (sqlSelectExpression.Alias != null)
         {
             AdvanceNext(() =>
@@ -1177,6 +1190,14 @@ public class UnitTestAstVisitor : BaseAstVisitor
             {
                 AppendAndNotRequiredNextSpace("OrderBy = ");
                 sqlSelectQueryExpression.OrderBy.Accept(this);
+            });
+        }
+        if (sqlSelectQueryExpression.DistinctOn.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("DistinctOn = ");
+                sqlSelectQueryExpression.DistinctOn.Accept(this);
             });
         }
         if (sqlSelectQueryExpression.GroupBy.HasValue())
@@ -1870,5 +1891,65 @@ public class UnitTestAstVisitor : BaseAstVisitor
         }
         AppendLine("},");
         return sqlArraySliceExpression;
+    }
+
+    public override SqlExpression VisitSqlDistinctOnExpression(SqlDistinctOnExpression sqlDistinctOnExpression, VisitContext context = null)
+    {
+        if (!sqlDistinctOnExpression.HasValue())
+        {
+            return sqlDistinctOnExpression;
+        }
+        AppendLine("new SqlDistinctOnExpression()");
+        AppendLine("{");
+        if (sqlDistinctOnExpression.Items.HasValue())
+        {
+            AdvanceNext(() =>
+            {
+                AppendLine("Items = new List<SqlExpression>()");
+                AppendLine("{");
+                foreach (var item in sqlDistinctOnExpression.Items)
+                {
+                    AdvanceNext(() =>
+                    {
+                        item.Accept(this);
+                    });
+
+                }
+                AppendLine("},");
+            });
+        }
+
+        AppendLine("},");
+        return sqlDistinctOnExpression;
+    }
+
+    public override SqlExpression VisitSqlCastAsExpressionExpression(SqlCastAsExpression sqlCastAsExpression, VisitContext context = null)
+    {
+        if (sqlCastAsExpression.Body == null)
+        {
+            return sqlCastAsExpression;
+        }
+
+        AppendLine("new SqlCastAsExpression()");
+        AppendLine("{");
+        AdvanceNext(() =>
+        {
+            AppendAndNotRequiredNextSpace("Body = ");
+            sqlCastAsExpression.Body.Accept(this);
+        });
+        if (sqlCastAsExpression.TargetType != null)
+        {
+            AdvanceNext(() =>
+            {
+                AppendAndNotRequiredNextSpace("TargetType = ");
+                sqlCastAsExpression.TargetType.Accept(this);
+            });
+        }
+        AdvanceNext(() =>
+        {
+            AppendLine("FunctionType = CastAsFunctionType." + sqlCastAsExpression.FunctionType.ToString() + ",");
+        });
+        AppendLine("},");
+        return sqlCastAsExpression;
     }
 }

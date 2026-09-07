@@ -722,13 +722,11 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     }
     public override SqlExpression VisitSqlOrderByExpression(SqlOrderByExpression sqlOrderByExpression, VisitContext context = null)
     {
-        callStack.Add(SqlExpressionType.OrderBy);
-
         if (!sqlOrderByExpression.HasValue())
         {
-            RemoveCallStackLastItem();
             return sqlOrderByExpression;
         }
+        callStack.Add(SqlExpressionType.OrderBy);
         if (sqlOrderByExpression.IsSiblings)
         {
             AppendWithSpace("order siblings by");
@@ -950,7 +948,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override SqlExpression VisitSqlReferenceTableExpression(SqlReferenceTableExpression sqlReferenceTableExpression, VisitContext context = null)
     {
         callStack.Add(SqlExpressionType.ReferenceTable);
-
+        if (IsPgsql && sqlReferenceTableExpression.IsLateral == true)
+        {
+            AppendWithSpace("lateral");
+        }
         if (sqlReferenceTableExpression.FunctionCall != null)
         {
             sqlReferenceTableExpression.FunctionCall = (SqlFunctionCallExpression)sqlReferenceTableExpression.FunctionCall.Accept(this);
@@ -962,6 +963,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
             {
                 AppendWithSpace("as");
             }
+            else
+            {
+                AppendSpace();
+            }
             sqlReferenceTableExpression.Alias = (SqlIdentifierExpression)sqlReferenceTableExpression.Alias.Accept(this);
         }
 
@@ -971,7 +976,10 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
     public override SqlExpression VisitSqlSelectExpression(SqlSelectExpression sqlSelectExpression, VisitContext context = null)
     {
         callStack.Add(SqlExpressionType.Select);
-
+        if (IsPgsql && sqlSelectExpression.IsLateral == true)
+        {
+            AppendWithSpace("lateral");
+        }
         if (sqlSelectExpression.Alias == null
             && (sb.Length == 0 || context?.Parent is SqlInsertExpression
                                || context?.Parent is SqlInExpression
@@ -1073,7 +1081,13 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         }
 
         AppendWithRightSpace("select");
-
+        if (IsPgsql)
+        {
+            if (sqlSelectQueryExpression.DistinctOn != null)
+            {
+                sqlSelectQueryExpression.DistinctOn = (SqlDistinctOnExpression)sqlSelectQueryExpression.DistinctOn.Accept(this);
+            }
+        }
         if (sqlSelectQueryExpression.ResultSetReturnOption.HasValue)
         {
             var resultSetReturnOption = "";
@@ -1768,5 +1782,66 @@ public class SqlGenerationAstVisitor : BaseAstVisitor
         Append("]");
         RemoveCallStackLastItem();
         return sqlArraySliceExpression;
+    }
+
+    public override SqlExpression VisitSqlDistinctOnExpression(SqlDistinctOnExpression sqlDistinctOnExpression, VisitContext context = null)
+    {
+        if (!sqlDistinctOnExpression.HasValue())
+        {
+            return sqlDistinctOnExpression;
+        }
+        callStack.Add(SqlExpressionType.DistinctOn);
+        if (sqlDistinctOnExpression.Items.HasValue())
+        {
+            Append("distinct on (");
+            for (var i = 0; i < sqlDistinctOnExpression.Items.Count; i++)
+            {
+                var item = sqlDistinctOnExpression.Items[i];
+                item.Accept(this);
+                if (i < sqlDistinctOnExpression.Items.Count - 1)
+                {
+                    AppendWithoutSpaces(", ");
+                }
+            }
+            Append(")");
+        }
+
+        RemoveCallStackLastItem();
+        return sqlDistinctOnExpression;
+    }
+
+    public override SqlExpression VisitSqlCastAsExpressionExpression(SqlCastAsExpression sqlCastAsExpression, VisitContext context = null)
+    {
+        callStack.Add(SqlExpressionType.CastAs);
+
+        if (sqlCastAsExpression.Body == null || sqlCastAsExpression.TargetType == null)
+        {
+            RemoveCallStackLastItem();
+            return sqlCastAsExpression;
+        }
+
+        switch (sqlCastAsExpression.FunctionType)
+        {
+            case CastAsFunctionType.Function:
+                Append("cast(");
+                sqlCastAsExpression.Body = sqlCastAsExpression.Body.Accept(this);
+                AppendWithSpace("as");
+                sqlCastAsExpression.TargetType = sqlCastAsExpression.TargetType.Accept(this);
+                Append(")");
+                break;
+            case CastAsFunctionType.ColonColon:
+                sqlCastAsExpression.Body = sqlCastAsExpression.Body.Accept(this);
+                Append("::");
+                sqlCastAsExpression.TargetType = sqlCastAsExpression.TargetType.Accept(this);
+                break;
+            case CastAsFunctionType.TypeString:
+                sqlCastAsExpression.TargetType = sqlCastAsExpression.TargetType.Accept(this);
+                AppendSpace();
+                sqlCastAsExpression.Body = sqlCastAsExpression.Body.Accept(this);
+                break;
+        }
+
+        RemoveCallStackLastItem();
+        return sqlCastAsExpression;
     }
 }

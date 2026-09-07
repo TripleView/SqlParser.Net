@@ -905,39 +905,6 @@ public class SqlLexer
         return token;
     }
 
-
-    /// <summary>
-    /// 初始化token名称字典
-    /// </summary>
-    //private static void InitTokenDic()
-    //{
-    //    if (isInitTokenDic)
-    //    {
-    //        return;
-    //    }
-
-    //    isInitTokenDic = true;
-
-    //    var fields = typeof(Token).GetFields(BindingFlags.Static | BindingFlags.Public);
-    //    var i = 0;
-    //    foreach (var fieldInfo in fields)
-    //    {
-    //        var token = (Token)fieldInfo.GetValue(null);
-    //        try
-    //        {
-    //            tokenDic.Add(token.Value.ToString().ToLower(), token);
-    //        }
-    //        catch (Exception e)
-    //        {
-    //            var c = token;
-    //            Console.WriteLine(e);
-    //            throw;
-    //        }
-
-    //        i++;
-    //    }
-    //}
-
     /// <summary>
     /// 初始化token字典集合
     /// </summary>
@@ -1077,6 +1044,16 @@ public class SqlLexer
 
         if (dbType == DbType.Pgsql)
         {
+            
+            tokenDic.TryAdd("Varying".ToLowerInvariant(), Token.Varying);
+            tokenDic.TryAdd("Character".ToLowerInvariant(), Token.Character);
+            tokenDic.TryAdd("National".ToLowerInvariant(), Token.National);
+            tokenDic.TryAdd("Bit".ToLowerInvariant(), Token.Bit);
+            tokenDic.TryAdd("Double".ToLowerInvariant(), Token.Double);
+            tokenDic.TryAdd("Precision".ToLowerInvariant(), Token.Precision);
+            tokenDic.TryAdd("Timestamp".ToLowerInvariant(), Token.Timestamp);
+            tokenDic.TryAdd("Without".ToLowerInvariant(), Token.Without);
+            tokenDic.TryAdd("Lateral".ToLowerInvariant(), Token.Lateral);
             tokenDic.TryAdd("At".ToLowerInvariant(), Token.AtValue);
             tokenDic.TryAdd("Time".ToLowerInvariant(), Token.Time);
             tokenDic.TryAdd("Zone".ToLowerInvariant(), Token.Zone);

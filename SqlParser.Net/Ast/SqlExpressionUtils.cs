@@ -27,4 +27,10 @@ public static class SqlExpressionUtils
         return sqlArrayExpression != null && sqlArrayExpression.Items != null &&
                sqlArrayExpression.Items.Count > 0;
     }
+
+    public static bool HasValue(this SqlDistinctOnExpression sqlDistinctOnExpression)
+    {
+        return sqlDistinctOnExpression != null && sqlDistinctOnExpression.Items != null &&
+               sqlDistinctOnExpression.Items.Count > 0;
+    }
 }

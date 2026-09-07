@@ -28,7 +28,6 @@
     <Folder Include="CreateTableSql\Mysql\" />
     <Folder Include="CreateTableSql\Sqlserver\" />
     <Folder Include="CreateTableSql\Oracle\" />
-    <Folder Include="CreateTableSql\Pgsql\" />
     <Folder Include="CreateTableSql\Sqlite\" />
   </ItemGroup>
 

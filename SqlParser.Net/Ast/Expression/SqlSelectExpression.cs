@@ -3,13 +3,17 @@ using System.Collections.Generic;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlSelectExpression : SqlExpression
+public class SqlSelectExpression : SqlExpression, ILateralExpression,IAliasExpression
 {
     private SqlExpression query;
     private SqlIdentifierExpression alias;
     private SqlOrderByExpression orderBy;
     private SqlLimitExpression limit;
-
+    /// <summary>
+    /// The LATERAL Modifier in PostgreSQL
+    /// pgsql÷–µƒlateral–ﬁ Œ
+    /// </summary>
+    public bool? IsLateral { set; get; }
     public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
         return visitor.VisitSqlSelectExpression(this, context);
@@ -60,6 +64,10 @@ public class SqlSelectExpression : SqlExpression
 
     protected bool Equals(SqlSelectExpression other)
     {
+        if (IsLateral != other.IsLateral)
+        {
+            return false;
+        }
         if (!CompareTwoSqlExpression(Limit, other.Limit))
         {
             return false;
@@ -103,8 +111,9 @@ public class SqlSelectExpression : SqlExpression
             DbType = this.DbType,
             Limit = this.Limit.Clone(),
             OrderBy = this.OrderBy.Clone(),
-            Alias= this.Alias.Clone(),
-            Query = this.Query.Clone()
+            Alias = this.Alias.Clone(),
+            Query = this.Query.Clone(),
+            IsLateral = this.IsLateral
         };
         return result;
     }

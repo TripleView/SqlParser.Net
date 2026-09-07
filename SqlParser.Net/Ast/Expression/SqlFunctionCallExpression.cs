@@ -19,6 +19,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
 
     private SqlCollateExpression collate;
 
+
     public override SqlExpression Accept(IAstVisitor visitor, VisitContext context = null)
     {
         return visitor.VisitSqlFunctionCallExpression(this, context);

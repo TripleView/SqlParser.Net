@@ -278,4 +278,51 @@ public struct Token
     /// pgsql中数组的有交集操作符
     /// </summary>
     public static readonly Token ArrayIntersectionForPg = new Token("ArrayIntersectionForPg", "&&", 133) { TokenType = TokenType.Operator };
+    /// <summary>
+    /// The LATERAL Keyword in PostgreSQL
+    /// pgsql中的关键字lateral
+    /// </summary>
+    public static readonly Token Lateral = new Token("Lateral", "Lateral", 134) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Character = new Token("Character", "Character", 135) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Varying = new Token("Varying", "Varying", 136) { TokenType = TokenType.Keyword };
+
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token National= new Token("National", "National", 137) { TokenType = TokenType.Keyword };
+
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Bit = new Token("Bit", "Bit", 138) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Double = new Token("Double", "Double", 139) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Precision = new Token("Precision", "Precision", 140) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Timestamp = new Token("Timestamp", "Timestamp", 141) { TokenType = TokenType.Keyword };
+    /// <summary>
+    /// The field type in PostgreSQL
+    /// pgsql中的字段类型
+    /// </summary>
+    public static readonly Token Without = new Token("Without", "Without", 142) { TokenType = TokenType.Keyword };
 }

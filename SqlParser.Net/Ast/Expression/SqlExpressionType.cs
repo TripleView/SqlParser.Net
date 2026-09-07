@@ -80,5 +80,14 @@ public enum SqlExpressionType
     /// Array Slice Type in PostgreSQL
     /// pgsql中的数组切片类型
     /// </summary>
-    ArraySlice
+    ArraySlice,
+    /// <summary>
+    /// DISTINCT ON Statement in PostgreSQL
+    /// pgsql中的distinct on语句
+    /// </summary>
+    DistinctOn,
+    /// <summary>
+    ///Cast As expression; Cast As表达式
+    /// </summary>
+    CastAs,
 }

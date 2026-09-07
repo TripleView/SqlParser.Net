@@ -5,3 +5,5 @@
 IAcceptVisitor接口的方法Accept(IAstVisitor visitor, VisitContext context = null)添加了VisitContext上下文，受此影响，如果你有自定义的sqlExpression, 我这边提供了快速正则替换，源:return (visitor.\S{1,})\(this\)替换为return $1(this, context)
 
 1.1.20版本发现1.1.19版本的实现方式有问题，所以再次移除VisitContext上下文，在SqlGenerationAstVisitor中采用callStack调用栈的方式来进行上下文识别
+
+1.1.版本将case(xx as yy)从sqlFunctionCall里独立出来，写成单独的SqlCastAsExpression表达式；添加了pgsql都有的SqlDistinctOnExpression表达式
