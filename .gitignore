@@ -42,3 +42,4 @@ msbuild.wrn
 /ATL.Performance.IdentityServer/Properties/launchSettings.json
 Vue-Element
 /**/*rfc.log
+*.pubxml
