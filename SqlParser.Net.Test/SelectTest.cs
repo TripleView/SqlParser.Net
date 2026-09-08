@@ -246,36 +246,36 @@ public class SelectTest
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "CITY",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "CITY",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
                     },
-                    Table = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "a",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "COLUMN_VALUE",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "b",
+                            },
+                        },
                     },
                 },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "COLUMN_VALUE",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "b",
-                    },
-                },
-            },
-        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -299,26 +299,26 @@ public class SelectTest
                                 Value = "TABLE",
                             },
                             Arguments = new List<SqlExpression>()
-                    {
-                        new SqlFunctionCallExpression()
-                        {
-                            Name = new SqlIdentifierExpression()
                             {
-                                Value = "splitstr",
-                            },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlStringExpression()
+                                new SqlFunctionCallExpression()
                                 {
-                                    Value = "a;b",
-                                },
-                                new SqlStringExpression()
-                                {
-                                    Value = ";",
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "splitstr",
+                                    },
+                                    Arguments = new List<SqlExpression>()
+                                    {
+                                        new SqlStringExpression()
+                                        {
+                                            Value = "a;b",
+                                        },
+                                        new SqlStringExpression()
+                                        {
+                                            Value = ";",
+                                        },
+                                    },
                                 },
                             },
-                        },
-                    },
                         },
                         Alias = new SqlIdentifierExpression()
                         {
@@ -345,7 +345,8 @@ public class SelectTest
 
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select a.CITY, b.COLUMN_VALUE from ADDRESS a left join TABLE(splitstr('a;b',';')) b on (1 = 1)", generationSql);
+        Assert.Equal("select a.CITY, b.COLUMN_VALUE from ADDRESS a left join TABLE(splitstr('a;b',';')) b on (1 = 1)",
+            generationSql);
     }
 
     [Fact]
@@ -933,9 +934,7 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
 
         var expect = new SqlSelectExpression()
         {
@@ -945,33 +944,27 @@ public class SelectTest
                 {
                     new SqlSelectItemExpression()
                     {
-                        Body = new SqlFunctionCallExpression()
+                        Body = new SqlCastAsExpression()
                         {
-                            Name = new SqlIdentifierExpression()
+                            Body = new SqlFunctionCallExpression()
                             {
-                                Value = "CAST",
-                            },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlFunctionCallExpression()
+                                Name = new SqlIdentifierExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
+                                    Value = "SYS_EXTRACT_UTC",
+                                },
+                                Arguments = new List<SqlExpression>()
+                                {
+                                    new SqlIdentifierExpression()
                                     {
-                                        Value = "SYS_EXTRACT_UTC",
-                                    },
-                                    Arguments = new List<SqlExpression>()
-                                    {
-                                        new SqlIdentifierExpression()
-                                        {
-                                            Value = "SYSTIMESTAMP",
-                                        },
+                                        Value = "SYSTIMESTAMP",
                                     },
                                 },
                             },
-                            CaseAsTargetType = new SqlIdentifierExpression()
+                            TargetType = new SqlIdentifierExpression()
                             {
                                 Value = "DATE",
                             },
+                            FunctionType = CastAsFunctionType.Function,
                         },
                         Alias = new SqlIdentifierExpression()
                         {
@@ -991,10 +984,8 @@ public class SelectTest
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select CAST(SYS_EXTRACT_UTC(SYSTIMESTAMP) as DATE) as utc_date from dual", generationSql);
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as DATE) as utc_date from dual", generationSql);
     }
 
     [Fact]
@@ -1045,9 +1036,7 @@ public class SelectTest
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
 
         var expect = new SqlSelectExpression()
         {
@@ -1057,64 +1046,43 @@ public class SelectTest
                 {
                     new SqlSelectItemExpression()
                     {
-                        Body = new SqlFunctionCallExpression()
+                        Body = new SqlCastAsExpression()
                         {
-                            Name = new SqlIdentifierExpression()
+                            Body = new SqlCastAsExpression()
                             {
-                                Value = "cast",
-                            },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlFunctionCallExpression()
+                                Body = new SqlCastAsExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
+                                    Body = new SqlStringExpression()
                                     {
-                                        Value = "cast",
+                                        Value = "12.34",
                                     },
-                                    Arguments = new List<SqlExpression>()
+                                    TargetType = new SqlIdentifierExpression()
                                     {
-                                        new SqlFunctionCallExpression()
-                                        {
-                                            Name = new SqlIdentifierExpression()
-                                            {
-                                                Value = "cast",
-                                            },
-                                            Arguments = new List<SqlExpression>()
-                                            {
-                                                new SqlStringExpression()
-                                                {
-                                                    Value = "12.34"
-                                                },
-                                            },
-                                            CaseAsTargetType = new SqlIdentifierExpression()
-                                            {
-                                                Value = "float8",
-                                            },
-                                        },
+                                        Value = "float8",
                                     },
-                                    CaseAsTargetType = new SqlIdentifierExpression()
-                                    {
-                                        Value = "numeric",
-                                    },
+                                    FunctionType = CastAsFunctionType.ColonColon,
                                 },
+                                TargetType = new SqlIdentifierExpression()
+                                {
+                                    Value = "numeric",
+                                },
+                                FunctionType = CastAsFunctionType.ColonColon,
                             },
-                            CaseAsTargetType = new SqlIdentifierExpression()
+                            TargetType = new SqlIdentifierExpression()
                             {
                                 Value = "money",
                             },
+                            FunctionType = CastAsFunctionType.ColonColon,
                         },
                     },
                 },
             },
         };
 
-
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select cast(cast(cast('12.34' as float8) as numeric) as money)", generationSql);
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select '12.34'::float8::numeric::money", generationSql);
     }
 
     [Fact]
@@ -1130,173 +1098,135 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
-        var unitTestAstVisitor = new UnitTestAstVisitor();
-        sqlAst.Accept(unitTestAstVisitor);
-        var result = unitTestAstVisitor.GetResult();
+        var result = sqlAst.ToFormat();
 
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlCaseExpression()
                 {
-                    Items = new List<SqlCaseItemExpression>()
+                    new SqlSelectItemExpression()
                     {
-                        new SqlCaseItemExpression()
+                        Body = new SqlCaseExpression()
                         {
-                            Condition = new SqlBinaryExpression()
+                            Items = new List<SqlCaseItemExpression>()
                             {
-                                Left = new SqlStringExpression()
+                                new SqlCaseItemExpression()
                                 {
-                                    Value = "1"
-                                },
-                                Operator = SqlBinaryOperator.EqualTo,
-                                Right = new SqlBinaryExpression()
-                                {
-                                    Left = new SqlStringExpression()
+                                    Condition = new SqlBinaryExpression()
                                     {
-                                        Value = "1"
-                                    },
-                                    Operator = SqlBinaryOperator.Concat,
-                                    Right = new SqlFunctionCallExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression()
+                                        Left = new SqlStringExpression()
                                         {
-                                            Value = "cast",
+                                            Value = "1",
                                         },
-                                        Arguments = new List<SqlExpression>()
+                                        Operator = SqlBinaryOperator.EqualTo,
+                                        Right = new SqlBinaryExpression()
                                         {
-                                            new SqlFunctionCallExpression()
+                                            Left = new SqlStringExpression()
                                             {
-                                                Name = new SqlIdentifierExpression()
+                                                Value = "1",
+                                            },
+                                            Operator = SqlBinaryOperator.Concat,
+                                            Right = new SqlCastAsExpression()
+                                            {
+                                                Body = new SqlCastAsExpression()
                                                 {
-                                                    Value = "cast",
-                                                },
-                                                Arguments = new List<SqlExpression>()
-                                                {
-                                                    new SqlStringExpression()
+                                                    Body = new SqlStringExpression()
                                                     {
-                                                        Value = "01"
+                                                        Value = "01",
                                                     },
+                                                    TargetType = new SqlIdentifierExpression()
+                                                    {
+                                                        Value = "bit varying",
+                                                    },
+                                                    FunctionType = CastAsFunctionType.ColonColon,
                                                 },
-                                                CaseAsTargetType = new SqlIdentifierExpression()
+                                                TargetType = new SqlIdentifierExpression()
                                                 {
-                                                    Value = "bit varying",
+                                                    Value = "varchar",
                                                 },
+                                                FunctionType = CastAsFunctionType.ColonColon,
                                             },
                                         },
-                                        CaseAsTargetType = new SqlIdentifierExpression()
+                                    },
+                                    Value = new SqlBinaryExpression()
+                                    {
+                                        Left = new SqlStringExpression()
                                         {
-                                            Value = "varchar",
+                                            Value = "1",
+                                        },
+                                        Operator = SqlBinaryOperator.EqualTo,
+                                        Right = new SqlBinaryExpression()
+                                        {
+                                            Left = new SqlStringExpression()
+                                            {
+                                                Value = "1",
+                                            },
+                                            Operator = SqlBinaryOperator.Concat,
+                                            Right = new SqlCastAsExpression()
+                                            {
+                                                Body = new SqlCastAsExpression()
+                                                {
+                                                    Body = new SqlStringExpression()
+                                                    {
+                                                        Value = "01",
+                                                    },
+                                                    TargetType = new SqlIdentifierExpression()
+                                                    {
+                                                        Value = "bit varying",
+                                                    },
+                                                    FunctionType = CastAsFunctionType.ColonColon,
+                                                },
+                                                TargetType = new SqlIdentifierExpression()
+                                                {
+                                                    Value = "varchar",
+                                                },
+                                                FunctionType = CastAsFunctionType.ColonColon,
+                                            },
                                         },
                                     },
                                 },
                             },
                             Value = new SqlBinaryExpression()
                             {
-                                Left = new SqlStringExpression()
-                                {
-                                    Value = "1"
-                                },
-                                Operator = SqlBinaryOperator.EqualTo,
-                                Right = new SqlBinaryExpression()
+                                Left = new SqlBinaryExpression()
                                 {
                                     Left = new SqlStringExpression()
                                     {
-                                        Value = "1"
+                                        Value = "1",
                                     },
                                     Operator = SqlBinaryOperator.Concat,
-                                    Right = new SqlFunctionCallExpression()
+                                    Right = new SqlCastAsExpression()
                                     {
-                                        Name = new SqlIdentifierExpression()
+                                        Body = new SqlCastAsExpression()
                                         {
-                                            Value = "cast",
-                                        },
-                                        Arguments = new List<SqlExpression>()
-                                        {
-                                            new SqlFunctionCallExpression()
+                                            Body = new SqlStringExpression()
                                             {
-                                                Name = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "cast",
-                                                },
-                                                Arguments = new List<SqlExpression>()
-                                                {
-                                                    new SqlStringExpression()
-                                                    {
-                                                        Value = "01"
-                                                    },
-                                                },
-                                                CaseAsTargetType = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "bit varying",
-                                                },
+                                                Value = "01",
                                             },
+                                            TargetType = new SqlIdentifierExpression()
+                                            {
+                                                Value = "bit varying",
+                                            },
+                                            FunctionType = CastAsFunctionType.ColonColon,
                                         },
-                                        CaseAsTargetType = new SqlIdentifierExpression()
+                                        TargetType = new SqlIdentifierExpression()
                                         {
                                             Value = "varchar",
                                         },
+                                        FunctionType = CastAsFunctionType.ColonColon,
                                     },
                                 },
-                            },
-                        },
-                    },
-                    Value = new SqlBinaryExpression()
-                    {
-                        Left = new SqlBinaryExpression()
-                        {
-                            Left = new SqlStringExpression()
-                            {
-                                Value = "1"
-                            },
-                            Operator = SqlBinaryOperator.Concat,
-                            Right = new SqlFunctionCallExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
+                                Operator = SqlBinaryOperator.EqualTo,
+                                Right = new SqlStringExpression()
                                 {
-                                    Value = "cast",
-                                },
-                                Arguments = new List<SqlExpression>()
-                                {
-                                    new SqlFunctionCallExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression()
-                                        {
-                                            Value = "cast",
-                                        },
-                                        Arguments = new List<SqlExpression>()
-                                        {
-                                            new SqlStringExpression()
-                                            {
-                                                Value = "01"
-                                            },
-                                        },
-                                        CaseAsTargetType = new SqlIdentifierExpression()
-                                        {
-                                            Value = "bit varying",
-                                        },
-                                    },
-                                },
-                                CaseAsTargetType = new SqlIdentifierExpression()
-                                {
-                                    Value = "varchar",
+                                    Value = "1",
                                 },
                             },
-                        },
-                        Operator = SqlBinaryOperator.EqualTo,
-                        Right = new SqlStringExpression()
-                        {
-                            Value = "1"
                         },
                     },
                 },
-            },
-        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlJoinTableExpression()
@@ -1336,47 +1266,35 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                                         {
                                             Left = new SqlStringExpression()
                                             {
-                                                Value = "1"
+                                                Value = "1",
                                             },
                                             Operator = SqlBinaryOperator.EqualTo,
                                             Right = new SqlBinaryExpression()
                                             {
                                                 Left = new SqlStringExpression()
                                                 {
-                                                    Value = "1"
+                                                    Value = "1",
                                                 },
                                                 Operator = SqlBinaryOperator.Concat,
-                                                Right = new SqlFunctionCallExpression()
+                                                Right = new SqlCastAsExpression()
                                                 {
-                                                    Name = new SqlIdentifierExpression()
+                                                    Body = new SqlCastAsExpression()
                                                     {
-                                                        Value = "cast",
-                                                    },
-                                                    Arguments = new List<SqlExpression>()
-                                            {
-                                                new SqlFunctionCallExpression()
-                                                {
-                                                    Name = new SqlIdentifierExpression()
-                                                    {
-                                                        Value = "cast",
-                                                    },
-                                                    Arguments = new List<SqlExpression>()
-                                                    {
-                                                        new SqlStringExpression()
+                                                        Body = new SqlStringExpression()
                                                         {
-                                                            Value = "01"
+                                                            Value = "01",
                                                         },
+                                                        TargetType = new SqlIdentifierExpression()
+                                                        {
+                                                            Value = "bit varying",
+                                                        },
+                                                        FunctionType = CastAsFunctionType.ColonColon,
                                                     },
-                                                    CaseAsTargetType = new SqlIdentifierExpression()
-                                                    {
-                                                        Value = "bit varying",
-                                                    },
-                                                },
-                                            },
-                                                    CaseAsTargetType = new SqlIdentifierExpression()
+                                                    TargetType = new SqlIdentifierExpression()
                                                     {
                                                         Value = "varchar",
                                                     },
+                                                    FunctionType = CastAsFunctionType.ColonColon,
                                                 },
                                             },
                                         },
@@ -1385,47 +1303,35 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                                         {
                                             Left = new SqlStringExpression()
                                             {
-                                                Value = "2"
+                                                Value = "2",
                                             },
                                             Operator = SqlBinaryOperator.EqualTo,
                                             Right = new SqlBinaryExpression()
                                             {
                                                 Left = new SqlStringExpression()
                                                 {
-                                                    Value = "1"
+                                                    Value = "1",
                                                 },
                                                 Operator = SqlBinaryOperator.Concat,
-                                                Right = new SqlFunctionCallExpression()
+                                                Right = new SqlCastAsExpression()
                                                 {
-                                                    Name = new SqlIdentifierExpression()
+                                                    Body = new SqlCastAsExpression()
                                                     {
-                                                        Value = "cast",
-                                                    },
-                                                    Arguments = new List<SqlExpression>()
-                                            {
-                                                new SqlFunctionCallExpression()
-                                                {
-                                                    Name = new SqlIdentifierExpression()
-                                                    {
-                                                        Value = "cast",
-                                                    },
-                                                    Arguments = new List<SqlExpression>()
-                                                    {
-                                                        new SqlStringExpression()
+                                                        Body = new SqlStringExpression()
                                                         {
-                                                            Value = "01"
+                                                            Value = "01",
                                                         },
+                                                        TargetType = new SqlIdentifierExpression()
+                                                        {
+                                                            Value = "bit varying",
+                                                        },
+                                                        FunctionType = CastAsFunctionType.ColonColon,
                                                     },
-                                                    CaseAsTargetType = new SqlIdentifierExpression()
-                                                    {
-                                                        Value = "bit varying",
-                                                    },
-                                                },
-                                            },
-                                                    CaseAsTargetType = new SqlIdentifierExpression()
+                                                    TargetType = new SqlIdentifierExpression()
                                                     {
                                                         Value = "varchar",
                                                     },
+                                                    FunctionType = CastAsFunctionType.ColonColon,
                                                 },
                                             },
                                         },
@@ -1437,46 +1343,34 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                                         {
                                             Left = new SqlStringExpression()
                                             {
-                                                Value = "1"
+                                                Value = "1",
                                             },
                                             Operator = SqlBinaryOperator.Concat,
-                                            Right = new SqlFunctionCallExpression()
+                                            Right = new SqlCastAsExpression()
                                             {
-                                                Name = new SqlIdentifierExpression()
+                                                Body = new SqlCastAsExpression()
                                                 {
-                                                    Value = "cast",
-                                                },
-                                                Arguments = new List<SqlExpression>()
-                                        {
-                                            new SqlFunctionCallExpression()
-                                            {
-                                                Name = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "cast",
-                                                },
-                                                Arguments = new List<SqlExpression>()
-                                                {
-                                                    new SqlStringExpression()
+                                                    Body = new SqlStringExpression()
                                                     {
-                                                        Value = "01"
+                                                        Value = "01",
                                                     },
+                                                    TargetType = new SqlIdentifierExpression()
+                                                    {
+                                                        Value = "bit varying",
+                                                    },
+                                                    FunctionType = CastAsFunctionType.ColonColon,
                                                 },
-                                                CaseAsTargetType = new SqlIdentifierExpression()
-                                                {
-                                                    Value = "bit varying",
-                                                },
-                                            },
-                                        },
-                                                CaseAsTargetType = new SqlIdentifierExpression()
+                                                TargetType = new SqlIdentifierExpression()
                                                 {
                                                     Value = "varchar",
                                                 },
+                                                FunctionType = CastAsFunctionType.ColonColon,
                                             },
                                         },
                                         Operator = SqlBinaryOperator.EqualTo,
                                         Right = new SqlStringExpression()
                                         {
-                                            Value = "1"
+                                            Value = "1",
                                         },
                                     },
                                 },
@@ -1493,47 +1387,35 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                             {
                                 Left = new SqlStringExpression()
                                 {
-                                    Value = "1"
+                                    Value = "1",
                                 },
                                 Operator = SqlBinaryOperator.EqualTo,
                                 Right = new SqlBinaryExpression()
                                 {
                                     Left = new SqlStringExpression()
                                     {
-                                        Value = "1"
+                                        Value = "1",
                                     },
                                     Operator = SqlBinaryOperator.Concat,
-                                    Right = new SqlFunctionCallExpression()
+                                    Right = new SqlCastAsExpression()
                                     {
-                                        Name = new SqlIdentifierExpression()
+                                        Body = new SqlCastAsExpression()
                                         {
-                                            Value = "cast",
-                                        },
-                                        Arguments = new List<SqlExpression>()
-                                {
-                                    new SqlFunctionCallExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression()
-                                        {
-                                            Value = "cast",
-                                        },
-                                        Arguments = new List<SqlExpression>()
-                                        {
-                                            new SqlStringExpression()
+                                            Body = new SqlStringExpression()
                                             {
-                                                Value = "01"
+                                                Value = "01",
                                             },
+                                            TargetType = new SqlIdentifierExpression()
+                                            {
+                                                Value = "bit varying",
+                                            },
+                                            FunctionType = CastAsFunctionType.ColonColon,
                                         },
-                                        CaseAsTargetType = new SqlIdentifierExpression()
-                                        {
-                                            Value = "bit varying",
-                                        },
-                                    },
-                                },
-                                        CaseAsTargetType = new SqlIdentifierExpression()
+                                        TargetType = new SqlIdentifierExpression()
                                         {
                                             Value = "varchar",
                                         },
+                                        FunctionType = CastAsFunctionType.ColonColon,
                                     },
                                 },
                             },
@@ -1550,47 +1432,35 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                         {
                             Left = new SqlStringExpression()
                             {
-                                Value = "1"
+                                Value = "1",
                             },
                             Operator = SqlBinaryOperator.EqualTo,
                             Right = new SqlBinaryExpression()
                             {
                                 Left = new SqlStringExpression()
                                 {
-                                    Value = "1"
+                                    Value = "1",
                                 },
                                 Operator = SqlBinaryOperator.Concat,
-                                Right = new SqlFunctionCallExpression()
+                                Right = new SqlCastAsExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
+                                    Body = new SqlCastAsExpression()
                                     {
-                                        Value = "cast",
-                                    },
-                                    Arguments = new List<SqlExpression>()
-                            {
-                                new SqlFunctionCallExpression()
-                                {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "cast",
-                                    },
-                                    Arguments = new List<SqlExpression>()
-                                    {
-                                        new SqlStringExpression()
+                                        Body = new SqlStringExpression()
                                         {
-                                            Value = "01"
+                                            Value = "01",
                                         },
+                                        TargetType = new SqlIdentifierExpression()
+                                        {
+                                            Value = "bit varying",
+                                        },
+                                        FunctionType = CastAsFunctionType.ColonColon,
                                     },
-                                    CaseAsTargetType = new SqlIdentifierExpression()
-                                    {
-                                        Value = "bit varying",
-                                    },
-                                },
-                            },
-                                    CaseAsTargetType = new SqlIdentifierExpression()
+                                    TargetType = new SqlIdentifierExpression()
                                     {
                                         Value = "varchar",
                                     },
+                                    FunctionType = CastAsFunctionType.ColonColon,
                                 },
                             },
                         },
@@ -1607,47 +1477,35 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                     {
                         Left = new SqlStringExpression()
                         {
-                            Value = "1"
+                            Value = "1",
                         },
                         Operator = SqlBinaryOperator.EqualTo,
                         Right = new SqlBinaryExpression()
                         {
                             Left = new SqlStringExpression()
                             {
-                                Value = "1"
+                                Value = "1",
                             },
                             Operator = SqlBinaryOperator.Concat,
-                            Right = new SqlFunctionCallExpression()
+                            Right = new SqlCastAsExpression()
                             {
-                                Name = new SqlIdentifierExpression()
+                                Body = new SqlCastAsExpression()
                                 {
-                                    Value = "cast",
-                                },
-                                Arguments = new List<SqlExpression>()
-                        {
-                            new SqlFunctionCallExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "cast",
-                                },
-                                Arguments = new List<SqlExpression>()
-                                {
-                                    new SqlStringExpression()
+                                    Body = new SqlStringExpression()
                                     {
-                                        Value = "01"
+                                        Value = "01",
                                     },
+                                    TargetType = new SqlIdentifierExpression()
+                                    {
+                                        Value = "bit varying",
+                                    },
+                                    FunctionType = CastAsFunctionType.ColonColon,
                                 },
-                                CaseAsTargetType = new SqlIdentifierExpression()
-                                {
-                                    Value = "bit varying",
-                                },
-                            },
-                        },
-                                CaseAsTargetType = new SqlIdentifierExpression()
+                                TargetType = new SqlIdentifierExpression()
                                 {
                                     Value = "varchar",
                                 },
+                                FunctionType = CastAsFunctionType.ColonColon,
                             },
                         },
                     },
@@ -1656,144 +1514,108 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                 {
                     Left = new SqlStringExpression()
                     {
-                        Value = "2"
+                        Value = "2",
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlBinaryExpression()
                     {
                         Left = new SqlStringExpression()
                         {
-                            Value = "1"
+                            Value = "1",
                         },
                         Operator = SqlBinaryOperator.Concat,
-                        Right = new SqlFunctionCallExpression()
+                        Right = new SqlCastAsExpression()
                         {
-                            Name = new SqlIdentifierExpression()
+                            Body = new SqlCastAsExpression()
                             {
-                                Value = "cast",
-                            },
-                            Arguments = new List<SqlExpression>()
-                    {
-                        new SqlFunctionCallExpression()
-                        {
-                            Name = new SqlIdentifierExpression()
-                            {
-                                Value = "cast",
-                            },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlStringExpression()
+                                Body = new SqlStringExpression()
                                 {
-                                    Value = "01"
+                                    Value = "01",
                                 },
+                                TargetType = new SqlIdentifierExpression()
+                                {
+                                    Value = "bit varying",
+                                },
+                                FunctionType = CastAsFunctionType.ColonColon,
                             },
-                            CaseAsTargetType = new SqlIdentifierExpression()
-                            {
-                                Value = "bit varying",
-                            },
-                        },
-                    },
-                            CaseAsTargetType = new SqlIdentifierExpression()
+                            TargetType = new SqlIdentifierExpression()
                             {
                                 Value = "varchar",
                             },
+                            FunctionType = CastAsFunctionType.ColonColon,
                         },
                     },
                 },
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlBinaryExpression()
                     {
-                        Left = new SqlStringExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "1"
-                        },
-                        Operator = SqlBinaryOperator.Concat,
-                        Right = new SqlFunctionCallExpression()
-                        {
-                            Name = new SqlIdentifierExpression()
+                            Body = new SqlBinaryExpression()
                             {
-                                Value = "cast",
-                            },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlFunctionCallExpression()
+                                Left = new SqlStringExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "cast",
-                                    },
-                                    Arguments = new List<SqlExpression>()
-                                    {
-                                        new SqlStringExpression()
-                                        {
-                                            Value = "01"
-                                        },
-                                    },
-                                    CaseAsTargetType = new SqlIdentifierExpression()
-                                    {
-                                        Value = "bit varying",
-                                    },
+                                    Value = "1",
                                 },
-                            },
-                            CaseAsTargetType = new SqlIdentifierExpression()
-                            {
-                                Value = "varchar",
+                                Operator = SqlBinaryOperator.Concat,
+                                Right = new SqlCastAsExpression()
+                                {
+                                    Body = new SqlCastAsExpression()
+                                    {
+                                        Body = new SqlStringExpression()
+                                        {
+                                            Value = "01",
+                                        },
+                                        TargetType = new SqlIdentifierExpression()
+                                        {
+                                            Value = "bit varying",
+                                        },
+                                        FunctionType = CastAsFunctionType.ColonColon,
+                                    },
+                                    TargetType = new SqlIdentifierExpression()
+                                    {
+                                        Value = "varchar",
+                                    },
+                                    FunctionType = CastAsFunctionType.ColonColon,
+                                },
                             },
                         },
                     },
-                },
-            },
                 },
                 GroupBy = new SqlGroupByExpression()
                 {
                     Items = new List<SqlExpression>()
-            {
-            new SqlBinaryExpression()
-            {
-                Left = new SqlStringExpression()
-                {
-                    Value = "1"
-                },
-                Operator = SqlBinaryOperator.Concat,
-                Right = new SqlFunctionCallExpression()
-                {
-                    Name = new SqlIdentifierExpression()
                     {
-                        Value = "cast",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlFunctionCallExpression()
+                        new SqlBinaryExpression()
                         {
-                            Name = new SqlIdentifierExpression()
+                            Left = new SqlStringExpression()
                             {
-                                Value = "cast",
+                                Value = "1",
                             },
-                            Arguments = new List<SqlExpression>()
+                            Operator = SqlBinaryOperator.Concat,
+                            Right = new SqlCastAsExpression()
                             {
-                                new SqlStringExpression()
+                                Body = new SqlCastAsExpression()
                                 {
-                                    Value = "01"
+                                    Body = new SqlStringExpression()
+                                    {
+                                        Value = "01",
+                                    },
+                                    TargetType = new SqlIdentifierExpression()
+                                    {
+                                        Value = "bit varying",
+                                    },
+                                    FunctionType = CastAsFunctionType.ColonColon,
                                 },
-                            },
-                            CaseAsTargetType = new SqlIdentifierExpression()
-                            {
-                                Value = "bit varying",
+                                TargetType = new SqlIdentifierExpression()
+                                {
+                                    Value = "varchar",
+                                },
+                                FunctionType = CastAsFunctionType.ColonColon,
                             },
                         },
                     },
-                    CaseAsTargetType = new SqlIdentifierExpression()
-                    {
-                        Value = "varchar",
-                    },
-                },
-            },
-            },
                 },
                 Limit = new SqlLimitExpression()
                 {
@@ -1801,37 +1623,25 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                     {
                         Value = 1M,
                     },
-                    RowCount = new SqlFunctionCallExpression()
+                    RowCount = new SqlCastAsExpression()
                     {
-                        Name = new SqlIdentifierExpression()
+                        Body = new SqlCastAsExpression()
                         {
-                            Value = "cast",
-                        },
-                        Arguments = new List<SqlExpression>()
-                {
-                    new SqlFunctionCallExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "cast",
-                        },
-                        Arguments = new List<SqlExpression>()
-                        {
-                            new SqlNumberExpression()
+                            Body = new SqlNumberExpression()
                             {
                                 Value = 1M,
                             },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "smallint",
+                            },
+                            FunctionType = CastAsFunctionType.ColonColon,
                         },
-                        CaseAsTargetType = new SqlIdentifierExpression()
-                        {
-                            Value = "smallint",
-                        },
-                    },
-                },
-                        CaseAsTargetType = new SqlIdentifierExpression()
+                        TargetType = new SqlIdentifierExpression()
                         {
                             Value = "float8",
                         },
+                        FunctionType = CastAsFunctionType.ColonColon,
                     },
                 },
             },
@@ -1839,10 +1649,9 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
 
         Assert.True(sqlAst.Equals(expect));
 
-        var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Pgsql);
-        sqlAst.Accept(sqlGenerationAstVisitor);
-        var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select case (('1' || cast(cast('01' as bit varying) as varchar)) = '1') when ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) then ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) end from test as a inner join test2 as b on ((('1' = ('1' || cast(cast('01' as bit varying) as varchar))) and ('2' = ('1' || cast(cast('01' as bit varying) as varchar)))) or (('1' || cast(cast('01' as bit varying) as varchar)) = '1')) left join test3 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) right join test4 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) full join test5 on ('1' = ('1' || cast(cast('01' as bit varying) as varchar))) where ('2' = ('1' || cast(cast('01' as bit varying) as varchar))) group by ('1' || cast(cast('01' as bit varying) as varchar)) order by ('1' || cast(cast('01' as bit varying) as varchar)) limit cast(cast(1 as smallint) as float8) offset 1", generationSql);
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal(
+            "select case (('1' || '01'::bit varying::varchar) = '1') when ('1' = ('1' || '01'::bit varying::varchar)) then ('1' = ('1' || '01'::bit varying::varchar)) end from test as a inner join test2 as b on ((('1' = ('1' || '01'::bit varying::varchar)) and ('2' = ('1' || '01'::bit varying::varchar))) or (('1' || '01'::bit varying::varchar) = '1')) left join test3 on ('1' = ('1' || '01'::bit varying::varchar)) right join test4 on ('1' = ('1' || '01'::bit varying::varchar)) full join test5 on ('1' = ('1' || '01'::bit varying::varchar)) where ('2' = ('1' || '01'::bit varying::varchar)) group by ('1' || '01'::bit varying::varchar) order by ('1' || '01'::bit varying::varchar) limit 1::smallint::float8 offset 1", generationSql);
     }
 
     [Theory]
@@ -1931,7 +1740,6 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                 },
             },
         };
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -2077,7 +1885,6 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                 },
             },
         };
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -2251,23 +2058,17 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
                 {
                     new SqlSelectItemExpression()
                     {
-                        Body = new SqlFunctionCallExpression()
+                        Body = new SqlCastAsExpression()
                         {
-                            Name = new SqlIdentifierExpression()
+                            Body = new SqlIdentifierExpression()
                             {
-                                Value = "Cast",
+                                Value = "a",
                             },
-                            Arguments = new List<SqlExpression>()
-                            {
-                                new SqlIdentifierExpression()
-                                {
-                                    Value = "a",
-                                },
-                            },
-                            CaseAsTargetType = new SqlIdentifierExpression()
+                            TargetType = new SqlIdentifierExpression()
                             {
                                 Value = "NVARCHAR(MAX)",
                             },
+                            FunctionType = CastAsFunctionType.Function,
                         },
                     },
                 },
@@ -2281,13 +2082,10 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
             },
         };
 
-
-
-
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select Cast(a as NVARCHAR(MAX)) from test", generationSql);
+        Assert.Equal("select cast(a as NVARCHAR(MAX)) from test", generationSql);
     }
 
     [Fact]
@@ -2363,6 +2161,308 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
     }
 
     [Fact]
+    public void TestFunctionCall3ForCaseAs18()
+    {
+        var sql = "select DOUBLE PRECISION '1.25'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "1.25",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "DOUBLE PRECISION",
+                            },
+                            FunctionType = CastAsFunctionType.TypeString,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select DOUBLE PRECISION '1.25'", generationSql);
+    }
+
+    [Theory]
+    [InlineData("national ")]
+    [InlineData("")]
+    public void TestFunctionCall3ForCaseAs19(string str)
+    {
+        var sql = $"select {str}character varying(8) '1'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "1",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = str+"character varying(8)",
+                            },
+                            FunctionType = CastAsFunctionType.TypeString,
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select {str}character varying(8) '1'", generationSql);
+    }
+
+    [Theory]
+    [InlineData("(8)")]
+    [InlineData("")]
+    public void TestFunctionCall3ForCaseAs20(string str)
+    {
+        var sql = $"select bit varying{str} '1'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "1",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "bit varying"+str,
+                            },
+                            FunctionType = CastAsFunctionType.TypeString,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select bit varying{str} '1'", generationSql);
+    }
+
+    [Theory]
+    [InlineData("(3)")]
+    [InlineData("")]
+    public void TestFunctionCall3ForCaseAs21(string str)
+    {
+        var sql = $"select  TIMESTAMP{str} WITH TIME ZONE '2023-10-15 10:20:30'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "2023-10-15 10:20:30",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = $"TIMESTAMP{str} WITH TIME ZONE",
+                            },
+                            FunctionType = CastAsFunctionType.TypeString,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select TIMESTAMP{str} WITH TIME ZONE '2023-10-15 10:20:30'", generationSql);
+    }
+
+    [Theory]
+    [InlineData("without")]
+    [InlineData("WITH")]
+    public void TestFunctionCall3ForCaseAs22(string str)
+    {
+        var sql = $"select TIMESTAMP {str} TIME ZONE '2023-10-15 10:20:30'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "2023-10-15 10:20:30",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = $"TIMESTAMP {str} TIME ZONE",
+                            },
+                            FunctionType = CastAsFunctionType.TypeString,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select TIMESTAMP {str} TIME ZONE '2023-10-15 10:20:30'", generationSql);
+    }
+
+    [Theory]
+    [InlineData("without")]
+    [InlineData("WITH")]
+    public void TestFunctionCall3ForCaseAs23(string str)
+    {
+        var sql = $"select time {str} TIME ZONE '2023-10-15 10:20:30'";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "2023-10-15 10:20:30",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = $"time {str} TIME ZONE",
+                            },
+                            FunctionType = CastAsFunctionType.TypeString,
+                        },
+                    },
+                },
+            },
+        };
+
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal($"select time {str} TIME ZONE '2023-10-15 10:20:30'", generationSql);
+    }
+
+    [Fact]
+    public void TestFunctionCall3ForCaseAs24()
+    {
+        var sql = "select cast('2023-10-15' as TIMESTAMP(3) WITH TIME ZONE)";
+        var sqlAst = new SqlExpression();
+        var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
+        testOutputHelper.WriteLine("time:" + t);
+
+        var result = sqlAst.ToFormat();
+        var expect = new SqlSelectExpression()
+        {
+            Query = new SqlSelectQueryExpression()
+            {
+                Columns = new List<SqlSelectItemExpression>()
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlCastAsExpression()
+                        {
+                            Body = new SqlStringExpression()
+                            {
+                                Value = "2023-10-15",
+                            },
+                            TargetType = new SqlIdentifierExpression()
+                            {
+                                Value = "TIMESTAMP(3) WITH TIME ZONE",
+                            },
+                            FunctionType = CastAsFunctionType.Function,
+                        },
+                    },
+                },
+            },
+        };
+
+        Assert.True(sqlAst.Equals(expect));
+
+
+        var generationSql = sqlAst.ToSql();
+        Assert.Equal("select cast('2023-10-15' as TIMESTAMP(3) WITH TIME ZONE)", generationSql);
+    }
+
+    [Fact]
     public void TestFunctionCall4()
     {
         var sql = "select DBMS_LOB.GETLENGTH(NAME) from TEST5";
@@ -2408,7 +2508,6 @@ full join test5 on '1'='1'||'01'::bit varying :: varchar
         };
 
 
-
         Assert.True(sqlAst.Equals(expect));
 
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
@@ -2437,68 +2536,68 @@ FROM
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "date_trunc",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlStringExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Value = "year"
-                        },
-                        new SqlIdentifierExpression()
-                        {
-                            Value = "order_date",
-                        },
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "extract",
-                    },
-                    FromSource = new SqlFunctionCallExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "date_trunc",
-                        },
-                        Arguments = new List<SqlExpression>()
-                        {
-                            new SqlStringExpression()
+                            Name = new SqlIdentifierExpression()
                             {
-                                Value = "minute"
+                                Value = "date_trunc",
                             },
-                            new SqlIdentifierExpression()
+                            Arguments = new List<SqlExpression>()
                             {
-                                Value = "order_date",
+                                new SqlStringExpression()
+                                {
+                                    Value = "year"
+                                },
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "order_date",
+                                },
                             },
                         },
                     },
-                    Arguments = new List<SqlExpression>()
+                    new SqlSelectItemExpression()
                     {
-                        new SqlIdentifierExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Value = "month",
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "extract",
+                            },
+                            FromSource = new SqlFunctionCallExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "date_trunc",
+                                },
+                                Arguments = new List<SqlExpression>()
+                                {
+                                    new SqlStringExpression()
+                                    {
+                                        Value = "minute"
+                                    },
+                                    new SqlIdentifierExpression()
+                                    {
+                                        Value = "order_date",
+                                    },
+                                },
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "month",
+                                },
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "order_year",
                         },
                     },
                 },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "order_year",
-                },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -2512,7 +2611,9 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select date_trunc('year',order_date), extract(month from date_trunc('minute',order_date)) as order_year from orders", generationSql);
+        Assert.Equal(
+            "select date_trunc('year',order_date), extract(month from date_trunc('minute',order_date)) as order_year from orders",
+            generationSql);
     }
 
     [Fact]
@@ -2529,52 +2630,52 @@ FROM
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "EXTRACT",
-                    },
-                    FromSource = new SqlSelectExpression()
-                    {
-                        Query = new SqlSelectQueryExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Columns = new List<SqlSelectItemExpression>()
+                            Name = new SqlIdentifierExpression()
                             {
-                                new SqlSelectItemExpression()
+                                Value = "EXTRACT",
+                            },
+                            FromSource = new SqlSelectExpression()
+                            {
+                                Query = new SqlSelectQueryExpression()
                                 {
-                                    Body = new SqlIdentifierExpression()
+                                    Columns = new List<SqlSelectItemExpression>()
                                     {
-                                        Value = "order_date",
+                                        new SqlSelectItemExpression()
+                                        {
+                                            Body = new SqlIdentifierExpression()
+                                            {
+                                                Value = "order_date",
+                                            },
+                                        },
+                                    },
+                                    From = new SqlTableExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "orders",
+                                        },
                                     },
                                 },
                             },
-                            From = new SqlTableExpression()
+                            Arguments = new List<SqlExpression>()
                             {
-                                Name = new SqlIdentifierExpression()
+                                new SqlIdentifierExpression()
                                 {
-                                    Value = "orders",
+                                    Value = "MONTH",
                                 },
                             },
                         },
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlIdentifierExpression()
+                        Alias = new SqlIdentifierExpression()
                         {
-                            Value = "MONTH",
+                            Value = "current_month",
                         },
                     },
                 },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "current_month",
-                },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -2588,7 +2689,8 @@ FROM
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select EXTRACT(MONTH from (select order_date from orders)) as current_month from dual", generationSql);
+        Assert.Equal("select EXTRACT(MONTH from (select order_date from orders)) as current_month from dual",
+            generationSql);
     }
 
     [Fact]
@@ -2728,56 +2830,56 @@ FROM
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "max",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlSelectExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Query = new SqlSelectQueryExpression()
+                            Name = new SqlIdentifierExpression()
                             {
-                                Columns = new List<SqlSelectItemExpression>()
+                                Value = "max",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlSelectExpression()
                                 {
-                                    new SqlSelectItemExpression()
+                                    Query = new SqlSelectQueryExpression()
                                     {
-                                        Body = new SqlIdentifierExpression()
+                                        Columns = new List<SqlSelectItemExpression>()
                                         {
-                                            Value = "d",
+                                            new SqlSelectItemExpression()
+                                            {
+                                                Body = new SqlIdentifierExpression()
+                                                {
+                                                    Value = "d",
+                                                },
+                                            },
                                         },
-                                    },
-                                },
-                                From = new SqlTableExpression()
-                                {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "test3",
-                                    },
-                                },
-                                Where = new SqlBinaryExpression()
-                                {
-                                    Left = new SqlIdentifierExpression()
-                                    {
-                                        Value = "a",
-                                    },
-                                    Operator = SqlBinaryOperator.EqualTo,
-                                    Right = new SqlStringExpression()
-                                    {
-                                        Value = "a",
+                                        From = new SqlTableExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "test3",
+                                            },
+                                        },
+                                        Where = new SqlBinaryExpression()
+                                        {
+                                            Left = new SqlIdentifierExpression()
+                                            {
+                                                Value = "a",
+                                            },
+                                            Operator = SqlBinaryOperator.EqualTo,
+                                            Right = new SqlStringExpression()
+                                            {
+                                                Value = "a",
+                                            },
+                                        },
                                     },
                                 },
                             },
                         },
                     },
                 },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -2813,56 +2915,56 @@ FROM
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "max",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlSelectExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Query = new SqlSelectQueryExpression()
+                            Name = new SqlIdentifierExpression()
                             {
-                                Columns = new List<SqlSelectItemExpression>()
+                                Value = "max",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlSelectExpression()
                                 {
-                                    new SqlSelectItemExpression()
+                                    Query = new SqlSelectQueryExpression()
                                     {
-                                        Body = new SqlIdentifierExpression()
+                                        Columns = new List<SqlSelectItemExpression>()
                                         {
-                                            Value = "d",
+                                            new SqlSelectItemExpression()
+                                            {
+                                                Body = new SqlIdentifierExpression()
+                                                {
+                                                    Value = "d",
+                                                },
+                                            },
                                         },
-                                    },
-                                },
-                                From = new SqlTableExpression()
-                                {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "test3",
-                                    },
-                                },
-                                Where = new SqlBinaryExpression()
-                                {
-                                    Left = new SqlIdentifierExpression()
-                                    {
-                                        Value = "a",
-                                    },
-                                    Operator = SqlBinaryOperator.EqualTo,
-                                    Right = new SqlStringExpression()
-                                    {
-                                        Value = "a",
+                                        From = new SqlTableExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "test3",
+                                            },
+                                        },
+                                        Where = new SqlBinaryExpression()
+                                        {
+                                            Left = new SqlIdentifierExpression()
+                                            {
+                                                Value = "a",
+                                            },
+                                            Operator = SqlBinaryOperator.EqualTo,
+                                            Right = new SqlStringExpression()
+                                            {
+                                                Value = "a",
+                                            },
+                                        },
                                     },
                                 },
                             },
                         },
                     },
                 },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -2894,54 +2996,54 @@ FROM
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "SQRT",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlSelectExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Query = new SqlSelectQueryExpression()
+                            Name = new SqlIdentifierExpression()
                             {
-                                Columns = new List<SqlSelectItemExpression>()
+                                Value = "SQRT",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlSelectExpression()
                                 {
-                                    new SqlSelectItemExpression()
+                                    Query = new SqlSelectQueryExpression()
                                     {
-                                        Body = new SqlFunctionCallExpression()
+                                        Columns = new List<SqlSelectItemExpression>()
                                         {
-                                            Name = new SqlIdentifierExpression()
+                                            new SqlSelectItemExpression()
                                             {
-                                                Value = "AVG",
-                                            },
-                                            Arguments = new List<SqlExpression>()
-                                            {
-                                                new SqlIdentifierExpression()
+                                                Body = new SqlFunctionCallExpression()
                                                 {
-                                                    Value = "d",
+                                                    Name = new SqlIdentifierExpression()
+                                                    {
+                                                        Value = "AVG",
+                                                    },
+                                                    Arguments = new List<SqlExpression>()
+                                                    {
+                                                        new SqlIdentifierExpression()
+                                                        {
+                                                            Value = "d",
+                                                        },
+                                                    },
                                                 },
                                             },
                                         },
-                                    },
-                                },
-                                From = new SqlTableExpression()
-                                {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "test3",
+                                        From = new SqlTableExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "test3",
+                                            },
+                                        },
                                     },
                                 },
                             },
                         },
                     },
                 },
-            },
-        },
             },
         };
 
@@ -2959,10 +3061,7 @@ FROM
     {
         var sql = @$"SELECT SUM((SELECT  d FROM test3 where a='a' )) FROM test3";
         var sqlAst = new SqlExpression();
-        Assert.Throws<SqlParsingErrorException>((() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-        }));
+        Assert.Throws<SqlParsingErrorException>((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
     }
 
     [Fact]
@@ -2979,43 +3078,43 @@ FROM
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "test3.dbo.testfun",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlPropertyExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
-                                Value = "d",
+                                Value = "test3.dbo.testfun",
                             },
-                            Table = new SqlTableExpression()
+                            Arguments = new List<SqlExpression>()
                             {
-                                Name = new SqlIdentifierExpression()
+                                new SqlPropertyExpression()
                                 {
-                                    Value = "test",
-                                },
-                                Database = new SqlIdentifierExpression()
-                                {
-                                    Value = "test3",
-                                },
-                                Schema = new SqlIdentifierExpression()
-                                {
-                                    Value = "dbo",
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "d",
+                                    },
+                                    Table = new SqlTableExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "test",
+                                        },
+                                        Database = new SqlIdentifierExpression()
+                                        {
+                                            Value = "test3",
+                                        },
+                                        Schema = new SqlIdentifierExpression()
+                                        {
+                                            Value = "dbo",
+                                        },
+                                    },
                                 },
                             },
                         },
                     },
                 },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -3033,8 +3132,6 @@ FROM
                 },
             },
         };
-
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -3434,7 +3531,8 @@ FROM
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from RouteData as rd where (id = '805B9CFC-1671-4BD8-B011-003EB7398FB0')", generationSql);
+        Assert.Equal("select * from RouteData as rd where (id = '805B9CFC-1671-4BD8-B011-003EB7398FB0')",
+            generationSql);
     }
 
     [Fact]
@@ -5138,22 +5236,22 @@ ORDER BY
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
                 {
-                    Value = "name",
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "name",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "age",
+                        },
+                    },
                 },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
-                {
-                    Value = "age",
-                },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -5164,46 +5262,46 @@ ORDER BY
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlSelectExpression()
                     {
-                        Query = new SqlSelectQueryExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Columns = new List<SqlSelectItemExpression>()
+                            Body = new SqlSelectExpression()
                             {
-                                new SqlSelectItemExpression()
+                                Query = new SqlSelectQueryExpression()
                                 {
-                                    Body = new SqlIdentifierExpression()
+                                    Columns = new List<SqlSelectItemExpression>()
                                     {
-                                        Value = "name",
+                                        new SqlSelectItemExpression()
+                                        {
+                                            Body = new SqlIdentifierExpression()
+                                            {
+                                                Value = "name",
+                                            },
+                                        },
+                                    },
+                                    From = new SqlTableExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "test",
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t",
+                                        },
                                     },
                                 },
                             },
-                            From = new SqlTableExpression()
+                        },
+                        new SqlOrderByItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
                             {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "test",
-                                },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "t",
-                                },
+                                Value = "age",
                             },
+                            OrderByType = SqlOrderByType.Desc,
                         },
                     },
-                },
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlIdentifierExpression()
-                    {
-                        Value = "age",
-                    },
-                    OrderByType = SqlOrderByType.Desc,
-                },
-            },
                 },
             },
         };
@@ -6242,44 +6340,44 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "Value",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Value",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "temp",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "Value",
+                        },
                     },
-                    Table = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "temp",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "Text",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "temp",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "Text",
+                        },
                     },
                 },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "Value",
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "Text",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "temp",
-                    },
-                },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "Text",
-                },
-            },
-        },
                 From = new SqlSelectExpression()
                 {
                     Alias = new SqlIdentifierExpression()
@@ -6293,41 +6391,41 @@ order by temp.InxNbr";
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                        {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlStringExpression()
                                 {
-                                    Value = "a"
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlStringExpression()
+                                        {
+                                            Value = "a"
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "Value",
+                                        },
+                                    },
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlStringExpression()
+                                        {
+                                            Value = "b"
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "Text",
+                                        },
+                                    },
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "InxNbr",
+                                        },
+                                    },
                                 },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "Value",
-                                },
-                            },
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlStringExpression()
-                                {
-                                    Value = "b"
-                                },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "Text",
-                                },
-                            },
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlNumberExpression()
-                                {
-                                    Value = 1M,
-                                },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "InxNbr",
-                                },
-                            },
-                        },
                             },
                         },
                         UnionType = SqlUnionType.UnionAll,
@@ -6336,41 +6434,41 @@ order by temp.InxNbr";
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                        {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlStringExpression()
                                 {
-                                    Value = "c"
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlStringExpression()
+                                        {
+                                            Value = "c"
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "Value",
+                                        },
+                                    },
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlStringExpression()
+                                        {
+                                            Value = "d"
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "Text",
+                                        },
+                                    },
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "InxNbr",
+                                        },
+                                    },
                                 },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "Value",
-                                },
-                            },
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlStringExpression()
-                                {
-                                    Value = "d"
-                                },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "Text",
-                                },
-                            },
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlNumberExpression()
-                                {
-                                    Value = 2M,
-                                },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "InxNbr",
-                                },
-                            },
-                        },
                             },
                         },
                     },
@@ -6378,22 +6476,22 @@ order by temp.InxNbr";
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "InxNbr",
-                        },
-                        Table = new SqlIdentifierExpression()
-                        {
-                            Value = "temp",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "InxNbr",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "temp",
+                                },
+                            },
                         },
                     },
-                },
-            },
                 },
             },
         };
@@ -6401,7 +6499,8 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select temp.Value as Value, temp.Text as Text from ((select 'a' as Value, 'b' as Text, 1 as InxNbr) union all (select 'c' as Value, 'd' as Text, 2 as InxNbr)) as temp order by temp.InxNbr",
+        Assert.Equal(
+            "select temp.Value as Value, temp.Text as Text from ((select 'a' as Value, 'b' as Text, 1 as InxNbr) union all (select 'c' as Value, 'd' as Text, 2 as InxNbr)) as temp order by temp.InxNbr",
             newSql);
     }
 
@@ -6414,7 +6513,6 @@ order by temp.InxNbr";
         var unionStringList = new List<string>() { "union", "except", "intersect" };
         foreach (var unionString in unionStringList)
         {
-
             var sql = $@"select 1 {unionString} select 2";
             var unionType = SqlUnionType.Union;
             switch (unionString)
@@ -6482,7 +6580,6 @@ order by temp.InxNbr";
             Assert.Equal(expectSql,
                 newSql);
         }
-
     }
 
     [Fact]
@@ -6547,10 +6644,7 @@ order by temp.InxNbr";
         var sql = @"select 3 as pn FROM dual union (SELECT * FROM (select 2 as pn  FROM dual)  order by pn)";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>((() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.Oracle);
-        }));
+        Assert.Throws<SqlParsingErrorException>((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
     }
 
 
@@ -6560,10 +6654,7 @@ order by temp.InxNbr";
         var sql = @"select 3 as pn union select 2 as pn union (select 5 as pn)";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>((() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.Sqlite);
-        }));
+        Assert.Throws<SqlParsingErrorException>((() => { sqlAst = DbUtils.Parse(sql, DbType.Sqlite); }));
     }
 
     [Theory]
@@ -6588,19 +6679,19 @@ order by temp.InxNbr";
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
-                    {
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlNumberExpression()
                             {
-                                Value = 3M,
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    Alias = new SqlIdentifierExpression()
+                                    {
+                                        Value = "pn",
+                                    },
+                                },
                             },
-                            Alias = new SqlIdentifierExpression()
-                            {
-                                Value = "pn",
-                            },
-                        },
-                    },
                         },
                     },
                     UnionType = SqlUnionType.Union,
@@ -6609,19 +6700,19 @@ order by temp.InxNbr";
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
-                    {
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlNumberExpression()
                             {
-                                Value = 2M,
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    Alias = new SqlIdentifierExpression()
+                                    {
+                                        Value = "pn",
+                                    },
+                                },
                             },
-                            Alias = new SqlIdentifierExpression()
-                            {
-                                Value = "pn",
-                            },
-                        },
-                    },
                         },
                     },
                 },
@@ -6631,19 +6722,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 5M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 5M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                     },
                 },
             },
@@ -6660,10 +6751,7 @@ order by temp.InxNbr";
         var sql = @"select 3 as pn union (select 2 as pn order by pn)";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>((() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-        }));
+        Assert.Throws<SqlParsingErrorException>((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
     }
 
     [Theory]
@@ -6842,19 +6930,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 3M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
@@ -6870,19 +6958,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 2M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
@@ -6896,15 +6984,15 @@ order by temp.InxNbr";
             OrderBy = new SqlOrderByExpression()
             {
                 Items = new List<SqlOrderByItemExpression>()
-        {
-            new SqlOrderByItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
                 {
-                    Value = "pn",
+                    new SqlOrderByItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
                 },
-            },
-        },
             },
         };
 
@@ -6931,12 +7019,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlSelectExpression()
                 {
                     Alias = new SqlIdentifierExpression()
@@ -6950,19 +7038,19 @@ order by temp.InxNbr";
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                        {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlNumberExpression()
                                 {
-                                    Value = 3M,
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "pn",
+                                        },
+                                    },
                                 },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "pn",
-                                },
-                            },
-                        },
                             },
                         },
                         UnionType = SqlUnionType.Union,
@@ -6971,19 +7059,19 @@ order by temp.InxNbr";
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                        {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlNumberExpression()
                                 {
-                                    Value = 2M,
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "pn",
+                                        },
+                                    },
                                 },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "pn",
-                                },
-                            },
-                        },
                             },
                         },
                     },
@@ -6993,7 +7081,9 @@ order by temp.InxNbr";
 
         Assert.True(sqlAst.Equals(expect));
         var newSql = sqlAst.ToSql();
-        var expectSql = dbType == DbType.Sqlite ? "select * from (select 3 as pn union select 2 as pn) as b" : "select * from ((select 3 as pn) union (select 2 as pn)) as b";
+        var expectSql = dbType == DbType.Sqlite
+            ? "select * from (select 3 as pn union select 2 as pn) as b"
+            : "select * from ((select 3 as pn) union (select 2 as pn)) as b";
         Assert.Equal(expectSql, newSql);
     }
 
@@ -7014,19 +7104,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 3M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                     },
                 },
                 UnionType = SqlUnionType.Union,
@@ -7039,19 +7129,19 @@ order by temp.InxNbr";
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                        {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlNumberExpression()
                                 {
-                                    Value = 2M,
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "pn",
+                                        },
+                                    },
                                 },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "pn",
-                                },
-                            },
-                        },
                             },
                         },
                         UnionType = SqlUnionType.Except,
@@ -7060,19 +7150,19 @@ order by temp.InxNbr";
                             Query = new SqlSelectQueryExpression()
                             {
                                 Columns = new List<SqlSelectItemExpression>()
-                        {
-                            new SqlSelectItemExpression()
-                            {
-                                Body = new SqlNumberExpression()
                                 {
-                                    Value = 5M,
+                                    new SqlSelectItemExpression()
+                                    {
+                                        Body = new SqlNumberExpression()
+                                        {
+                                            Value = 5M,
+                                        },
+                                        Alias = new SqlIdentifierExpression()
+                                        {
+                                            Value = "pn",
+                                        },
+                                    },
                                 },
-                                Alias = new SqlIdentifierExpression()
-                                {
-                                    Value = "pn",
-                                },
-                            },
-                        },
                             },
                         },
                     },
@@ -7093,10 +7183,7 @@ order by temp.InxNbr";
         var sql = @"select 3 as pn from dual union (select 2 as pn from dual order by pn)";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>((() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.Oracle);
-        }));
+        Assert.Throws<SqlParsingErrorException>((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
     }
 
     [Fact]
@@ -7105,10 +7192,7 @@ order by temp.InxNbr";
         var sql = @"select 3 as pn  union (select 2 as pn ORDER BY pn OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY)";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>((() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.SqlServer);
-        }));
+        Assert.Throws<SqlParsingErrorException>((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
     }
 
     [Fact]
@@ -7128,19 +7212,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 3M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                     },
                 },
                 UnionType = SqlUnionType.Union,
@@ -7149,34 +7233,34 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 2M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                     },
                 },
             },
             OrderBy = new SqlOrderByExpression()
             {
                 Items = new List<SqlOrderByItemExpression>()
-        {
-            new SqlOrderByItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
                 {
-                    Value = "pn",
+                    new SqlOrderByItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
                 },
-            },
-        },
             },
             Limit = new SqlLimitExpression()
             {
@@ -7216,19 +7300,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 3M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 3M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                     },
                 },
                 UnionType = SqlUnionType.Union,
@@ -7237,34 +7321,34 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 2M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                     },
                 },
             },
             OrderBy = new SqlOrderByExpression()
             {
                 Items = new List<SqlOrderByItemExpression>()
-        {
-            new SqlOrderByItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
                 {
-                    Value = "pn",
+                    new SqlOrderByItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "pn",
+                        },
+                    },
                 },
-            },
-        },
             },
             Limit = new SqlLimitExpression()
             {
@@ -7484,19 +7568,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 2M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 2M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
@@ -7512,19 +7596,19 @@ order by temp.InxNbr";
                     Query = new SqlSelectQueryExpression()
                     {
                         Columns = new List<SqlSelectItemExpression>()
-                {
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlNumberExpression()
                         {
-                            Value = 1M,
+                            new SqlSelectItemExpression()
+                            {
+                                Body = new SqlNumberExpression()
+                                {
+                                    Value = 1M,
+                                },
+                                Alias = new SqlIdentifierExpression()
+                                {
+                                    Value = "pn",
+                                },
+                            },
                         },
-                        Alias = new SqlIdentifierExpression()
-                        {
-                            Value = "pn",
-                        },
-                    },
-                },
                         From = new SqlTableExpression()
                         {
                             Name = new SqlIdentifierExpression()
@@ -7547,7 +7631,8 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("((select 2 as pn from dual) union (select 1 as pn from dual)) fetch first 1 rows only", generationSql);
+        Assert.Equal("((select 2 as pn from dual) union (select 1 as pn from dual)) fetch first 1 rows only",
+            generationSql);
     }
 
     [Fact]
@@ -8619,54 +8704,54 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlCaseExpression()
                 {
-                    Items = new List<SqlCaseItemExpression>()
+                    new SqlSelectItemExpression()
                     {
-                        new SqlCaseItemExpression()
+                        Body = new SqlCaseExpression()
                         {
-                            Condition = new SqlStringExpression()
+                            Items = new List<SqlCaseItemExpression>()
                             {
-                                Value = "4276a4b28080450dab41420407a683e4",
+                                new SqlCaseItemExpression()
+                                {
+                                    Condition = new SqlStringExpression()
+                                    {
+                                        Value = "4276a4b28080450dab41420407a683e4",
+                                    },
+                                    Value = new SqlStringExpression()
+                                    {
+                                        Value = "1",
+                                    },
+                                },
+                                new SqlCaseItemExpression()
+                                {
+                                    Condition = new SqlStringExpression()
+                                    {
+                                        Value = "5b355c4a62f643908acb5315acf769fc",
+                                    },
+                                    Value = new SqlStringExpression()
+                                    {
+                                        Value = "2",
+                                    },
+                                },
                             },
-                            Value = new SqlStringExpression()
+                            Else = new SqlStringExpression()
                             {
-                                Value = "1",
+                                Value = "0",
                             },
-                        },
-                        new SqlCaseItemExpression()
-                        {
-                            Condition = new SqlStringExpression()
+                            Value = new SqlPropertyExpression()
                             {
-                                Value = "5b355c4a62f643908acb5315acf769fc",
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "city",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
                             },
-                            Value = new SqlStringExpression()
-                            {
-                                Value = "2",
-                            },
-                        },
-                    },
-                    Else = new SqlStringExpression()
-                    {
-                        Value = "0",
-                    },
-                    Value = new SqlPropertyExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "city",
-                        },
-                        Table = new SqlIdentifierExpression()
-                        {
-                            Value = "a",
                         },
                     },
                 },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -10078,12 +10163,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -10305,7 +10390,6 @@ order by temp.InxNbr";
         };
 
 
-
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
@@ -10316,7 +10400,8 @@ order by temp.InxNbr";
     [Fact]
     public void TestDatabaseScheme6()
     {
-        var sql = "select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on(a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName";
+        var sql =
+            "select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on(a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -10327,87 +10412,87 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "Id",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "a",
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "LTRIM",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlBinaryExpression()
+                        Body = new SqlPropertyExpression()
                         {
-                            Left = new SqlBinaryExpression()
+                            Name = new SqlIdentifierExpression()
                             {
-                                Left = new SqlPropertyExpression()
+                                Value = "Id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "LTRIM",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlBinaryExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
+                                    Left = new SqlBinaryExpression()
                                     {
-                                        Value = "OrganizationName",
+                                        Left = new SqlPropertyExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "OrganizationName",
+                                            },
+                                            Table = new SqlIdentifierExpression()
+                                            {
+                                                Value = "a",
+                                            },
+                                        },
+                                        Operator = SqlBinaryOperator.Concat,
+                                        Right = new SqlStringExpression()
+                                        {
+                                            Value = " / "
+                                        },
                                     },
-                                    Table = new SqlIdentifierExpression()
+                                    Operator = SqlBinaryOperator.Concat,
+                                    Right = new SqlPropertyExpression()
                                     {
-                                        Value = "a",
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "TeacherName",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "a",
+                                        },
                                     },
-                                },
-                                Operator = SqlBinaryOperator.Concat,
-                                Right = new SqlStringExpression()
-                                {
-                                    Value = " / "
                                 },
                             },
-                            Operator = SqlBinaryOperator.Concat,
-                            Right = new SqlPropertyExpression()
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "OrganizationName",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
                             {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "TeacherName",
-                                },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "a",
-                                },
+                                Value = "Total",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "a",
                             },
                         },
                     },
                 },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "OrganizationName",
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "Total",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "a",
-                    },
-                },
-            },
-        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -10489,36 +10574,36 @@ order by temp.InxNbr";
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "InxNbr",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "InxNbr",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "o",
+                                },
+                            },
                         },
-                        Table = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "o",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "TeacherName",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                            },
                         },
                     },
-                },
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "TeacherName",
-                        },
-                        Table = new SqlIdentifierExpression()
-                        {
-                            Value = "a",
-                        },
-                    },
-                },
-            },
                 },
             },
         };
@@ -10526,7 +10611,8 @@ order by temp.InxNbr";
         Assert.True(sqlAst.Equals(expect));
 
         var newSql = sqlAst.ToSql();
-        Assert.Equal("select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on (a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName",
+        Assert.Equal(
+            "select a.Id, LTRIM(((a.OrganizationName || ' / ') || a.TeacherName)) as OrganizationName, a.Total from \"public\".\"RewardDocPersonSummary\"@\"winter.fixform\" as a inner join \"public\".Organization@\"winter.school\" as o on (a.OrganizationId = o.Id) order by o.InxNbr, a.TeacherName",
             newSql);
     }
 
@@ -11811,33 +11897,33 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
                 {
-                    Value = "year",
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "year",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "1",
+                            LeftQualifiers = "[",
+                            RightQualifiers = "]",
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlIdentifierExpression()
+                        {
+                            Value = "2",
+                            LeftQualifiers = "[",
+                            RightQualifiers = "]",
+                        },
+                    },
                 },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
-                {
-                    Value = "1",
-                    LeftQualifiers = "[",
-                    RightQualifiers = "]",
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlIdentifierExpression()
-                {
-                    Value = "2",
-                    LeftQualifiers = "[",
-                    RightQualifiers = "]",
-                },
-            },
-        },
                 From = new SqlPivotTableExpression()
                 {
                     Alias = new SqlIdentifierExpression()
@@ -11857,12 +11943,12 @@ order by temp.InxNbr";
                             Value = "sum",
                         },
                         Arguments = new List<SqlExpression>()
-                {
-                    new SqlIdentifierExpression()
-                    {
-                        Value = "amount",
-                    },
-                },
+                        {
+                            new SqlIdentifierExpression()
+                            {
+                                Value = "amount",
+                            },
+                        },
                     },
                     SubQuery = new SqlSelectExpression()
                     {
@@ -11873,54 +11959,54 @@ order by temp.InxNbr";
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
-                    {
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
                             {
-                                Name = new SqlIdentifierExpression()
+                                new SqlSelectItemExpression()
                                 {
-                                    Value = "year",
-                                    LeftQualifiers = "[",
-                                    RightQualifiers = "]",
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "year",
+                                            LeftQualifiers = "[",
+                                            RightQualifiers = "]",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t",
+                                        },
+                                    },
                                 },
-                                Table = new SqlIdentifierExpression()
+                                new SqlSelectItemExpression()
                                 {
-                                    Value = "t",
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "month",
+                                            LeftQualifiers = "[",
+                                            RightQualifiers = "]",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t",
+                                        },
+                                    },
+                                },
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "amount",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "t",
+                                        },
+                                    },
                                 },
                             },
-                        },
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "month",
-                                    LeftQualifiers = "[",
-                                    RightQualifiers = "]",
-                                },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "t",
-                                },
-                            },
-                        },
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "amount",
-                                },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "t",
-                                },
-                            },
-                        },
-                    },
                             From = new SqlTableExpression()
                             {
                                 Name = new SqlIdentifierExpression()
@@ -11935,26 +12021,26 @@ order by temp.InxNbr";
                         },
                     },
                     In = new List<SqlExpression>()
-            {
-                    new SqlSelectItemExpression()
                     {
-                        Body = new SqlIdentifierExpression()
+                        new SqlSelectItemExpression()
                         {
-                            Value = "1",
-                            LeftQualifiers = "[",
-                            RightQualifiers = "]",
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "1",
+                                LeftQualifiers = "[",
+                                RightQualifiers = "]",
+                            },
+                        },
+                        new SqlSelectItemExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "2",
+                                LeftQualifiers = "[",
+                                RightQualifiers = "]",
+                            },
                         },
                     },
-                    new SqlSelectItemExpression()
-                    {
-                        Body = new SqlIdentifierExpression()
-                        {
-                            Value = "2",
-                            LeftQualifiers = "[",
-                            RightQualifiers = "]",
-                        },
-                    },
-            },
                 },
             },
         };
@@ -12902,7 +12988,6 @@ order by temp.InxNbr";
         };
 
 
-
         Assert.True(sqlAst.Equals(expect));
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.Oracle);
         sqlAst.Accept(sqlGenerationAstVisitor);
@@ -12951,7 +13036,6 @@ order by temp.InxNbr";
                 },
             },
         };
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -13539,73 +13623,60 @@ order by temp.InxNbr";
         testOutputHelper.WriteLine("time:" + t);
 
         var result = sqlAst.ToFormat();
-
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlBinaryExpression()
                 {
-                    Left = new SqlStringExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "101"
-                    },
-                    Operator = SqlBinaryOperator.EqualTo,
-                    Right = new SqlBinaryExpression()
-                    {
-                        Left = new SqlStringExpression()
+                        Body = new SqlBinaryExpression()
                         {
-                            Value = "1"
-                        },
-                        Operator = SqlBinaryOperator.Concat,
-                        Right = new SqlFunctionCallExpression()
-                        {
-                            Name = new SqlIdentifierExpression()
+                            Left = new SqlStringExpression()
                             {
-                                Value = "cast",
+                                Value = "101",
                             },
-                            Arguments = new List<SqlExpression>()
+                            Operator = SqlBinaryOperator.EqualTo,
+                            Right = new SqlBinaryExpression()
                             {
-                                new SqlFunctionCallExpression()
+                                Left = new SqlStringExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "cast",
-                                    },
-                                    Arguments = new List<SqlExpression>()
-                                    {
-                                        new SqlStringExpression()
-                                        {
-                                            Value = "01"
-                                        },
-                                    },
-                                    CaseAsTargetType = new SqlIdentifierExpression()
-                                    {
-                                        Value = "bit varying",
-                                    },
+                                    Value = "1",
                                 },
-                            },
-                            CaseAsTargetType = new SqlIdentifierExpression()
-                            {
-                                Value = "varchar",
+                                Operator = SqlBinaryOperator.Concat,
+                                Right = new SqlCastAsExpression()
+                                {
+                                    Body = new SqlCastAsExpression()
+                                    {
+                                        Body = new SqlStringExpression()
+                                        {
+                                            Value = "01",
+                                        },
+                                        TargetType = new SqlIdentifierExpression()
+                                        {
+                                            Value = "bit varying",
+                                        },
+                                        FunctionType = CastAsFunctionType.ColonColon,
+                                    },
+                                    TargetType = new SqlIdentifierExpression()
+                                    {
+                                        Value = "varchar",
+                                    },
+                                    FunctionType = CastAsFunctionType.ColonColon,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-            },
         };
 
         Assert.True(sqlAst.Equals(expect));
 
-        var generationSql =  sqlAst.ToSql();
+        var generationSql = sqlAst.ToSql();
         Assert.Equal(
-            "select ('101' = ('1' || cast(cast('01' as bit varying) as varchar)))",
+            "select ('101' = ('1' || '01'::bit varying::varchar))",
             generationSql);
     }
 
@@ -13813,7 +13884,8 @@ order by temp.InxNbr";
     [Fact]
     public void TestHintsForSqlServer2()
     {
-        var sql = "select * from FlowStartUpSetting a with  (TABLOCK ,  FORCESEEK) join FlowStartUpReadyEmployee b on a.Id = b.FlowStartUpSettingId";
+        var sql =
+            "select * from FlowStartUpSetting a with  (TABLOCK ,  FORCESEEK) join FlowStartUpReadyEmployee b on a.Id = b.FlowStartUpSettingId";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -13826,12 +13898,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -13845,15 +13917,15 @@ order by temp.InxNbr";
                             Value = "a",
                         },
                         Hints = new List<SqlHintExpression>()
-                {
-                    new SqlHintExpression()
-                    {
-                        Body = new SqlIdentifierExpression()
                         {
-                            Value = "with  (TABLOCK ,  FORCESEEK)",
+                            new SqlHintExpression()
+                            {
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "with  (TABLOCK ,  FORCESEEK)",
+                                },
+                            },
                         },
-                    },
-                },
                     },
                     JoinType = SqlJoinType.InnerJoin,
                     Right = new SqlTableExpression()
@@ -13902,7 +13974,9 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from FlowStartUpSetting as a with  (TABLOCK ,  FORCESEEK) inner join FlowStartUpReadyEmployee as b on (a.Id = b.FlowStartUpSettingId)", generationSql);
+        Assert.Equal(
+            "select * from FlowStartUpSetting as a with  (TABLOCK ,  FORCESEEK) inner join FlowStartUpReadyEmployee as b on (a.Id = b.FlowStartUpSettingId)",
+            generationSql);
     }
 
     [Fact]
@@ -13965,7 +14039,8 @@ order by temp.InxNbr";
         var sqlGenerationAstVisitor = new SqlGenerationAstVisitor(DbType.SqlServer);
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
-        Assert.Equal("select * from FlowStartUpSetting where (active = @active) OPTION (OPTIMIZE FOR (@active =0))", generationSql);
+        Assert.Equal("select * from FlowStartUpSetting where (active = @active) OPTION (OPTIMIZE FOR (@active =0))",
+            generationSql);
     }
 
     [Fact]
@@ -14210,6 +14285,7 @@ order by temp.InxNbr";
                 allColumns.Add(column.ToSql());
             }
         }
+
         Assert.Equal(3, allColumns.Count);
         Assert.Equal("''' '''", allColumns[0]);
         Assert.Equal("3", allColumns[1]);
@@ -14219,7 +14295,8 @@ order by temp.InxNbr";
     [Fact]
     public void TestToSql2()
     {
-        var sql = "SELECT * FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY bill_code ORDER BY seq_date DESC) as rn FROM bill_sequence t) ranked WHERE rn <= 4 ORDER BY bill_code, seq_date DESC;";
+        var sql =
+            "SELECT * FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY bill_code ORDER BY seq_date DESC) as rn FROM bill_sequence t) ranked WHERE rn <= 4 ORDER BY bill_code, seq_date DESC;";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -14228,7 +14305,9 @@ order by temp.InxNbr";
                 is SqlSelectQueryExpression a && a.From is SqlSelectExpression b)
         {
             var fromSql = b.ToSql();
-            Assert.Equal("(select t.*, ROW_NUMBER() over (partition by bill_code order by seq_date desc) as rn from bill_sequence as t) as ranked", fromSql);
+            Assert.Equal(
+                "(select t.*, ROW_NUMBER() over (partition by bill_code order by seq_date desc) as rn from bill_sequence as t) as ranked",
+                fromSql);
         }
     }
 
@@ -14359,52 +14438,52 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAtTimeZoneExpression()
                 {
-                    Body = new SqlSelectExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Query = new SqlSelectQueryExpression()
+                        Body = new SqlAtTimeZoneExpression()
                         {
-                            Columns = new List<SqlSelectItemExpression>()
+                            Body = new SqlSelectExpression()
                             {
-                                new SqlSelectItemExpression()
+                                Query = new SqlSelectQueryExpression()
                                 {
-                                    Body = new SqlIdentifierExpression()
+                                    Columns = new List<SqlSelectItemExpression>()
                                     {
-                                        Value = "order_date",
+                                        new SqlSelectItemExpression()
+                                        {
+                                            Body = new SqlIdentifierExpression()
+                                            {
+                                                Value = "order_date",
+                                            },
+                                            Alias = new SqlIdentifierExpression()
+                                            {
+                                                Value = "b",
+                                            },
+                                        },
                                     },
-                                    Alias = new SqlIdentifierExpression()
+                                    From = new SqlTableExpression()
                                     {
-                                        Value = "b",
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "orders",
+                                        },
+                                    },
+                                    Limit = new SqlLimitExpression()
+                                    {
+                                        RowCount = new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
                                     },
                                 },
                             },
-                            From = new SqlTableExpression()
+                            TimeZone = new SqlStringExpression()
                             {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "orders",
-                                },
-                            },
-                            Limit = new SqlLimitExpression()
-                            {
-                                RowCount = new SqlNumberExpression()
-                                {
-                                    Value = 1M,
-                                },
+                                Value = "Asia/ShangHai"
                             },
                         },
                     },
-                    TimeZone = new SqlStringExpression()
-                    {
-                        Value = "Asia/ShangHai"
-                    },
                 },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -14427,7 +14506,8 @@ order by temp.InxNbr";
     [Fact]
     public void TestAtTimeZone4()
     {
-        var sql = @"SELECT order_date at TIME zone 'Asia/ShangHai' as b FROM orders2 where date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai'))= '2023-04-19 03:11'::timestamp";
+        var sql =
+            @"SELECT order_date at TIME zone 'Asia/ShangHai' as b FROM orders2 where date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai'))= '2023-04-19 03:11'::timestamp";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -14438,26 +14518,26 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAtTimeZoneExpression()
                 {
-                    Body = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "order_date",
-                    },
-                    TimeZone = new SqlStringExpression()
-                    {
-                        Value = "Asia/ShangHai",
+                        Body = new SqlAtTimeZoneExpression()
+                        {
+                            Body = new SqlIdentifierExpression()
+                            {
+                                Value = "order_date",
+                            },
+                            TimeZone = new SqlStringExpression()
+                            {
+                                Value = "Asia/ShangHai",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
                     },
                 },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "b",
-                },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -14474,23 +14554,23 @@ order by temp.InxNbr";
                             Value = "date_trunc",
                         },
                         Arguments = new List<SqlExpression>()
-                {
-                    new SqlStringExpression()
-                    {
-                        Value = "minute",
-                    },
-                    new SqlAtTimeZoneExpression()
-                    {
-                        Body = new SqlIdentifierExpression()
                         {
-                            Value = "order_date",
+                            new SqlStringExpression()
+                            {
+                                Value = "minute",
+                            },
+                            new SqlAtTimeZoneExpression()
+                            {
+                                Body = new SqlIdentifierExpression()
+                                {
+                                    Value = "order_date",
+                                },
+                                TimeZone = new SqlStringExpression()
+                                {
+                                    Value = "Asia/ShangHai",
+                                },
+                            },
                         },
-                        TimeZone = new SqlStringExpression()
-                        {
-                            Value = "Asia/ShangHai",
-                        },
-                    },
-                },
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlCastAsExpression()
@@ -14520,7 +14600,8 @@ order by temp.InxNbr";
     [Fact]
     public void TestAtTimeZone5()
     {
-        var sql = @"SELECT date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai')) at TIME zone 'Asia/ShangHai' as b FROM orders2 where date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai'))= '2023-04-19 03:11'::timestamp";
+        var sql =
+            @"SELECT date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai')) at TIME zone 'Asia/ShangHai' as b FROM orders2 where date_trunc('minute',(order_date at TIME zone 'Asia/ShangHai'))= '2023-04-19 03:11'::timestamp";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -14531,12 +14612,57 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAtTimeZoneExpression()
                 {
-                    Body = new SqlFunctionCallExpression()
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAtTimeZoneExpression()
+                        {
+                            Body = new SqlFunctionCallExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "date_trunc",
+                                },
+                                Arguments = new List<SqlExpression>()
+                                {
+                                    new SqlStringExpression()
+                                    {
+                                        Value = "minute",
+                                    },
+                                    new SqlAtTimeZoneExpression()
+                                    {
+                                        Body = new SqlIdentifierExpression()
+                                        {
+                                            Value = "order_date",
+                                        },
+                                        TimeZone = new SqlStringExpression()
+                                        {
+                                            Value = "Asia/ShangHai",
+                                        },
+                                    },
+                                },
+                            },
+                            TimeZone = new SqlStringExpression()
+                            {
+                                Value = "Asia/ShangHai",
+                            },
+                        },
+                        Alias = new SqlIdentifierExpression()
+                        {
+                            Value = "b",
+                        },
+                    },
+                },
+                From = new SqlTableExpression()
+                {
+                    Name = new SqlIdentifierExpression()
+                    {
+                        Value = "orders2",
+                    },
+                },
+                Where = new SqlBinaryExpression()
+                {
+                    Left = new SqlFunctionCallExpression()
                     {
                         Name = new SqlIdentifierExpression()
                         {
@@ -14560,51 +14686,6 @@ order by temp.InxNbr";
                                 },
                             },
                         },
-                    },
-                    TimeZone = new SqlStringExpression()
-                    {
-                        Value = "Asia/ShangHai",
-                    },
-                },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "b",
-                },
-            },
-        },
-                From = new SqlTableExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "orders2",
-                    },
-                },
-                Where = new SqlBinaryExpression()
-                {
-                    Left = new SqlFunctionCallExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "date_trunc",
-                        },
-                        Arguments = new List<SqlExpression>()
-                {
-                    new SqlStringExpression()
-                    {
-                        Value = "minute",
-                    },
-                    new SqlAtTimeZoneExpression()
-                    {
-                        Body = new SqlIdentifierExpression()
-                        {
-                            Value = "order_date",
-                        },
-                        TimeZone = new SqlStringExpression()
-                        {
-                            Value = "Asia/ShangHai",
-                        },
-                    },
-                },
                     },
                     Operator = SqlBinaryOperator.EqualTo,
                     Right = new SqlCastAsExpression()
@@ -15219,7 +15300,6 @@ order by temp.InxNbr";
             testOutputHelper.WriteLine("time:" + t);
             var result = sqlAst.ToFormat();
         });
-
     }
 
     [Fact]
@@ -15578,12 +15658,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -15670,6 +15750,7 @@ order by temp.InxNbr";
             "select * from test3 as t where ((t.a = 'a') or ((t.b = '2') and (t.c = '3')))",
             generationSql);
     }
+
     [Fact]
     public void TestLogical2()
     {
@@ -15684,12 +15765,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -15771,12 +15852,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -15858,12 +15939,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -15994,10 +16075,7 @@ order by temp.InxNbr";
         var sql = @"select t.a from  from test3 as t";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>(() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
-        });
+        Assert.Throws<SqlParsingErrorException>(() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); });
     }
 
     [Fact]
@@ -16006,10 +16084,7 @@ order by temp.InxNbr";
         var sql = @"select c.Id as from from customer c";
         var sqlAst = new SqlExpression();
 
-        Assert.Throws<SqlParsingErrorException>(() =>
-        {
-            sqlAst = DbUtils.Parse(sql, DbType.MySql);
-        });
+        Assert.Throws<SqlParsingErrorException>(() => { sqlAst = DbUtils.Parse(sql, DbType.MySql); });
     }
 
     [Theory]
@@ -16048,17 +16123,18 @@ order by temp.InxNbr";
                 };
                 break;
         }
+
         var expect = new SqlSelectExpression()
         {
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -16073,43 +16149,43 @@ order by temp.InxNbr";
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "a",
-                        },
-                        Table = new SqlIdentifierExpression()
-                        {
-                            Value = "t",
-                        },
-                        Collate = new SqlCollateExpression()
-                        {
-                            Body = body
-                        },
-                    },
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "a",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                                Collate = new SqlCollateExpression()
+                                {
+                                    Body = body
+                                },
+                            },
 
-                    OrderByType = SqlOrderByType.Desc,
-                },
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "b",
+                            OrderByType = SqlOrderByType.Desc,
                         },
-                        Table = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "t",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "b",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "t",
+                                },
+                            },
+                            OrderByType = SqlOrderByType.Desc,
                         },
                     },
-                    OrderByType = SqlOrderByType.Desc,
-                },
-            },
                 },
             },
         };
@@ -16130,7 +16206,8 @@ order by temp.InxNbr";
     [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
     public void TestCollate2(DbType dbType, string sortingRules)
     {
-        var sql = $"SELECT * FROM test3 t  WHERE t.a='a'  COLLATE {sortingRules} and t.b !='c' COLLATE {sortingRules}   and t.c like '%c%' COLLATE {sortingRules};";
+        var sql =
+            $"SELECT * FROM test3 t  WHERE t.a='a'  COLLATE {sortingRules} and t.b !='c' COLLATE {sortingRules}   and t.c like '%c%' COLLATE {sortingRules};";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -16166,12 +16243,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -16268,7 +16345,9 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select * from test3{asStr}t where (((t.a = 'a' collate {sortingRules}) and (t.b != 'c' collate {sortingRules})) and (t.c like '%c%' collate {sortingRules}))", generationSql);
+        Assert.Equal(
+            $"select * from test3{asStr}t where (((t.a = 'a' collate {sortingRules}) and (t.b != 'c' collate {sortingRules})) and (t.c like '%c%' collate {sortingRules}))",
+            generationSql);
     }
 
     [Theory]
@@ -16314,32 +16393,32 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "max",
-                    },
-                    Arguments = new List<SqlExpression>()
-                    {
-                        new SqlPropertyExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
                             Name = new SqlIdentifierExpression()
                             {
-                                Value = "a",
+                                Value = "max",
                             },
-                            Table = new SqlIdentifierExpression()
+                            Arguments = new List<SqlExpression>()
                             {
-                                Value = "t",
+                                new SqlPropertyExpression()
+                                {
+                                    Name = new SqlIdentifierExpression()
+                                    {
+                                        Value = "a",
+                                    },
+                                    Table = new SqlIdentifierExpression()
+                                    {
+                                        Value = "t",
+                                    },
+                                },
                             },
                         },
                     },
                 },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -16354,31 +16433,31 @@ order by temp.InxNbr";
                 GroupBy = new SqlGroupByExpression()
                 {
                     Items = new List<SqlExpression>()
-            {
-            new SqlIdentifierExpression()
-            {
-                Value = "a",
-                Collate = new SqlCollateExpression()
-                {
-                    Body = body
-                },
-            },
-            new SqlPropertyExpression()
-            {
-                Name = new SqlIdentifierExpression()
-                {
-                    Value = "b",
-                },
-                Table = new SqlIdentifierExpression()
-                {
-                    Value = "t",
-                },
-                Collate = new SqlCollateExpression()
-                {
-                    Body = body
-                },
-            },
-            },
+                    {
+                        new SqlIdentifierExpression()
+                        {
+                            Value = "a",
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body
+                            },
+                        },
+                        new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "b",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "t",
+                            },
+                            Collate = new SqlCollateExpression()
+                            {
+                                Body = body
+                            },
+                        },
+                    },
                 },
             },
         };
@@ -16388,7 +16467,9 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select max(t.a) from test3{asStr}t group by a collate {sortingRules}, t.b collate {sortingRules}", generationSql);
+        Assert.Equal(
+            $"select max(t.a) from test3{asStr}t group by a collate {sortingRules}, t.b collate {sortingRules}",
+            generationSql);
     }
 
     [Theory]
@@ -16487,7 +16568,6 @@ order by temp.InxNbr";
         };
 
 
-
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
@@ -16503,7 +16583,8 @@ order by temp.InxNbr";
     [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
     public void TestCollate5(DbType dbType, string sortingRules)
     {
-        var sql = $"SELECT RANK() OVER (partition by t.a COLLATE {sortingRules} ORDER BY t.a   COLLATE {sortingRules} DESC) AS a FROM test3 t ;";
+        var sql =
+            $"SELECT RANK() OVER (partition by t.a COLLATE {sortingRules} ORDER BY t.a   COLLATE {sortingRules} DESC) AS a FROM test3 t ;";
 
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
@@ -16539,71 +16620,71 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlFunctionCallExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "RANK",
-                    },
-                    Over = new SqlOverExpression()
-                    {
-                        PartitionBy = new SqlPartitionByExpression()
+                        Body = new SqlFunctionCallExpression()
                         {
-                            Items = new List<SqlExpression>()
+                            Name = new SqlIdentifierExpression()
                             {
-                                new SqlPropertyExpression()
+                                Value = "RANK",
+                            },
+                            Over = new SqlOverExpression()
+                            {
+                                PartitionBy = new SqlPartitionByExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
+                                    Items = new List<SqlExpression>()
                                     {
-                                        Value = "a",
+                                        new SqlPropertyExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "a",
+                                            },
+                                            Table = new SqlIdentifierExpression()
+                                            {
+                                                Value = "t",
+                                            },
+                                            Collate = new SqlCollateExpression()
+                                            {
+                                                Body = body
+                                            },
+                                        },
                                     },
-                                    Table = new SqlIdentifierExpression()
+                                },
+                                OrderBy = new SqlOrderByExpression()
+                                {
+                                    Items = new List<SqlOrderByItemExpression>()
                                     {
-                                        Value = "t",
-                                    },
-                                    Collate = new SqlCollateExpression()
-                                    {
-                                        Body = body
+                                        new SqlOrderByItemExpression()
+                                        {
+                                            Body = new SqlPropertyExpression()
+                                            {
+                                                Name = new SqlIdentifierExpression()
+                                                {
+                                                    Value = "a",
+                                                },
+                                                Table = new SqlIdentifierExpression()
+                                                {
+                                                    Value = "t",
+                                                },
+                                                Collate = new SqlCollateExpression()
+                                                {
+                                                    Body = body
+                                                },
+                                            },
+                                            OrderByType = SqlOrderByType.Desc,
+                                        },
                                     },
                                 },
                             },
                         },
-                        OrderBy = new SqlOrderByExpression()
+                        Alias = new SqlIdentifierExpression()
                         {
-                            Items = new List<SqlOrderByItemExpression>()
-                            {
-                                new SqlOrderByItemExpression()
-                                {
-                                    Body = new SqlPropertyExpression()
-                                    {
-                                        Name = new SqlIdentifierExpression()
-                                        {
-                                            Value = "a",
-                                        },
-                                        Table = new SqlIdentifierExpression()
-                                        {
-                                            Value = "t",
-                                        },
-                                        Collate = new SqlCollateExpression()
-                                        {
-                                            Body = body
-                                        },
-                                    },
-                                    OrderByType = SqlOrderByType.Desc,
-                                },
-                            },
+                            Value = "a",
                         },
                     },
                 },
-                Alias = new SqlIdentifierExpression()
-                {
-                    Value = "a",
-                },
-            },
-        },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -16622,7 +16703,9 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select RANK() over (partition by t.a collate {sortingRules} order by t.a collate {sortingRules} desc) as a from test3{asStr}t", generationSql);
+        Assert.Equal(
+            $"select RANK() over (partition by t.a collate {sortingRules} order by t.a collate {sortingRules} desc) as a from test3{asStr}t",
+            generationSql);
     }
 
     [Theory]
@@ -16633,7 +16716,8 @@ order by temp.InxNbr";
     [InlineData(DbType.Oracle, "\"USING_NLS_COMP\"")]
     public void TestCollate6(DbType dbType, string sortingRules)
     {
-        var sql = $"SELECT * FROM test3 t  WHERE t.a COLLATE {sortingRules} ='a'   and t.b COLLATE {sortingRules} !='c' and t.c COLLATE {sortingRules} like '%c%' ;";
+        var sql =
+            $"SELECT * FROM test3 t  WHERE t.a COLLATE {sortingRules} ='a'   and t.b COLLATE {sortingRules} !='c' and t.c COLLATE {sortingRules} like '%c%' ;";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, dbType); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -16668,12 +16752,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -16770,7 +16854,9 @@ order by temp.InxNbr";
 
         var generationSql = sqlAst.ToSql();
         var asStr = dbType == DbType.Oracle ? " " : " as ";
-        Assert.Equal($"select * from test3{asStr}t where (((t.a collate {sortingRules} = 'a') and (t.b collate {sortingRules} != 'c')) and (t.c collate {sortingRules} like '%c%'))", generationSql);
+        Assert.Equal(
+            $"select * from test3{asStr}t where (((t.a collate {sortingRules} = 'a') and (t.b collate {sortingRules} != 'c')) and (t.c collate {sortingRules} like '%c%'))",
+            generationSql);
     }
 
     [Theory]
@@ -17173,7 +17259,6 @@ order by temp.InxNbr";
         {
             throw new NotSupportedException();
         }
-
     }
 
     [Fact]
@@ -17233,7 +17318,6 @@ order by temp.InxNbr";
         };
 
 
-
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
@@ -17281,8 +17365,6 @@ order by temp.InxNbr";
                 },
             },
         };
-
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -17348,59 +17430,59 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlArrayExpression()
                 {
-                    Items = new List<SqlExpression>()
+                    new SqlSelectItemExpression()
                     {
-                        new SqlArrayExpression()
+                        Body = new SqlArrayExpression()
                         {
                             Items = new List<SqlExpression>()
                             {
-                                new SqlNumberExpression()
+                                new SqlArrayExpression()
                                 {
-                                    Value = 1M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                    },
                                 },
-                                new SqlNumberExpression()
+                                new SqlArrayExpression()
                                 {
-                                    Value = 2M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                    },
                                 },
-                            },
-                        },
-                        new SqlArrayExpression()
-                        {
-                            Items = new List<SqlExpression>()
-                            {
-                                new SqlNumberExpression()
+                                new SqlArrayExpression()
                                 {
-                                    Value = 3M,
-                                },
-                                new SqlNumberExpression()
-                                {
-                                    Value = 4M,
-                                },
-                            },
-                        },
-                        new SqlArrayExpression()
-                        {
-                            Items = new List<SqlExpression>()
-                            {
-                                new SqlNumberExpression()
-                                {
-                                    Value = 5M,
-                                },
-                                new SqlNumberExpression()
-                                {
-                                    Value = 6M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 5M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 6M,
+                                        },
+                                    },
                                 },
                             },
                         },
                     },
                 },
-            },
-        },
             },
         };
 
@@ -17427,59 +17509,59 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlArrayExpression()
                 {
-                    Items = new List<SqlExpression>()
+                    new SqlSelectItemExpression()
                     {
-                        new SqlArrayExpression()
+                        Body = new SqlArrayExpression()
                         {
                             Items = new List<SqlExpression>()
                             {
-                                new SqlNumberExpression()
+                                new SqlArrayExpression()
                                 {
-                                    Value = 1M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                    },
                                 },
-                                new SqlNumberExpression()
+                                new SqlArrayExpression()
                                 {
-                                    Value = 2M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                    },
                                 },
-                            },
-                        },
-                        new SqlArrayExpression()
-                        {
-                            Items = new List<SqlExpression>()
-                            {
-                                new SqlNumberExpression()
+                                new SqlArrayExpression()
                                 {
-                                    Value = 3M,
-                                },
-                                new SqlNumberExpression()
-                                {
-                                    Value = 4M,
-                                },
-                            },
-                        },
-                        new SqlArrayExpression()
-                        {
-                            Items = new List<SqlExpression>()
-                            {
-                                new SqlNumberExpression()
-                                {
-                                    Value = 5M,
-                                },
-                                new SqlNumberExpression()
-                                {
-                                    Value = 6M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 5M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 6M,
+                                        },
+                                    },
                                 },
                             },
                         },
                     },
                 },
-            },
-        },
             },
         };
 
@@ -17545,7 +17627,6 @@ order by temp.InxNbr";
                 },
             },
         };
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -17662,9 +17743,6 @@ order by temp.InxNbr";
                 },
             },
         };
-
-
-
 
 
         Assert.True(sqlAst.Equals(expect));
@@ -18566,69 +18644,69 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlBinaryExpression()
                 {
-                    Left = new SqlBinaryExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Left = new SqlArrayExpression()
+                        Body = new SqlBinaryExpression()
                         {
-                            Items = new List<SqlExpression>()
+                            Left = new SqlBinaryExpression()
                             {
-                                new SqlNumberExpression()
+                                Left = new SqlArrayExpression()
                                 {
-                                    Value = 1M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 1M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 2M,
+                                        },
+                                    },
                                 },
-                                new SqlNumberExpression()
+                                Operator = SqlBinaryOperator.Concat,
+                                Right = new SqlArrayExpression()
                                 {
-                                    Value = 2M,
+                                    Items = new List<SqlExpression>()
+                                    {
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 3M,
+                                        },
+                                        new SqlNumberExpression()
+                                        {
+                                            Value = 4M,
+                                        },
+                                    },
                                 },
                             },
-                        },
-                        Operator = SqlBinaryOperator.Concat,
-                        Right = new SqlArrayExpression()
-                        {
-                            Items = new List<SqlExpression>()
+                            Operator = SqlBinaryOperator.ArrayContainsForPg,
+                            Right = new SqlArrayExpression()
                             {
-                                new SqlNumberExpression()
+                                Items = new List<SqlExpression>()
                                 {
-                                    Value = 3M,
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 1M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 2M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 3M,
+                                    },
+                                    new SqlNumberExpression()
+                                    {
+                                        Value = 4M,
+                                    },
                                 },
-                                new SqlNumberExpression()
-                                {
-                                    Value = 4M,
-                                },
-                            },
-                        },
-                    },
-                    Operator = SqlBinaryOperator.ArrayContainsForPg,
-                    Right = new SqlArrayExpression()
-                    {
-                        Items = new List<SqlExpression>()
-                        {
-                            new SqlNumberExpression()
-                            {
-                                Value = 1M,
-                            },
-                            new SqlNumberExpression()
-                            {
-                                Value = 2M,
-                            },
-                            new SqlNumberExpression()
-                            {
-                                Value = 3M,
-                            },
-                            new SqlNumberExpression()
-                            {
-                                Value = 4M,
                             },
                         },
                     },
                 },
-            },
-        },
             },
         };
 
@@ -18760,6 +18838,7 @@ order by temp.InxNbr";
             $"select (array[1,2,3])[2]",
             generationSql);
     }
+
     [Fact]
     public void TestArrayIndexForPgsq2()
     {
@@ -18773,73 +18852,73 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlArrayIndexExpression()
                 {
-                    Body = new SqlArrayIndexExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Body = new SqlArrayExpression()
+                        Body = new SqlArrayIndexExpression()
                         {
-                            Items = new List<SqlExpression>()
+                            Body = new SqlArrayIndexExpression()
                             {
-                                new SqlArrayExpression()
+                                Body = new SqlArrayExpression()
                                 {
                                     Items = new List<SqlExpression>()
                                     {
-                                        new SqlNumberExpression()
+                                        new SqlArrayExpression()
                                         {
-                                            Value = 1M,
+                                            Items = new List<SqlExpression>()
+                                            {
+                                                new SqlNumberExpression()
+                                                {
+                                                    Value = 1M,
+                                                },
+                                                new SqlNumberExpression()
+                                                {
+                                                    Value = 2M,
+                                                },
+                                            },
                                         },
-                                        new SqlNumberExpression()
+                                        new SqlArrayExpression()
                                         {
-                                            Value = 2M,
+                                            Items = new List<SqlExpression>()
+                                            {
+                                                new SqlNumberExpression()
+                                                {
+                                                    Value = 3M,
+                                                },
+                                                new SqlNumberExpression()
+                                                {
+                                                    Value = 4M,
+                                                },
+                                            },
+                                        },
+                                        new SqlArrayExpression()
+                                        {
+                                            Items = new List<SqlExpression>()
+                                            {
+                                                new SqlNumberExpression()
+                                                {
+                                                    Value = 5M,
+                                                },
+                                                new SqlNumberExpression()
+                                                {
+                                                    Value = 6M,
+                                                },
+                                            },
                                         },
                                     },
                                 },
-                                new SqlArrayExpression()
+                                Index = new SqlNumberExpression()
                                 {
-                                    Items = new List<SqlExpression>()
-                                    {
-                                        new SqlNumberExpression()
-                                        {
-                                            Value = 3M,
-                                        },
-                                        new SqlNumberExpression()
-                                        {
-                                            Value = 4M,
-                                        },
-                                    },
-                                },
-                                new SqlArrayExpression()
-                                {
-                                    Items = new List<SqlExpression>()
-                                    {
-                                        new SqlNumberExpression()
-                                        {
-                                            Value = 5M,
-                                        },
-                                        new SqlNumberExpression()
-                                        {
-                                            Value = 6M,
-                                        },
-                                    },
+                                    Value = 2M,
                                 },
                             },
+                            Index = new SqlNumberExpression()
+                            {
+                                Value = 1M,
+                            },
                         },
-                        Index = new SqlNumberExpression()
-                        {
-                            Value = 2M,
-                        },
-                    },
-                    Index = new SqlNumberExpression()
-                    {
-                        Value = 1M,
                     },
                 },
-            },
-        },
             },
         };
 
@@ -19033,70 +19112,70 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlArraySliceExpression()
                 {
-                    Body = new SqlArrayExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Items = new List<SqlExpression>()
+                        Body = new SqlArraySliceExpression()
                         {
-                            new SqlArrayExpression()
+                            Body = new SqlArrayExpression()
                             {
                                 Items = new List<SqlExpression>()
                                 {
-                                    new SqlNumberExpression()
+                                    new SqlArrayExpression()
                                     {
-                                        Value = 1M,
+                                        Items = new List<SqlExpression>()
+                                        {
+                                            new SqlNumberExpression()
+                                            {
+                                                Value = 1M,
+                                            },
+                                            new SqlNumberExpression()
+                                            {
+                                                Value = 2M,
+                                            },
+                                        },
                                     },
-                                    new SqlNumberExpression()
+                                    new SqlArrayExpression()
                                     {
-                                        Value = 2M,
+                                        Items = new List<SqlExpression>()
+                                        {
+                                            new SqlNumberExpression()
+                                            {
+                                                Value = 3M,
+                                            },
+                                            new SqlNumberExpression()
+                                            {
+                                                Value = 4M,
+                                            },
+                                        },
+                                    },
+                                    new SqlArrayExpression()
+                                    {
+                                        Items = new List<SqlExpression>()
+                                        {
+                                            new SqlNumberExpression()
+                                            {
+                                                Value = 5M,
+                                            },
+                                            new SqlNumberExpression()
+                                            {
+                                                Value = 6M,
+                                            },
+                                        },
                                     },
                                 },
                             },
-                            new SqlArrayExpression()
+                            StartIndex = new SqlNumberExpression()
                             {
-                                Items = new List<SqlExpression>()
-                                {
-                                    new SqlNumberExpression()
-                                    {
-                                        Value = 3M,
-                                    },
-                                    new SqlNumberExpression()
-                                    {
-                                        Value = 4M,
-                                    },
-                                },
+                                Value = 1M,
                             },
-                            new SqlArrayExpression()
+                            EndIndex = new SqlNumberExpression()
                             {
-                                Items = new List<SqlExpression>()
-                                {
-                                    new SqlNumberExpression()
-                                    {
-                                        Value = 5M,
-                                    },
-                                    new SqlNumberExpression()
-                                    {
-                                        Value = 6M,
-                                    },
-                                },
+                                Value = 2M,
                             },
                         },
                     },
-                    StartIndex = new SqlNumberExpression()
-                    {
-                        Value = 1M,
-                    },
-                    EndIndex = new SqlNumberExpression()
-                    {
-                        Value = 2M,
-                    },
                 },
-            },
-        },
             },
         };
 
@@ -19112,7 +19191,8 @@ order by temp.InxNbr";
     [Fact]
     public void TestTableJoin()
     {
-        var sql = @"SELECT * FROM mes_mo_parts left join mes_equipment as me on (me.id = mes_mo_parts.eq_id) left join msi on ((user_item_type = 'CLA') and (msi.thisid = mes_mo_parts.part_id))  WHERE ((mes_mo_parts.orgid = @orgid) and (mes_mo_parts.""mo"" = @billValue))";
+        var sql =
+            @"SELECT * FROM mes_mo_parts left join mes_equipment as me on (me.id = mes_mo_parts.eq_id) left join msi on ((user_item_type = 'CLA') and (msi.thisid = mes_mo_parts.part_id))  WHERE ((mes_mo_parts.orgid = @orgid) and (mes_mo_parts.""mo"" = @billValue))";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Pgsql); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -19123,12 +19203,12 @@ order by temp.InxNbr";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlJoinTableExpression()
@@ -19305,12 +19385,12 @@ ORDER BY created_at,LOWER(stance) DESC;";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlAllColumnExpression()
-            },
-        },
+                {
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlAllColumnExpression()
+                    },
+                },
                 From = new SqlTableExpression()
                 {
                     Name = new SqlIdentifierExpression()
@@ -19321,57 +19401,57 @@ ORDER BY created_at,LOWER(stance) DESC;";
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlIdentifierExpression()
                     {
-                        Value = "created_at",
-                    },
-                },
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlFunctionCallExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "LOWER",
-                        },
-                        Arguments = new List<SqlExpression>()
-                        {
-                            new SqlIdentifierExpression()
+                            Body = new SqlIdentifierExpression()
                             {
-                                Value = "stance",
+                                Value = "created_at",
                             },
                         },
+                        new SqlOrderByItemExpression()
+                        {
+                            Body = new SqlFunctionCallExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "LOWER",
+                                },
+                                Arguments = new List<SqlExpression>()
+                                {
+                                    new SqlIdentifierExpression()
+                                    {
+                                        Value = "stance",
+                                    },
+                                },
+                            },
+                            OrderByType = SqlOrderByType.Desc,
+                        },
                     },
-                    OrderByType = SqlOrderByType.Desc,
-                },
-            },
                 },
                 DistinctOn = new SqlDistinctOnExpression()
                 {
                     Items = new List<SqlExpression>()
-            {
-                new SqlIdentifierExpression()
-                {
-                    Value = "created_at",
-                },
-                new SqlFunctionCallExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "LOWER",
-                    },
-                    Arguments = new List<SqlExpression>()
                     {
                         new SqlIdentifierExpression()
                         {
-                            Value = "stance",
+                            Value = "created_at",
+                        },
+                        new SqlFunctionCallExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "LOWER",
+                            },
+                            Arguments = new List<SqlExpression>()
+                            {
+                                new SqlIdentifierExpression()
+                                {
+                                    Value = "stance",
+                                },
+                            },
                         },
                     },
-                },
-            },
                 },
             },
         };
@@ -19380,7 +19460,9 @@ ORDER BY created_at,LOWER(stance) DESC;";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select distinct on (created_at, LOWER(stance)) * from articles order by created_at, LOWER(stance) desc", generationSql);
+        Assert.Equal(
+            "select distinct on (created_at, LOWER(stance)) * from articles order by created_at, LOWER(stance) desc",
+            generationSql);
     }
 
     [Theory]
@@ -19461,92 +19543,92 @@ ORDER BY c.customer_id;";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "customer_id",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "customer_id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                        },
                     },
-                    Table = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "c",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "customer_name",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "order_id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "latest_order",
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "order_no",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "latest_order",
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "amount",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "latest_order",
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "order_time",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "latest_order",
+                            },
+                        },
                     },
                 },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "customer_name",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "c",
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "order_id",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "latest_order",
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "order_no",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "latest_order",
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "amount",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "latest_order",
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "order_time",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "latest_order",
-                    },
-                },
-            },
-        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -19571,64 +19653,64 @@ ORDER BY c.customer_id;";
                         Query = new SqlSelectQueryExpression()
                         {
                             Columns = new List<SqlSelectItemExpression>()
-                    {
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
                             {
-                                Name = new SqlIdentifierExpression()
+                                new SqlSelectItemExpression()
                                 {
-                                    Value = "order_id",
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "order_id",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "o",
+                                        },
+                                    },
                                 },
-                                Table = new SqlIdentifierExpression()
+                                new SqlSelectItemExpression()
                                 {
-                                    Value = "o",
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "order_no",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "o",
+                                        },
+                                    },
+                                },
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "amount",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "o",
+                                        },
+                                    },
+                                },
+                                new SqlSelectItemExpression()
+                                {
+                                    Body = new SqlPropertyExpression()
+                                    {
+                                        Name = new SqlIdentifierExpression()
+                                        {
+                                            Value = "order_time",
+                                        },
+                                        Table = new SqlIdentifierExpression()
+                                        {
+                                            Value = "o",
+                                        },
+                                    },
                                 },
                             },
-                        },
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "order_no",
-                                },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "o",
-                                },
-                            },
-                        },
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "amount",
-                                },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "o",
-                                },
-                            },
-                        },
-                        new SqlSelectItemExpression()
-                        {
-                            Body = new SqlPropertyExpression()
-                            {
-                                Name = new SqlIdentifierExpression()
-                                {
-                                    Value = "order_time",
-                                },
-                                Table = new SqlIdentifierExpression()
-                                {
-                                    Value = "o",
-                                },
-                            },
-                        },
-                    },
                             From = new SqlTableExpression()
                             {
                                 Name = new SqlIdentifierExpression()
@@ -19692,38 +19774,38 @@ ORDER BY c.customer_id;";
                             OrderBy = new SqlOrderByExpression()
                             {
                                 Items = new List<SqlOrderByItemExpression>()
-                        {
-                            new SqlOrderByItemExpression()
-                            {
-                                Body = new SqlPropertyExpression()
                                 {
-                                    Name = new SqlIdentifierExpression()
+                                    new SqlOrderByItemExpression()
                                     {
-                                        Value = "order_time",
+                                        Body = new SqlPropertyExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "order_time",
+                                            },
+                                            Table = new SqlIdentifierExpression()
+                                            {
+                                                Value = "o",
+                                            },
+                                        },
+                                        OrderByType = SqlOrderByType.Desc,
                                     },
-                                    Table = new SqlIdentifierExpression()
+                                    new SqlOrderByItemExpression()
                                     {
-                                        Value = "o",
+                                        Body = new SqlPropertyExpression()
+                                        {
+                                            Name = new SqlIdentifierExpression()
+                                            {
+                                                Value = "order_id",
+                                            },
+                                            Table = new SqlIdentifierExpression()
+                                            {
+                                                Value = "o",
+                                            },
+                                        },
+                                        OrderByType = SqlOrderByType.Desc,
                                     },
                                 },
-                                OrderByType = SqlOrderByType.Desc,
-                            },
-                            new SqlOrderByItemExpression()
-                            {
-                                Body = new SqlPropertyExpression()
-                                {
-                                    Name = new SqlIdentifierExpression()
-                                    {
-                                        Value = "order_id",
-                                    },
-                                    Table = new SqlIdentifierExpression()
-                                    {
-                                        Value = "o",
-                                    },
-                                },
-                                OrderByType = SqlOrderByType.Desc,
-                            },
-                        },
                             },
                             Limit = new SqlLimitExpression()
                             {
@@ -19738,22 +19820,22 @@ ORDER BY c.customer_id;";
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "customer_id",
-                        },
-                        Table = new SqlIdentifierExpression()
-                        {
-                            Value = "c",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "customer_id",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "c",
+                                },
+                            },
                         },
                     },
-                },
-            },
                 },
             },
         };
@@ -19761,7 +19843,9 @@ ORDER BY c.customer_id;";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select c.customer_id, c.customer_name, latest_order.order_id, latest_order.order_no, latest_order.amount, latest_order.order_time from customers as c cross join lateral (select o.order_id, o.order_no, o.amount, o.order_time from orders as o where ((o.customer_id = c.customer_id) and (o.order_status = 'PAID')) order by o.order_time desc, o.order_id desc limit 1) as latest_order order by c.customer_id", generationSql);
+        Assert.Equal(
+            "select c.customer_id, c.customer_name, latest_order.order_id, latest_order.order_no, latest_order.amount, latest_order.order_time from customers as c cross join lateral (select o.order_id, o.order_no, o.amount, o.order_time from orders as o where ((o.customer_id = c.customer_id) and (o.order_status = 'PAID')) order by o.order_time desc, o.order_id desc limit 1) as latest_order order by c.customer_id",
+            generationSql);
     }
 
     [Fact]
@@ -19788,50 +19872,50 @@ ORDER BY c.customer_id, d.stat_date;";
             Query = new SqlSelectQueryExpression()
             {
                 Columns = new List<SqlSelectItemExpression>()
-        {
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
                 {
-                    Name = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "customer_id",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "customer_id",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                        },
                     },
-                    Table = new SqlIdentifierExpression()
+                    new SqlSelectItemExpression()
                     {
-                        Value = "c",
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "customer_name",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "c",
+                            },
+                        },
+                    },
+                    new SqlSelectItemExpression()
+                    {
+                        Body = new SqlPropertyExpression()
+                        {
+                            Name = new SqlIdentifierExpression()
+                            {
+                                Value = "stat_date",
+                            },
+                            Table = new SqlIdentifierExpression()
+                            {
+                                Value = "d",
+                            },
+                        },
                     },
                 },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "customer_name",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "c",
-                    },
-                },
-            },
-            new SqlSelectItemExpression()
-            {
-                Body = new SqlPropertyExpression()
-                {
-                    Name = new SqlIdentifierExpression()
-                    {
-                        Value = "stat_date",
-                    },
-                    Table = new SqlIdentifierExpression()
-                    {
-                        Value = "d",
-                    },
-                },
-            },
-        },
                 From = new SqlJoinTableExpression()
                 {
                     Left = new SqlTableExpression()
@@ -19856,39 +19940,39 @@ ORDER BY c.customer_id, d.stat_date;";
                                 Value = "generate_series",
                             },
                             Arguments = new List<SqlExpression>()
-                    {
-                        new SqlCastAsExpression()
-                        {
-                            Body = new SqlStringExpression()
                             {
-                                Value = "2024-01-01",
+                                new SqlCastAsExpression()
+                                {
+                                    Body = new SqlStringExpression()
+                                    {
+                                        Value = "2024-01-01",
+                                    },
+                                    TargetType = new SqlIdentifierExpression()
+                                    {
+                                        Value = "DATE",
+                                    },
+                                    FunctionType = CastAsFunctionType.TypeString,
+                                },
+                                new SqlCastAsExpression()
+                                {
+                                    Body = new SqlStringExpression()
+                                    {
+                                        Value = "2024-01-05",
+                                    },
+                                    TargetType = new SqlIdentifierExpression()
+                                    {
+                                        Value = "DATE",
+                                    },
+                                    FunctionType = CastAsFunctionType.TypeString,
+                                },
+                                new SqlIntervalExpression()
+                                {
+                                    Body = new SqlStringExpression()
+                                    {
+                                        Value = "1 day",
+                                    },
+                                },
                             },
-                            TargetType = new SqlIdentifierExpression()
-                            {
-                                Value = "DATE",
-                            },
-                            FunctionType = CastAsFunctionType.TypeString,
-                        },
-                        new SqlCastAsExpression()
-                        {
-                            Body = new SqlStringExpression()
-                            {
-                                Value = "2024-01-05",
-                            },
-                            TargetType = new SqlIdentifierExpression()
-                            {
-                                Value = "DATE",
-                            },
-                            FunctionType = CastAsFunctionType.TypeString,
-                        },
-                        new SqlIntervalExpression()
-                        {
-                            Body = new SqlStringExpression()
-                            {
-                                Value = "1 day",
-                            },
-                        },
-                    },
                         },
                         Alias = new SqlIdentifierExpression()
                         {
@@ -19899,36 +19983,36 @@ ORDER BY c.customer_id, d.stat_date;";
                 OrderBy = new SqlOrderByExpression()
                 {
                     Items = new List<SqlOrderByItemExpression>()
-            {
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
                     {
-                        Name = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "customer_id",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "customer_id",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "c",
+                                },
+                            },
                         },
-                        Table = new SqlIdentifierExpression()
+                        new SqlOrderByItemExpression()
                         {
-                            Value = "c",
+                            Body = new SqlPropertyExpression()
+                            {
+                                Name = new SqlIdentifierExpression()
+                                {
+                                    Value = "stat_date",
+                                },
+                                Table = new SqlIdentifierExpression()
+                                {
+                                    Value = "d",
+                                },
+                            },
                         },
                     },
-                },
-                new SqlOrderByItemExpression()
-                {
-                    Body = new SqlPropertyExpression()
-                    {
-                        Name = new SqlIdentifierExpression()
-                        {
-                            Value = "stat_date",
-                        },
-                        Table = new SqlIdentifierExpression()
-                        {
-                            Value = "d",
-                        },
-                    },
-                },
-            },
                 },
             },
         };
@@ -19936,6 +20020,8 @@ ORDER BY c.customer_id, d.stat_date;";
         Assert.True(sqlAst.Equals(expect));
 
         var generationSql = sqlAst.ToSql();
-        Assert.Equal("select c.customer_id, c.customer_name, d.stat_date from customers as c cross join lateral generate_series(DATE '2024-01-01',DATE '2024-01-05', interval '1 day') as d(stat_date) order by c.customer_id, d.stat_date", generationSql);
+        Assert.Equal(
+            "select c.customer_id, c.customer_name, d.stat_date from customers as c cross join lateral generate_series(DATE '2024-01-01',DATE '2024-01-05', interval '1 day') as d(stat_date) order by c.customer_id, d.stat_date",
+            generationSql);
     }
 }

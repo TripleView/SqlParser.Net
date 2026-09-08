@@ -69,7 +69,7 @@ CROSS JOIN LATERAL (
 ) AS latest_order
 ORDER BY c.customer_id;";
 
-            sql = "select cast('2023-10-15' as TIMESTAMP WITH TIME ZONE)";
+            sql = "select '' as sn,'' as so,'' as mo,'' as acode FROM syslog limit 1 WHERE syslog.orgid=@orgid";
             var sqlAst = DbUtils.Parse(sql, DbType.Pgsql);
 
 

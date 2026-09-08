@@ -62,19 +62,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
     }
 
     /// <summary>
-    /// Only for case as functions,such as sql:SELECT CAST('123' AS INT)
-    /// 只为case as函数,比如sql：SELECT CAST('123' AS INT)
-    /// </summary>
-    public SqlIdentifierExpression CaseAsTargetType
-    {
-        get => caseAsTargetType;
-        set
-        {
-            caseAsTargetType = value;
-        }
-    }
-
-    /// <summary>
     /// Only for EXTRACT functions,such as sql:EXTRACT(YEAR FROM order_date)
     /// 只为EXTRACT函数,比如sql：EXTRACT(YEAR FROM order_date)
     /// </summary>
@@ -131,11 +118,7 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
         {
             return false;
         }
-        if (!CompareTwoSqlExpression(CaseAsTargetType, other.CaseAsTargetType))
-        {
-            return false;
-        }
-
+        
         if (!CompareTwoSqlExpression(Collate, other.Collate))
         {
             return false;
@@ -181,7 +164,6 @@ public class SqlFunctionCallExpression : SqlExpression, ICollateExpression
             Name = this.Name.Clone(),
             Over = this.Over.Clone(),
             IsDistinct = this.IsDistinct,
-            CaseAsTargetType = this.CaseAsTargetType.Clone(),
             Collate = this.Collate.Clone(),
             WithinGroup = this.WithinGroup.Clone(),
             FromSource = this.FromSource.Clone()

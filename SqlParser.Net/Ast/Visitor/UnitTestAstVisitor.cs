@@ -351,14 +351,7 @@ public class UnitTestAstVisitor : BaseAstVisitor
                 AppendLine($"IsDistinct = true,");
             });
         }
-        if (sqlFunctionCallExpression.CaseAsTargetType != null)
-        {
-            AdvanceNext(() =>
-            {
-                AppendAndNotRequiredNextSpace("CaseAsTargetType = ");
-                sqlFunctionCallExpression.CaseAsTargetType?.Accept(this);
-            });
-        }
+
         if (sqlFunctionCallExpression.Collate != null)
         {
             AdvanceNext(() =>

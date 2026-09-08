@@ -5,9 +5,21 @@ namespace SqlParser.Net.Lexer;
 public enum TokenType
 {
     UnKnown,
+    /// <summary>
+    /// Keyword;关键字
+    /// </summary>
     Keyword,
+    /// <summary>
+    /// Symbol；符号
+    /// </summary>
     Symbol,
+    /// <summary>
+    /// Relational Operator;关系运算符
+    /// </summary>
     Operator,
+    /// <summary>
+    /// Constant;常量
+    /// </summary>
     Constant,
     Hints
 }
