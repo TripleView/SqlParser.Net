@@ -43,3 +43,4 @@ msbuild.wrn
 Vue-Element
 /**/*rfc.log
 *.pubxml
+/.idea

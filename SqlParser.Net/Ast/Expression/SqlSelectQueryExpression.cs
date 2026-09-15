@@ -5,7 +5,7 @@ using SqlParser.Net.Lexer;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlSelectQueryExpression : SqlExpression
+public class SqlSelectQueryExpression : SqlExpression,IWhereExpression
 {
     private List<SqlWithSubQueryExpression> withSubQuerys;
     private List<SqlSelectItemExpression> columns;

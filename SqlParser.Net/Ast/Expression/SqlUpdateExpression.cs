@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlUpdateExpression : SqlExpression
+public class SqlUpdateExpression : SqlExpression,IWhereExpression
 {
     private SqlExpression table;
     private List<SqlExpression> items;

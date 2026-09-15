@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SqlParser.Net.Ast.Expression;
 
-public class SqlDeleteExpression : SqlExpression
+public class SqlDeleteExpression : SqlExpression,IWhereExpression
 {
     private SqlExpression body;
     private SqlExpression table;

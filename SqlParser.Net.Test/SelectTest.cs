@@ -8982,8 +8982,8 @@ order by temp.InxNbr";
     public void TestMultiLineComment()
     {
         var sql = @"/*aaa
-                    ÕâÊÇÒ»¸ö
-                    ¶àĞĞ×¢ÊÍ
+                    è¿™æ˜¯ä¸€ä¸ª
+                    å¤šè¡Œæ³¨é‡Š
                     */
                     select *--abc
                     FROM test";
@@ -9016,7 +9016,7 @@ order by temp.InxNbr";
 
         Assert.Equal(2, sqlAstExpression.Comments.Count);
         Assert.Equal(
-            "aaa\r\n                    ÕâÊÇÒ»¸ö\r\n                    ¶àĞĞ×¢ÊÍ\r\n                    ".Replace("\r\n",
+            "aaa\r\n                    è¿™æ˜¯ä¸€ä¸ª\r\n                    å¤šè¡Œæ³¨é‡Š\r\n                    ".Replace("\r\n",
                 "\n"), sqlAstExpression.Comments[0]);
         Assert.Equal("abc", sqlAstExpression.Comments[1]);
     }
@@ -9024,13 +9024,13 @@ order by temp.InxNbr";
     [Fact]
     public void TestMultiLineComment2()
     {
-        var sql = @"/*Õâ
-                    ÊÇ
-                    ¶¥²¿*/
+        var sql = @"/*è¿™
+                    æ˜¯
+                    é¡¶éƒ¨*/
                     select *--abc
-                    FROM test/*Õâ
-                    ÊÇ
-                    µ×²¿*/";
+                    FROM test/*è¿™
+                    æ˜¯
+                    åº•éƒ¨*/";
 
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
@@ -9060,10 +9060,10 @@ order by temp.InxNbr";
         var sqlAstExpression = sqlAst as SqlSelectExpression;
 
         Assert.Equal(3, sqlAstExpression.Comments.Count);
-        Assert.Equal("Õâ\r\n                    ÊÇ\r\n                    ¶¥²¿".Replace("\r\n", "\n"),
+        Assert.Equal("è¿™\r\n                    æ˜¯\r\n                    é¡¶éƒ¨".Replace("\r\n", "\n"),
             sqlAstExpression.Comments[0]);
         Assert.Equal("abc", sqlAstExpression.Comments[1]);
-        Assert.Equal("Õâ\r\n                    ÊÇ\r\n                    µ×²¿".Replace("\r\n", "\n"),
+        Assert.Equal("è¿™\r\n                    æ˜¯\r\n                    åº•éƒ¨".Replace("\r\n", "\n"),
             sqlAstExpression.Comments[2]);
     }
 
@@ -11312,7 +11312,7 @@ order by temp.InxNbr";
     [Fact]
     public void TestCommaForOracle()
     {
-        var sql = "select NAME£¬AGE  from TEST5 ";
+        var sql = "select NAMEï¼ŒAGE  from TEST5 ";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -13049,7 +13049,7 @@ order by temp.InxNbr";
     [Fact]
     public void TestOracleSpecialParen()
     {
-        var sql = "select * from TEST5 t WHERE t.NAME  IN £¨'a','b','c'£©";
+        var sql = "select * from TEST5 t WHERE t.NAME  IN ï¼ˆ'a','b','c'ï¼‰";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -13124,7 +13124,7 @@ order by temp.InxNbr";
     public void TestEmptyChar()
     {
         var sql =
-            "SELECT F.FACILITY, F.FACILITY || '__' ||TT.MEDIUM AS NAME¡¡FROM FACILITY  F   LEFT JOIN TEXT_TRANSLATION TT ON TT.TEXTID = F.TEXTID WHERE TT.LANGUAGEID ='2052' AND F.OBJECTCLASS = '1'";
+            "SELECT F.FACILITY, F.FACILITY || '__' ||TT.MEDIUM AS NAMEã€€FROM FACILITY  F   LEFT JOIN TEXT_TRANSLATION TT ON TT.TEXTID = F.TEXTID WHERE TT.LANGUAGEID ='2052' AND F.OBJECTCLASS = '1'";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.Oracle); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -13494,7 +13494,7 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ÔËËã·ûÓÅÏÈ¼¶
+    /// è¿ç®—ç¬¦ä¼˜å…ˆçº§
     /// Operator precedence
     /// </summary>
     [Fact]
@@ -13553,7 +13553,7 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ÔËËã·ûÓÅÏÈ¼¶
+    /// è¿ç®—ç¬¦ä¼˜å…ˆçº§
     /// Operator precedence
     /// </summary>
     [Fact]
@@ -13610,7 +13610,7 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ÔËËã·ûÓÅÏÈ¼¶
+    /// è¿ç®—ç¬¦ä¼˜å…ˆçº§
     /// Operator precedence
     /// </summary>
     [Fact]
@@ -13681,7 +13681,7 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ÔËËã·ûÓÅÏÈ¼¶
+    /// è¿ç®—ç¬¦ä¼˜å…ˆçº§
     /// Operator precedence
     /// </summary>
     [Fact]
@@ -14077,7 +14077,7 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ²âÊÔÈ¡Óà
+    /// æµ‹è¯•å–ä½™
     /// test Modulus
     /// </summary>
     [Fact]
@@ -14156,7 +14156,7 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ²âÊÔsqlserverÖĞµ¥ÒıºÅ°ü¹üÊı¾İ¿âÁĞ±ğÃû
+    /// æµ‹è¯•sqlserverä¸­å•å¼•å·åŒ…è£¹æ•°æ®åº“åˆ—åˆ«å
     /// Test the single quotes in sqlserver to wrap the database column alias
     /// </summary>
     [Theory]
@@ -14214,14 +14214,14 @@ order by temp.InxNbr";
     }
 
     /// <summary>
-    /// ²âÊÔsqlserverÖĞºº×Ö×÷Îª±í±ğÃû»òÕßÁĞ±ğÃû
+    /// æµ‹è¯•sqlserverä¸­æ±‰å­—ä½œä¸ºè¡¨åˆ«åæˆ–è€…åˆ—åˆ«å
     /// Test Chinese characters as table aliases or column aliases in SQL Server
     /// </summary>
     [Fact]
     public void TestChineseCharactersAsTableAliasesOrColumnAliasesInSQLServer()
     {
         var sql =
-            "select city ±í1 from Address ±í";
+            "select city è¡¨1 from Address è¡¨";
         var sqlAst = new SqlExpression();
         var t = TimeUtils.TestMicrosecond((() => { sqlAst = DbUtils.Parse(sql, DbType.SqlServer); }));
         testOutputHelper.WriteLine("time:" + t);
@@ -14243,7 +14243,7 @@ order by temp.InxNbr";
                         },
                         Alias = new SqlIdentifierExpression()
                         {
-                            Value = "±í1",
+                            Value = "è¡¨1",
                         },
                     },
                 },
@@ -14255,7 +14255,7 @@ order by temp.InxNbr";
                     },
                     Alias = new SqlIdentifierExpression()
                     {
-                        Value = "±í",
+                        Value = "è¡¨",
                     },
                 },
             },
@@ -14267,7 +14267,7 @@ order by temp.InxNbr";
         sqlAst.Accept(sqlGenerationAstVisitor);
         var generationSql = sqlGenerationAstVisitor.GetResult();
         Assert.Equal(
-            "select city as ±í1 from Address as ±í",
+            "select city as è¡¨1 from Address as è¡¨",
             generationSql);
     }
 
@@ -17821,9 +17821,9 @@ order by temp.InxNbr";
     {
         //CREATE TABLE users(
         //    id SERIAL PRIMARY KEY,
-        //    tags TEXT[], --×Ö·û´®Êı×é
+        //    tags TEXT[], --å­—ç¬¦ä¸²æ•°ç»„
 
-        //scores INTEGER[]-- ÕûĞÍÊı×é
+        //scores INTEGER[]-- æ•´å‹æ•°ç»„
         //    );
 
 
@@ -17948,9 +17948,9 @@ order by temp.InxNbr";
     {
         //CREATE TABLE users(
         //    id SERIAL PRIMARY KEY,
-        //    tags TEXT[], --×Ö·û´®Êı×é
+        //    tags TEXT[], --å­—ç¬¦ä¸²æ•°ç»„
 
-        //scores INTEGER[]-- ÕûĞÍÊı×é
+        //scores INTEGER[]-- æ•´å‹æ•°ç»„
         //    );
 
 
@@ -18012,9 +18012,9 @@ order by temp.InxNbr";
     {
         //CREATE TABLE users(
         //    id SERIAL PRIMARY KEY,
-        //    tags TEXT[], --×Ö·û´®Êı×é
+        //    tags TEXT[], --å­—ç¬¦ä¸²æ•°ç»„
 
-        //scores INTEGER[]-- ÕûĞÍÊı×é
+        //scores INTEGER[]-- æ•´å‹æ•°ç»„
         //    );
 
 
@@ -18070,9 +18070,9 @@ order by temp.InxNbr";
     {
         //CREATE TABLE users(
         //    id SERIAL PRIMARY KEY,
-        //    tags TEXT[], --×Ö·û´®Êı×é
+        //    tags TEXT[], --å­—ç¬¦ä¸²æ•°ç»„
 
-        //scores INTEGER[]-- ÕûĞÍÊı×é
+        //scores INTEGER[]-- æ•´å‹æ•°ç»„
         //    );
 
 
@@ -18140,9 +18140,9 @@ order by temp.InxNbr";
     {
         //CREATE TABLE users(
         //    id SERIAL PRIMARY KEY,
-        //    tags TEXT[], --×Ö·û´®Êı×é
+        //    tags TEXT[], --å­—ç¬¦ä¸²æ•°ç»„
 
-        //scores INTEGER[]-- ÕûĞÍÊı×é
+        //scores INTEGER[]-- æ•´å‹æ•°ç»„
         //    );
 
 
@@ -18208,7 +18208,7 @@ order by temp.InxNbr";
     {
         //CREATE TABLE users2(
         //    id SERIAL PRIMARY KEY,
-        //    tags TEXT[][]-- ×Ö·û´®Êı×é
+        //    tags TEXT[][]-- å­—ç¬¦ä¸²æ•°ç»„
         //);
 
         //INSERT INTO users2(tags) VALUES
