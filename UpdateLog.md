@@ -7,3 +7,4 @@ IAcceptVisitor接口的方法Accept(IAstVisitor visitor, VisitContext context = 
 1.1.20版本发现1.1.19版本的实现方式有问题，所以再次移除VisitContext上下文，在SqlGenerationAstVisitor中采用callStack调用栈的方式来进行上下文识别
 
 1.1.22版本将cast as表达式，即CAST(表达式 AS 数据类型)，从sqlFunctionCall里独立出来，写成单独的SqlCastAsExpression表达式；同时添加了pgsql独有的SqlDistinctOnExpression表达式，以及对pgsql的lateral语法进行了兼容
+1.1.23版本，添加了IWhereExpression接口，添加这个接口的主要原因是，用于在后续解析器里更方便的合并多个where字句，SqlDeleteExpression、SqlSelectQueryExpression、SqlUpdateExpression3个类实现了该接口
